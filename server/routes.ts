@@ -27,8 +27,34 @@ const crypto = {
   },
 };
 
+export async function createAdminUser() {
+  try {
+    // Delete existing admin user
+    await db.delete(users).where(eq(users.username, 'admin'));
+
+    // Create new admin user with hashed password
+    const hashedPassword = await crypto.hash('admin123');
+    const [newAdmin] = await db.insert(users)
+      .values({
+        username: 'admin',
+        password: hashedPassword,
+        role: 'admin' // Assuming a 'role' column exists in the users table
+      })
+      .returning();
+
+    console.log('Admin user created successfully');
+    return newAdmin;
+  } catch (error) {
+    console.error('Error creating admin user:', error);
+    throw error;
+  }
+}
+
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
+
+  // Create admin user on startup
+  createAdminUser().catch(console.error);
 
   // Password change API
   app.post("/api/user/change-password", async (req, res) => {
