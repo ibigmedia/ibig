@@ -19,6 +19,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
@@ -82,7 +83,7 @@ export default function AuthPage() {
           <CardDescription>
             {isRegistering
               ? "새로운 계정을 만들어주세요"
-              : "계정에 로그인하세요"}
+              : "이메일 주소로 로그인하세요"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -93,30 +94,17 @@ export default function AuthPage() {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>아이디 (이메일)</FormLabel>
+                    <FormLabel>이메일 주소</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input type="email" placeholder="example@domain.com" {...field} />
                     </FormControl>
+                    <FormDescription>
+                      {isRegistering ? "이메일 주소를 아이디로 사용합니다" : "등록된 이메일 주소를 입력하세요"}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              {isRegistering && (
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>이메일</FormLabel>
-                      <FormControl>
-                        <Input type="email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
 
               <FormField
                 control={form.control}
