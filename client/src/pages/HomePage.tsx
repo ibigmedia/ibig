@@ -5,10 +5,15 @@ import { MedicalForm } from '@/components/medical/MedicalForm';
 import { AppointmentScheduler } from '@/components/appointments/AppointmentScheduler';
 import { MedicationTracker } from '@/components/medications/MedicationTracker';
 import { WelcomePage } from '@/components/common/WelcomePage';
+import { useLocation } from 'wouter';
 
 export function HomePage() {
   const { t } = useLanguage();
   const [showWelcome, setShowWelcome] = React.useState(true);
+  const [location] = useLocation();
+
+  // Parse the tab from URL
+  const tab = new URLSearchParams(location.split('?')[1]).get('tab') || 'medical';
 
   if (showWelcome) {
     return (
@@ -28,7 +33,7 @@ export function HomePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Tabs defaultValue="medical" className="space-y-6">
+      <Tabs defaultValue={tab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="medical">{t('nav.medical')}</TabsTrigger>
           <TabsTrigger value="appointments">{t('nav.appointments')}</TabsTrigger>
