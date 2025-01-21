@@ -28,14 +28,19 @@ function Router() {
   }
 
   return (
-    <WouterRouter>
-      <Switch>
-        <Route path="/" component={HomePage} />
-        <Route path="/personal" component={PersonalInfoPage} />
-        <Route path="/medical-records" component={MedicalRecordsPage} />
-        <Route component={NotFound} />
-      </Switch>
-    </WouterRouter>
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <main className="flex-1">
+        <WouterRouter>
+          <Switch>
+            <Route path="/" component={HomePage} />
+            <Route path="/personal" component={PersonalInfoPage} />
+            <Route path="/medical-records" component={MedicalRecordsPage} />
+            <Route component={NotFound} />
+          </Switch>
+        </WouterRouter>
+      </main>
+    </div>
   );
 }
 
@@ -43,12 +48,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
-        <div className="flex flex-col min-h-screen bg-background">
-          <Header />
-          <main className="flex-1">
-            <Router />
-          </main>
-        </div>
+        <Router />
         <Toaster />
       </LanguageProvider>
     </QueryClientProvider>

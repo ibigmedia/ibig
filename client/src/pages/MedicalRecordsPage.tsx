@@ -14,7 +14,6 @@ import { EmergencyContacts } from "@/components/user/EmergencyContacts";
 import { useQuery } from "@tanstack/react-query";
 
 export function MedicalRecordsPage() {
-  // Fetch user's medical records
   const { data: medicalRecords } = useQuery({
     queryKey: ['/api/medical-records'],
   });
@@ -33,21 +32,9 @@ export function MedicalRecordsPage() {
           </CardHeader>
 
           <CardContent className="p-0">
-            <Tabs defaultValue="personal" className="w-full">
+            <Tabs defaultValue="history" className="w-full">
               <div className="border-b px-3 sm:px-6">
                 <TabsList className="flex w-full gap-1 overflow-x-auto py-2 scrollbar-none">
-                  <TabsTrigger 
-                    value="personal" 
-                    className="flex-shrink-0 whitespace-nowrap px-3 py-1.5 text-sm sm:text-base"
-                  >
-                    기본 정보
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="emergency" 
-                    className="flex-shrink-0 whitespace-nowrap px-3 py-1.5 text-sm sm:text-base"
-                  >
-                    비상연락처
-                  </TabsTrigger>
                   <TabsTrigger 
                     value="history" 
                     className="flex-shrink-0 whitespace-nowrap px-3 py-1.5 text-sm sm:text-base"
@@ -70,20 +57,6 @@ export function MedicalRecordsPage() {
               </div>
 
               <div className="p-3 sm:p-6">
-                <TabsContent value="personal" className="mt-0 focus-visible:outline-none">
-                  <div className="space-y-6">
-                    <div className="bg-card rounded-lg p-4 sm:p-6">
-                      <PersonalInfoForm initialData={medicalRecords?.[0]} />
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="emergency" className="mt-0 focus-visible:outline-none">
-                  <div className="bg-card rounded-lg p-4 sm:p-6">
-                    <EmergencyContacts />
-                  </div>
-                </TabsContent>
-
                 <TabsContent value="history" className="mt-0 focus-visible:outline-none">
                   <div className="bg-card rounded-lg p-4 sm:p-6">
                     <MedicalHistory />
