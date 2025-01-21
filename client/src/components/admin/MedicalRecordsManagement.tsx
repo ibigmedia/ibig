@@ -139,113 +139,6 @@ export function MedicalRecordsManagement() {
     },
   });
 
-  const addBloodSugarMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await fetch('/api/blood-sugar', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: '성공',
-        description: '혈당 기록이 추가되었습니다.',
-      });
-      setShowAddDialog(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/blood-sugar'] });
-    },
-    onError: (error: Error) => {
-      toast({
-        variant: 'destructive',
-        title: '오류',
-        description: error.message,
-      });
-    },
-  });
-
-  const addDiseaseHistoryMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await fetch('/api/disease-histories', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: '성공',
-        description: '질병 이력이 추가되었습니다.',
-      });
-      setShowAddDialog(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/disease-histories'] });
-    },
-    onError: (error: Error) => {
-      toast({
-        variant: 'destructive',
-        title: '오류',
-        description: error.message,
-      });
-    },
-  });
-
-  const addMedicationMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await fetch('/api/medications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...data,
-          startDate: data.startDate,
-          endDate: data.endDate || null,
-        }),
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText);
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: '성공',
-        description: '약물 정보가 추가되었습니다.',
-      });
-      setShowAddDialog(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/medications'] });
-    },
-    onError: (error: Error) => {
-      toast({
-        variant: 'destructive',
-        title: '오류',
-        description: error.message,
-      });
-    },
-  });
-
   const handleSave = () => {
     if (selectedRecord) {
       updateMutation.mutate(selectedRecord);
@@ -438,7 +331,6 @@ export function MedicalRecordsManagement() {
                         <TableHead>측정일시</TableHead>
                         <TableHead>혈당</TableHead>
                         <TableHead>측정시기</TableHead>
-                        <TableHead>메모</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -450,7 +342,6 @@ export function MedicalRecordsManagement() {
                           <TableCell>
                             {record.measurementType === 'before_meal' ? '식전' : '식후'}
                           </TableCell>
-                          <TableCell>{record.notes}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
