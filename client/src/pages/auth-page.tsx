@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -73,35 +72,29 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-8 sm:py-12">
-      <Card className="w-full max-w-[400px] mx-auto shadow-lg">
-        <CardHeader className="space-y-2 pb-4 sm:pb-6">
-          <CardTitle className="text-xl sm:text-2xl font-semibold text-center">
+    <div className="w-full min-h-screen flex items-center justify-center p-4 bg-background">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle className="text-center">
             {isRegistering ? "회원가입" : "로그인"}
           </CardTitle>
-          <CardDescription className="text-center text-sm sm:text-base">
-            {isRegistering
-              ? "새로운 계정을 만들어주세요"
-              : "아이디와 비밀번호를 입력하세요"}
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm sm:text-base">아이디</FormLabel>
+                    <FormLabel>아이디</FormLabel>
                     <FormControl>
                       <Input 
                         placeholder="아이디를 입력하세요" 
-                        className="h-10 sm:h-11 text-sm sm:text-base"
                         {...field} 
                       />
                     </FormControl>
-                    <FormMessage className="text-xs sm:text-sm" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -111,32 +104,28 @@ export default function AuthPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm sm:text-base">비밀번호</FormLabel>
+                    <FormLabel>비밀번호</FormLabel>
                     <FormControl>
                       <Input 
                         type="password" 
                         placeholder="비밀번호를 입력하세요" 
-                        className="h-10 sm:h-11 text-sm sm:text-base"
                         {...field} 
                       />
                     </FormControl>
-                    <FormMessage className="text-xs sm:text-sm" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="space-y-3 pt-2 sm:pt-4">
-                <Button 
-                  type="submit" 
-                  className="w-full h-10 sm:h-11 text-sm sm:text-base font-medium"
-                >
+              <div className="pt-2">
+                <Button type="submit" className="w-full">
                   {isRegistering ? "회원가입" : "로그인"}
                 </Button>
 
                 <Button
                   type="button"
                   variant="ghost"
-                  className="w-full h-10 sm:h-11 text-xs sm:text-sm"
+                  className="w-full mt-2"
                   onClick={() => setIsRegistering(!isRegistering)}
                 >
                   {isRegistering
