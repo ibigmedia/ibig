@@ -14,7 +14,7 @@ import { useTheme } from '@/hooks/use-theme';
 
 export function Header() {
   const { user, logout } = useUser();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
 
   const handleLogout = async () => {
@@ -35,7 +35,7 @@ export function Header() {
             </Button>
           </Link>
 
-          <nav className="hidden md:flex items-center space-x-4">
+          <nav className="flex items-center space-x-4">
             {user && (
               <>
                 <Link href="/">
@@ -43,9 +43,6 @@ export function Header() {
                 </Link>
                 <Link href="/personal">
                   <Button variant="ghost">개인정보</Button>
-                </Link>
-                <Link href="/medical-records">
-                  <Button variant="ghost">의료기록</Button>
                 </Link>
               </>
             )}
