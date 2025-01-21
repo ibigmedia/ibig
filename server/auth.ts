@@ -36,10 +36,15 @@ declare global {
   }
 }
 
+// Generate a random session secret for development
+const DEV_SESSION_SECRET = randomBytes(32).toString('hex');
+
 export function setupAuth(app: Express) {
   const MemoryStore = createMemoryStore(session);
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.REPL_ID || "grace-river-health",
+    secret: process.env.NODE_ENV === 'production'
+      ? (process.env.SESSION_SECRET || process.env.REPL_ID || DEV_SESSION_SECRET)
+      : DEV_SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
