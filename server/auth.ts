@@ -8,6 +8,7 @@ import { promisify } from "util";
 import { users, insertUserSchema, type SelectUser } from "@db/schema";
 import { db } from "@db";
 import { eq } from "drizzle-orm";
+import { type TranslationKey } from "../client/src/lib/translations";
 import { translations } from "../client/src/lib/translations";
 
 const scryptAsync = promisify(scrypt);
@@ -27,12 +28,6 @@ const crypto = {
     )) as Buffer;
     return timingSafeEqual(hashedPasswordBuf, suppliedPasswordBuf);
   },
-};
-
-// Translation helper
-const t = (key: string, lang: 'ko' | 'en' = 'ko'): string => {
-  const translations_obj = translations[lang] || {};
-  return translations_obj[key] || key;
 };
 
 declare global {
@@ -78,11 +73,11 @@ export function setupAuth(app: Express) {
           .limit(1);
 
         if (!user) {
-          return done(null, false, { message: t('auth.incorrectUsername') });
+          return done(null, false, { message: "Incorrect username" });
         }
         const isMatch = await crypto.compare(password, user.password);
         if (!isMatch) {
-          return done(null, false, { message: t('auth.incorrectPassword') });
+          return done(null, false, { message: "Incorrect password" });
         }
         return done(null, user);
       } catch (err) {
@@ -130,7 +125,7 @@ export function setupAuth(app: Express) {
         .limit(1);
 
       if (existingUser) {
-        return res.status(400).send(t('auth.userExists'));
+        return res.status(400).send("Username already exists");
       }
 
       const hashedPassword = await crypto.hash(password);
@@ -147,8 +142,8 @@ export function setupAuth(app: Express) {
           return next(err);
         }
         return res.json({
-          message: t('auth.registrationSuccess'),
-          user: { id: newUser.id, username: newUser.username, role: newUser.role },
+          message: "Registration successful",
+          user: { id: newUser.id, username: newUser.username },
         });
       });
     } catch (error) {
@@ -163,7 +158,7 @@ export function setupAuth(app: Express) {
       }
 
       if (!user) {
-        return res.status(400).send(info.message ?? t('auth.loginFailed'));
+        return res.status(400).send(info.message ?? "Login failed");
       }
 
       req.logIn(user, (err) => {
@@ -172,8 +167,8 @@ export function setupAuth(app: Express) {
         }
 
         return res.json({
-          message: t('auth.loginSuccess'),
-          user: { id: user.id, username: user.username, role: user.role },
+          message: "Login successful",
+          user: { id: user.id, username: user.username },
         });
       });
     })(req, res, next);
@@ -182,10 +177,10 @@ export function setupAuth(app: Express) {
   app.post("/api/logout", (req, res) => {
     req.logout((err) => {
       if (err) {
-        return res.status(500).send(t('auth.logoutFailed'));
+        return res.status(500).send("Logout failed");
       }
 
-      res.json({ message: t('auth.logoutSuccess') });
+      res.json({ message: "Logout successful" });
     });
   });
 
@@ -194,6 +189,6 @@ export function setupAuth(app: Express) {
       return res.json(req.user);
     }
 
-    res.status(401).send(t('auth.notLoggedIn'));
+    res.status(401).send("Not logged in");
   });
 }

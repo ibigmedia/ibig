@@ -1,6 +1,6 @@
 export const translations = {
   ko: {
-    'common.appName': 'Grace River Health Book',
+    'common.appName': 'Grace River Health',
     'nav.personal': '개인정보',
     'nav.health': '건강기록',
     'nav.medication': '투약관리',
@@ -59,7 +59,7 @@ export const translations = {
     'welcome.reminder': '이 핸드북을 꾸준히 업데이트하고 필요할 때 쉽게 찾을 수 있도록 보관하세요.'
   },
   en: {
-    'common.appName': 'Grace River Health Book',
+    'common.appName': 'Grace River Health',
     'nav.personal': 'Personal Info',
     'nav.health': 'Health Records',
     'nav.medication': 'Medications',
@@ -99,7 +99,7 @@ export const translations = {
     'admin.tabs.appointments': 'Appointments',
     'admin.tabs.emergency': 'Emergency Contacts',
     'admin.tabs.subadmins': 'Sub-admin Management',
-    'welcome.title': 'Welcome to Grace River Health Book',
+    'welcome.title': 'Welcome to Grace River Health',
     'welcome.description': 'This handbook is designed to help you manage your health more systematically and effectively.',
     'welcome.purposeTitle': 'Purpose of this Handbook',
     'welcome.purpose1': 'Help organize personal medical records and health information systematically.',
