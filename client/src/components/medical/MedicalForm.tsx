@@ -108,6 +108,7 @@ export function MedicalForm() {
   const {
     register: registerBS,
     handleSubmit: handleSubmitBS,
+    setValue: setValueBS,
     reset: resetBS,
   } = useForm<BloodSugarData>({
     defaultValues: {
@@ -489,7 +490,7 @@ export function MedicalForm() {
                   {...registerBS('bloodSugar', { required: true })}
                 />
                 <Select
-                  onValueChange={(value) => setValue('measurementType', value)}
+                  onValueChange={(value) => setValueBS('measurementType', value)}
                   defaultValue="before_meal"
                 >
                   <SelectTrigger className="w-32">

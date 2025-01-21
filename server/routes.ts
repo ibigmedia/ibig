@@ -154,17 +154,91 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Admin routes for medical records and appointments
+  // Admin routes for medical records and related data
   app.get("/api/admin/medical-records", async (req, res) => {
-    if (!req.user || req.user.role !== 'admin') {
+    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
       return res.status(403).send("Unauthorized");
     }
 
     try {
-      const records = await db.query.medicalRecords.findMany();
+      const records = await db
+        .select({
+          ...medicalRecords,
+          user: {
+            name: users.username,
+          },
+        })
+        .from(medicalRecords)
+        .leftJoin(users, eq(medicalRecords.userId, users.id));
       res.json(records);
     } catch (error) {
       res.status(500).send("Error fetching medical records");
+    }
+  });
+
+  app.get("/api/admin/blood-pressure", async (req, res) => {
+    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
+      return res.status(403).send("Unauthorized");
+    }
+
+    try {
+      const records = await db
+        .select({
+          ...bloodPressureRecords,
+          user: {
+            name: users.username,
+          },
+        })
+        .from(bloodPressureRecords)
+        .leftJoin(users, eq(bloodPressureRecords.userId, users.id))
+        .orderBy(desc(bloodPressureRecords.measuredAt));
+      res.json(records);
+    } catch (error) {
+      res.status(500).send("Error fetching blood pressure records");
+    }
+  });
+
+  app.get("/api/admin/blood-sugar", async (req, res) => {
+    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
+      return res.status(403).send("Unauthorized");
+    }
+
+    try {
+      const records = await db
+        .select({
+          ...bloodSugarRecords,
+          user: {
+            name: users.username,
+          },
+        })
+        .from(bloodSugarRecords)
+        .leftJoin(users, eq(bloodSugarRecords.userId, users.id))
+        .orderBy(desc(bloodSugarRecords.measuredAt));
+      res.json(records);
+    } catch (error) {
+      res.status(500).send("Error fetching blood sugar records");
+    }
+  });
+
+  app.get("/api/admin/disease-histories", async (req, res) => {
+    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
+      return res.status(403).send("Unauthorized");
+    }
+
+    try {
+      const records = await db
+        .select({
+          ...diseaseHistories,
+          user: {
+            name: users.username,
+          },
+        })
+        .from(diseaseHistories)
+        .leftJoin(users, eq(diseaseHistories.userId, users.id))
+        .orderBy(desc(diseaseHistories.createdAt));
+      res.json(records);
+    } catch (error) {
+      res.status(500).send("Error fetching disease histories");
     }
   });
 
