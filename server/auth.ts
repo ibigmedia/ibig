@@ -31,7 +31,8 @@ const crypto = {
 
 // Translation helper
 const t = (key: string, lang: 'ko' | 'en' = 'ko'): string => {
-  return translations[lang][key] || key;
+  const translations_obj = translations[lang] || {};
+  return translations_obj[key] || key;
 };
 
 declare global {
@@ -147,7 +148,7 @@ export function setupAuth(app: Express) {
         }
         return res.json({
           message: t('auth.registrationSuccess'),
-          user: { id: newUser.id, username: newUser.username },
+          user: { id: newUser.id, username: newUser.username, role: newUser.role },
         });
       });
     } catch (error) {
@@ -156,13 +157,6 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    const result = insertUserSchema.safeParse(req.body);
-    if (!result.success) {
-      return res
-        .status(400)
-        .send("Invalid input: " + result.error.issues.map(i => i.message).join(", "));
-    }
-
     passport.authenticate("local", (err: any, user: Express.User, info: IVerifyOptions) => {
       if (err) {
         return next(err);
