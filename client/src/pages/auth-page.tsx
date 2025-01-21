@@ -32,12 +32,13 @@ export default function AuthPage() {
   const [, setLocation] = useLocation();
   const [isRegistering, setIsRegistering] = useState(false);
 
-  const form = useForm({
+  const form = useForm<z.infer<typeof insertUserSchema>>({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
       username: "",
       password: "",
-      role: "user" as const,
+      email: "",
+      role: "user",
     },
   });
 
@@ -100,6 +101,22 @@ export default function AuthPage() {
                   </FormItem>
                 )}
               />
+
+              {isRegistering && (
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>이메일</FormLabel>
+                      <FormControl>
+                        <Input type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}
