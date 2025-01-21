@@ -25,6 +25,17 @@ export function Header() {
         </Link>
 
         <div className="flex items-center space-x-4">
+          {user && user.role !== 'admin' && (
+            <>
+              <Link href="/personal-info">
+                <Button variant="ghost">개인정보 관리</Button>
+              </Link>
+              <Link href="/medical-records">
+                <Button variant="ghost">의료기록 관리</Button>
+              </Link>
+            </>
+          )}
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -61,7 +72,7 @@ export function Header() {
                 </Link>
               ) : (
                 <Link href="/dashboard">
-                  <Button variant="ghost">내 정보</Button>
+                  <Button variant="ghost">대시보드</Button>
                 </Link>
               )}
               <Button variant="outline" onClick={() => logout()}>

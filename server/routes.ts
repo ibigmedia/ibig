@@ -866,16 +866,9 @@ export function registerRoutes(app: Express): Server {
     }
 
     try {
-      const records = await db
-        .select({
-          ...medications,
-          user: {
-            name: users.username,
-          },
-        })
-        .from(medications)
-        .leftJoin(users, eq(medications.userId, users.id))
-        .orderBy(desc(medications.createdAt));
+      const records = await db.query.medications.findMany({
+        orderBy: [desc(medications.createdAt)],
+      });
       res.json(records);
     } catch (error) {
       console.error('Error fetching medications:', error);
@@ -890,6 +883,10 @@ export function registerRoutes(app: Express): Server {
 
     try {
       const { name, dosage, startDate, endDate, frequency, notes } = req.body;
+
+      if (!name || !dosage || !startDate || !frequency) {
+        return res.status(400).send("필수 입력값이 누락되었습니다");
+      }
 
       const [record] = await db
         .insert(medications)
@@ -907,7 +904,7 @@ export function registerRoutes(app: Express): Server {
       res.json(record);
     } catch (error) {
       console.error('Error saving medication:', error);
-      res.status(500).send("Error saving medication");
+      res.status(500).send("약물 정보 저장 중 오류가 발생했습니다");
     }
   });
 

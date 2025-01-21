@@ -29,6 +29,19 @@ import { Plus, Eye, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { SelectMedicalRecord } from "@db/schema";
 
+interface Medication {
+  id: number;
+  userId: number;
+  name: string;
+  dosage: string;
+  startDate: string;
+  endDate: string | null;
+  frequency: string;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export function MedicalRecordsManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -54,7 +67,7 @@ export function MedicalRecordsManagement() {
     queryKey: ['/api/admin/disease-histories'],
   });
 
-  const { data: medications = [] } = useQuery({
+  const { data: medications = [] } = useQuery<Medication[]>({
     queryKey: ['/api/admin/medications'],
   });
 
@@ -201,12 +214,17 @@ export function MedicalRecordsManagement() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          startDate: data.startDate,
+          endDate: data.endDate || null,
+        }),
         credentials: 'include',
       });
 
       if (!response.ok) {
-        throw new Error(await response.text());
+        const errorText = await response.text();
+        throw new Error(errorText);
       }
 
       return response.json();
@@ -254,9 +272,15 @@ export function MedicalRecordsManagement() {
         });
         break;
       case 'medication':
-        addMedicationMutation.mutate({
-          ...newRecord,
-        });
+        if (!newRecord.name || !newRecord.dosage || !newRecord.startDate || !newRecord.frequency) {
+          toast({
+            variant: 'destructive',
+            title: '오류',
+            description: '필수 항목을 모두 입력해주세요.',
+          });
+          return;
+        }
+        addMedicationMutation.mutate(newRecord);
         break;
     }
   };

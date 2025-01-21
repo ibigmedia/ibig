@@ -1,11 +1,14 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
+import { Switch, Route } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { Header } from "@/components/common/Header";
 import { HomePage } from "@/pages/HomePage";
 import { AdminPage } from "@/pages/AdminPage";
+import { PersonalInfoPage } from "@/pages/PersonalInfoPage";
+import { MedicalRecordsPage } from "@/pages/MedicalRecordsPage";
 import AuthPage from "@/pages/auth-page";
 import { useUser } from "@/hooks/use-user";
 
@@ -31,8 +34,15 @@ function Router() {
     return <AdminPage />;
   }
 
-  // Show home page for regular users
-  return <HomePage />;
+  // Show regular user routes
+  return (
+    <Switch>
+      <Route path="/" component={HomePage} />
+      <Route path="/personal-info" component={PersonalInfoPage} />
+      <Route path="/medical-records" component={MedicalRecordsPage} />
+      <Route component={NotFound} />
+    </Switch>
+  );
 }
 
 function App() {
