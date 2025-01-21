@@ -23,9 +23,10 @@ export function AppointmentScheduler() {
         throw new Error("모든 필드를 입력해주세요");
       }
 
-      const appointmentDate = new Date(date);
+      // Create a new Date object for the appointment
+      const appointmentDate = new Date(date.getTime());
       const [hours, minutes] = time.split(':');
-      appointmentDate.setHours(parseInt(hours), parseInt(minutes));
+      appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
       const response = await fetch('/api/appointments', {
         method: 'POST',
