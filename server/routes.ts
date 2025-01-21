@@ -86,10 +86,15 @@ async function setupMailer() {
   }
 }
 
-async function sendNotificationEmail(subject: string, content: { text: string, html?: string }) {
+async function sendNotificationEmail(subject: string, content: { text: string, html?: string }, toEmail?: string) {
   if (!mailer) {
-    console.log('Mailer not configured, skipping email notification');
-    return;
+    console.log('Mailer not configured, attempting to setup mailer...');
+    await setupMailer();
+
+    if (!mailer) {
+      console.error('Failed to setup mailer after attempt');
+      return;
+    }
   }
 
   try {
@@ -99,19 +104,33 @@ async function sendNotificationEmail(subject: string, content: { text: string, h
       .limit(1);
 
     if (!settings) {
-      console.log('No SMTP settings found');
+      console.error('No SMTP settings found in database');
       return;
     }
 
+    const recipient = toEmail || settings.fromEmail;
+
+    console.log('Attempting to send email with settings:', {
+      from: settings.fromEmail,
+      to: recipient,
+      subject
+    });
+
     await mailer.sendMail({
       from: settings.fromEmail,
-      to: settings.fromEmail,
+      to: recipient,
       subject,
       text: content.text,
       html: content.html || content.text,
     });
+
+    console.log('Email sent successfully');
   } catch (error) {
     console.error('Error sending notification email:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
+    }
   }
 }
 
@@ -902,7 +921,8 @@ export function registerRoutes(app: Express): Server {
         {
           text: `의료 관리 시스템의 서브관리자로 초대되었습니다.\n\n초대 링크: ${invitationUrl}\n\n이 링크는 7일간 유효합니다.`,
           html: generateInvitationEmailHtml(invitationUrl)
-        }
+        },
+        email // Pass the invitation recipient's email
       );
 
       res.json({
