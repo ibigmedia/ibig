@@ -315,7 +315,7 @@ export function MedicalForm({ isHealthRecordOnly = false }: Props) {
       <div className="flex justify-between items-center">
         <Button onClick={onSubmit} className="flex items-center gap-2">
           <Save className="h-4 w-4" />
-          {t('save')}
+          저장
         </Button>
         {!isHealthRecordOnly && (
           <div className="w-48">
@@ -327,21 +327,21 @@ export function MedicalForm({ isHealthRecordOnly = false }: Props) {
       {!isHealthRecordOnly && (
         <Card>
           <CardHeader>
-            <h3 className="text-lg font-bold">{t('medical.personalInfo')}</h3>
+            <h3 className="text-xl font-semibold">기본 정보</h3>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>{t('medical.name')}</Label>
+                <Label>이름</Label>
                 <Input {...register('name')} />
               </div>
               <div>
-                <Label>{t('medical.birthdate')}</Label>
+                <Label>생년월일</Label>
                 <Input type="date" {...register('birthDate')} />
               </div>
             </div>
             <div>
-              <Label>{t('medical.notes')}</Label>
+              <Label>메모</Label>
               <Textarea {...register('notes')} />
             </div>
           </CardContent>
@@ -350,7 +350,7 @@ export function MedicalForm({ isHealthRecordOnly = false }: Props) {
 
       <Card>
         <CardHeader>
-          <h3 className="text-lg font-bold">{t('medical.healthInfo')}</h3>
+          <h3 className="text-xl font-semibold">건강 정보</h3>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center space-x-2">
@@ -359,15 +359,21 @@ export function MedicalForm({ isHealthRecordOnly = false }: Props) {
               checked={isDiabetic}
               onCheckedChange={(checked) => setValue('isDiabetic', checked as boolean)}
             />
-            <Label htmlFor="diabetesCheck">{t('medical.diabetic')}</Label>
+            <Label htmlFor="diabetesCheck">당뇨병 여부</Label>
           </div>
           <div>
-            <Label>{t('medical.drugAllergy')}</Label>
-            <Textarea {...register('drugAllergies')} placeholder={t('medical.drugAllergyPlaceholder')} />
+            <Label>약물 알레르기</Label>
+            <Textarea
+              {...register('drugAllergies')}
+              placeholder="약물 알레르기가 있다면 입력해주세요."
+            />
           </div>
           <div>
-            <Label>{t('medical.foodAllergy')}</Label>
-            <Textarea {...register('foodAllergies')} placeholder={t('medical.foodAllergyPlaceholder')} />
+            <Label>음식 알레르기</Label>
+            <Textarea
+              {...register('foodAllergies')}
+              placeholder="음식 알레르기가 있다면 입력해주세요."
+            />
           </div>
         </CardContent>
       </Card>
