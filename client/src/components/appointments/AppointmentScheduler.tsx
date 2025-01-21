@@ -36,7 +36,7 @@ export function AppointmentScheduler() {
         body: JSON.stringify({
           date: appointmentDate.toISOString(),
           department,
-          status: 'pending',
+          status: 'pending'
         }),
         credentials: 'include',
       });

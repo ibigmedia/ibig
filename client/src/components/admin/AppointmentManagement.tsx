@@ -25,7 +25,6 @@ interface Appointment {
   date: string;
   department: string;
   status: string;
-  notes?: string;
   user?: {
     username: string;
   };
@@ -86,7 +85,6 @@ export function AppointmentManagement() {
                 <TableHead>날짜</TableHead>
                 <TableHead>진료과</TableHead>
                 <TableHead>상태</TableHead>
-                <TableHead>비고</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -119,7 +117,6 @@ export function AppointmentManagement() {
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell>{appointment.notes}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

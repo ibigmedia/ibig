@@ -79,7 +79,6 @@ export const appointments = pgTable("appointments", {
   date: timestamp("date").notNull(),
   department: text("department").notNull(),
   status: text("status").notNull().default('pending'),
-  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
