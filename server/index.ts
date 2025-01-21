@@ -1,10 +1,12 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { monitoringMiddleware, metricsEndpoint } from "./monitoring";
-import { loggerMiddleware } from "./logger";
+import { registerRoutes } from "./routes";
 import cluster from "cluster";
 import os from "os";
+
+// Initialize monitoring and logging after express
+import { monitoringMiddleware, metricsEndpoint } from "./monitoring";
+import { loggerMiddleware } from "./logger";
 
 // Auto-restart using cluster
 if (cluster.isPrimary && process.env.NODE_ENV === "production") {
@@ -22,18 +24,20 @@ if (cluster.isPrimary && process.env.NODE_ENV === "production") {
   });
 } else {
   const app = express();
+
+  // Basic middleware
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
 
-  // Add monitoring and logging middleware
-  app.use(monitoringMiddleware);
+  // Add monitoring middleware first
+  app.use("/", monitoringMiddleware);
   app.use(loggerMiddleware);
 
   // Expose metrics endpoint
   app.get("/metrics", metricsEndpoint);
 
   // Request logging middleware
-  app.use((req, res, next) => {
+  app.use((req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
     const path = req.path;
     let capturedJsonResponse: Record<string, any> | undefined = undefined;
