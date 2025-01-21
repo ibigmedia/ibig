@@ -5,15 +5,27 @@ import { MedicalForm } from '@/components/medical/MedicalForm';
 import { AppointmentScheduler } from '@/components/appointments/AppointmentScheduler';
 import { MedicationTracker } from '@/components/medications/MedicationTracker';
 import { WelcomePage } from '@/components/common/WelcomePage';
-import { useLocation } from 'wouter';
+import { useLocation, useSearch } from 'wouter';
 
 export function HomePage() {
   const { t } = useLanguage();
-  const [showWelcome, setShowWelcome] = React.useState(true);
   const [location] = useLocation();
+  const [search] = useSearch();
+
+  // Check if welcome page has been shown before
+  const [showWelcome, setShowWelcome] = React.useState(() => {
+    const welcomeShown = localStorage.getItem('welcomeShown');
+    return !welcomeShown;
+  });
 
   // Parse the tab from URL
-  const tab = new URLSearchParams(location.split('?')[1]).get('tab') || 'medical';
+  const tab = new URLSearchParams(search).get('tab') || 'medical';
+
+  // When user clicks to start, save that welcome has been shown
+  const handleStartClick = () => {
+    localStorage.setItem('welcomeShown', 'true');
+    setShowWelcome(false);
+  };
 
   if (showWelcome) {
     return (
@@ -21,7 +33,7 @@ export function HomePage() {
         <WelcomePage />
         <div className="flex justify-center mt-8">
           <button
-            onClick={() => setShowWelcome(false)}
+            onClick={handleStartClick}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
           >
             시작하기

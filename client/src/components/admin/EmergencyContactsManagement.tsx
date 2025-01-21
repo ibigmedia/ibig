@@ -14,9 +14,16 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import type { SelectEmergencyContact } from "@db/schema";
 
+interface EmergencyContactWithUser extends SelectEmergencyContact {
+  user: {
+    username: string;
+    email?: string | null;
+  };
+}
+
 export function EmergencyContactsManagement() {
   const { t } = useLanguage();
-  const { data: contacts = [] } = useQuery<SelectEmergencyContact[]>({
+  const { data: contacts = [] } = useQuery<EmergencyContactWithUser[]>({
     queryKey: ['/api/admin/emergency-contacts'],
   });
 
@@ -30,6 +37,7 @@ export function EmergencyContactsManagement() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>환자명</TableHead>
                 <TableHead>이름</TableHead>
                 <TableHead>관계</TableHead>
                 <TableHead>연락처</TableHead>
@@ -41,6 +49,7 @@ export function EmergencyContactsManagement() {
             <TableBody>
               {contacts.map((contact) => (
                 <TableRow key={contact.id}>
+                  <TableCell>{contact.user.username}</TableCell>
                   <TableCell>{contact.name}</TableCell>
                   <TableCell>{contact.relationship}</TableCell>
                   <TableCell>{contact.phoneNumber}</TableCell>

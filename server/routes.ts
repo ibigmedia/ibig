@@ -501,9 +501,28 @@ export function registerRoutes(app: Express): Server {
     }
 
     try {
-      const contacts = await db.query.emergencyContacts.findMany();
+      const contacts = await db
+        .select({
+          id: emergencyContacts.id,
+          userId: emergencyContacts.userId,
+          name: emergencyContacts.name,
+          relationship: emergencyContacts.relationship,
+          phoneNumber: emergencyContacts.phoneNumber,
+          email: emergencyContacts.email,
+          isMainContact: emergencyContacts.isMainContact,
+          createdAt: emergencyContacts.createdAt,
+          updatedAt: emergencyContacts.updatedAt,
+          user: {
+            username: users.username,
+            email: users.email,
+          },
+        })
+        .from(emergencyContacts)
+        .leftJoin(users, eq(emergencyContacts.userId, users.id));
+
       res.json(contacts);
     } catch (error) {
+      console.error('Error fetching emergency contacts:', error);
       res.status(500).send("Error fetching emergency contacts");
     }
   });
