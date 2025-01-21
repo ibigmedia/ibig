@@ -11,11 +11,16 @@ import { DiabetesManagement } from "@/components/medical/DiabetesManagement";
 import { MedicationManagement } from "@/components/medical/MedicationManagement";
 import { PersonalInfoForm } from "@/components/personal/PersonalInfoForm";
 import { EmergencyContacts } from "@/components/user/EmergencyContacts";
+import { useQuery } from "@tanstack/react-query";
 
 export function MedicalRecordsPage() {
+  // Fetch user's medical records
+  const { data: medicalRecords } = useQuery({
+    queryKey: ['/api/medical-records'],
+  });
+
   return (
     <div className="min-h-screen bg-background p-2 sm:p-4 md:p-6">
-      {/* 모바일에서는 작은 패딩, 데스크톱에서는 큰 패딩 */}
       <div className="mx-auto max-w-5xl">
         <Card className="border-0 shadow-sm">
           <CardHeader className="px-3 py-4 sm:p-6">
@@ -66,23 +71,35 @@ export function MedicalRecordsPage() {
 
               <div className="p-3 sm:p-6">
                 <TabsContent value="personal" className="mt-0 focus-visible:outline-none">
-                  <PersonalInfoForm />
+                  <div className="space-y-6">
+                    <div className="bg-card rounded-lg p-4 sm:p-6">
+                      <PersonalInfoForm initialData={medicalRecords?.[0]} />
+                    </div>
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="emergency" className="mt-0 focus-visible:outline-none">
-                  <EmergencyContacts />
+                  <div className="bg-card rounded-lg p-4 sm:p-6">
+                    <EmergencyContacts />
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="history" className="mt-0 focus-visible:outline-none">
-                  <MedicalHistory />
+                  <div className="bg-card rounded-lg p-4 sm:p-6">
+                    <MedicalHistory />
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="diabetes" className="mt-0 focus-visible:outline-none">
-                  <DiabetesManagement />
+                  <div className="bg-card rounded-lg p-4 sm:p-6">
+                    <DiabetesManagement />
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="medications" className="mt-0 focus-visible:outline-none">
-                  <MedicationManagement />
+                  <div className="bg-card rounded-lg p-4 sm:p-6">
+                    <MedicationManagement />
+                  </div>
                 </TabsContent>
               </div>
             </Tabs>
