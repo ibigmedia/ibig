@@ -371,6 +371,81 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.put("/api/medical-records/:id", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const recordId = parseInt(req.params.id);
+
+      // Verify the record belongs to the user
+      const [existingRecord] = await db
+        .select()
+        .from(medicalRecords)
+        .where(
+          and(
+            eq(medicalRecords.id, recordId),
+            eq(medicalRecords.userId, req.user.id)
+          )
+        )
+        .limit(1);
+
+      if (!existingRecord) {
+        return res.status(404).send("Record not found");
+      }
+
+      const [updatedRecord] = await db
+        .update(medicalRecords)
+        .set({
+          ...req.body,
+          updatedAt: new Date(),
+        })
+        .where(eq(medicalRecords.id, recordId))
+        .returning();
+
+      res.json(updatedRecord);
+    } catch (error) {
+      console.error('Error updating medical record:', error);
+      res.status(500).send("Error updating medical record");
+    }
+  });
+
+  app.delete("/api/medical-records/:id", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const recordId = parseInt(req.params.id);
+
+      // Verify the record belongs to the user
+      const [existingRecord] = await db
+        .select()
+        .from(medicalRecords)
+        .where(
+          and(
+            eq(medicalRecords.id, recordId),
+            eq(medicalRecords.userId, req.user.id)
+          )
+        )
+        .limit(1);
+
+      if (!existingRecord) {
+        return res.status(404).send("Record not found");
+      }
+
+      await db
+        .delete(medicalRecords)
+        .where(eq(medicalRecords.id, recordId));
+
+      res.json({ message: "Record deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting medical record:', error);
+      res.status(500).send("Error deleting medical record");
+    }
+  });
+
 
   // Medical History Export API
   app.get("/api/medical-records/export", async (req, res) => {
@@ -590,7 +665,7 @@ export function registerRoutes(app: Express): Server {
 
       // Here you would typically integrate with an email service
       // For now, we'll return the invitation token in the response
-      res.json({ 
+      res.json({
         message: "Invitation created successfully",
         invitationUrl: `${req.protocol}://${req.get('host')}/register?token=${token}`,
         expiresAt

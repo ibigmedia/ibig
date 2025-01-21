@@ -35,14 +35,20 @@ export function Header() {
         </Link>
 
         <div className="flex items-center space-x-4">
-          {user && !user.role === 'admin' && (
-            <>
-              <Link href="/">
-                <Button variant="ghost">
-                  {t('nav.dashboard')}
-                </Button>
-              </Link>
-            </>
+          {user && user.role !== 'admin' && (
+            <Link href="/">
+              <Button variant="ghost">
+                {t('nav.dashboard')}
+              </Button>
+            </Link>
+          )}
+
+          {user && user.role === 'admin' && (
+            <Link href="/admin">
+              <Button variant="ghost">
+                {t('nav.admin')}
+              </Button>
+            </Link>
           )}
 
           <DropdownMenu>
