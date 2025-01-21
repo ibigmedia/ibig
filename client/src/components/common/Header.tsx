@@ -17,25 +17,24 @@ export function Header() {
   const { language, setLanguage, t } = useLanguage();
   const { theme, setTheme } = useTheme();
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   return (
     <header className="border-b">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/">
-          <a className="text-2xl font-bold">Grace River Health</a>
+          <Button variant="ghost" className="text-2xl font-bold px-0">
+            Grace River Health
+          </Button>
         </Link>
 
         <div className="flex items-center space-x-4">
-          {user && user.role !== 'admin' && (
-            <>
-              <Link href="/personal-info">
-                <Button variant="ghost">개인정보 관리</Button>
-              </Link>
-              <Link href="/medical-records">
-                <Button variant="ghost">의료기록 관리</Button>
-              </Link>
-            </>
-          )}
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -65,23 +64,14 @@ export function Header() {
           </Button>
 
           {user ? (
-            <>
-              {user.role === 'admin' ? (
-                <Link href="/admin">
-                  <Button variant="ghost">{t('nav.admin')}</Button>
-                </Link>
-              ) : (
-                <Link href="/dashboard">
-                  <Button variant="ghost">대시보드</Button>
-                </Link>
-              )}
-              <Button variant="outline" onClick={() => logout()}>
-                {t('auth.logout')}
-              </Button>
-            </>
+            <Button variant="outline" onClick={handleLogout}>
+              {language === 'ko' ? '로그아웃' : 'Logout'}
+            </Button>
           ) : (
             <Link href="/auth">
-              <Button variant="outline">{t('auth.login')}</Button>
+              <Button variant="outline">
+                {language === 'ko' ? '로그인' : 'Login'}
+              </Button>
             </Link>
           )}
         </div>
