@@ -438,7 +438,6 @@ export function registerRoutes(app: Express): Server {
           date: appointments.date,
           department: appointments.department,
           status: appointments.status,
-          notes: appointments.notes,
           user: {
             username: users.username,
           },
