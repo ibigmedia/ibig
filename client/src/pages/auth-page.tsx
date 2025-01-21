@@ -37,6 +37,7 @@ export default function AuthPage() {
     defaultValues: {
       username: "",
       password: "",
+      role: "user" as const,
     },
   });
 
@@ -49,24 +50,24 @@ export default function AuthPage() {
       if (!result.ok) {
         toast({
           variant: "destructive",
-          title: t('auth.error'),
+          title: "오류",
           description: result.message,
         });
         return;
       }
 
       toast({
-        title: t('auth.success'),
+        title: "성공",
         description: isRegistering
-          ? t('auth.registrationSuccess')
-          : t('auth.loginSuccess'),
+          ? "회원가입이 완료되었습니다"
+          : "로그인되었습니다",
       });
 
       setLocation("/");
     } catch (error) {
       toast({
         variant: "destructive",
-        title: t('auth.error'),
+        title: "오류",
         description: error instanceof Error ? error.message : String(error),
       });
     }
@@ -76,11 +77,11 @@ export default function AuthPage() {
     <div className="container max-w-[400px] py-16">
       <Card>
         <CardHeader>
-          <CardTitle>{isRegistering ? t('auth.register') : t('auth.login')}</CardTitle>
+          <CardTitle>{isRegistering ? "회원가입" : "로그인"}</CardTitle>
           <CardDescription>
             {isRegistering
-              ? t('auth.registerDescription')
-              : t('auth.loginDescription')}
+              ? "새로운 계정을 만들어주세요"
+              : "계정에 로그인하세요"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -91,7 +92,7 @@ export default function AuthPage() {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('auth.username')}</FormLabel>
+                    <FormLabel>아이디</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -105,7 +106,7 @@ export default function AuthPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('auth.password')}</FormLabel>
+                    <FormLabel>비밀번호</FormLabel>
                     <FormControl>
                       <Input type="password" {...field} />
                     </FormControl>
@@ -115,7 +116,7 @@ export default function AuthPage() {
               />
 
               <Button type="submit" className="w-full">
-                {isRegistering ? t('auth.register') : t('auth.login')}
+                {isRegistering ? "회원가입" : "로그인"}
               </Button>
 
               <Button
@@ -124,7 +125,9 @@ export default function AuthPage() {
                 className="w-full"
                 onClick={() => setIsRegistering(!isRegistering)}
               >
-                {isRegistering ? t('auth.haveAccount') : t('auth.needAccount')}
+                {isRegistering
+                  ? "이미 계정이 있으신가요? 로그인하기"
+                  : "계정이 없으신가요? 회원가입하기"}
               </Button>
             </form>
           </Form>
