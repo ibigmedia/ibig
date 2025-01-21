@@ -23,7 +23,6 @@ export function AppointmentScheduler() {
         throw new Error("모든 필드를 입력해주세요");
       }
 
-      // Create a new Date object for the appointment
       const appointmentDate = new Date(date.getTime());
       const [hours, minutes] = time.split(':');
       appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
@@ -35,14 +34,14 @@ export function AppointmentScheduler() {
         },
         body: JSON.stringify({
           date: appointmentDate.toISOString(),
-          department,
-          status: 'pending'
+          department
         }),
         credentials: 'include',
       });
 
       if (!response.ok) {
-        throw new Error(await response.text());
+        const errorText = await response.text();
+        throw new Error(errorText);
       }
 
       return response.json();
@@ -52,10 +51,8 @@ export function AppointmentScheduler() {
         title: "예약 완료",
         description: "진료 예약이 성공적으로 생성되었습니다.",
       });
-      // Reset form
       setTime("");
       setDepartment("");
-      // Refresh appointments list
       queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
     },
     onError: (error: Error) => {

@@ -488,9 +488,7 @@ export function registerRoutes(app: Express): Server {
           userId: req.user.id,
           date: new Date(req.body.date),
           department: req.body.department,
-          status: req.body.status || 'pending',
-          createdAt: new Date(),
-          updatedAt: new Date()
+          status: 'pending'
         })
         .returning();
 
@@ -903,9 +901,9 @@ export function registerRoutes(app: Express): Server {
 
       const [existingContact] = await db
         .select()
-        .from(emergencyContacts)        .where(
-          and(
-            eq(emergencyContacts.id, contactId),
+        .from(emergencyContacts)
+        .where(
+          and(eq(emergencyContacts.id, contactId),
             eq(emergencyContacts.userId, req.user.id)
           )
         )
