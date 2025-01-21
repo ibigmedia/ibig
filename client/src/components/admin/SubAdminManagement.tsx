@@ -16,11 +16,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Shield, ShieldOff } from "lucide-react";
+import { UserPlus, Shield, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { SelectUser } from "@db/schema";
 
@@ -30,6 +31,7 @@ export function SubAdminManagement() {
   const queryClient = useQueryClient();
   const [showInviteDialog, setShowInviteDialog] = React.useState(false);
   const [email, setEmail] = React.useState('');
+  const [invitationUrl, setInvitationUrl] = React.useState('');
 
   const { data: subadmins = [] } = useQuery<SelectUser[]>({
     queryKey: ['/api/admin/subadmins'],
@@ -55,14 +57,12 @@ export function SubAdminManagement() {
 
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
-        title: '초대 성공',
-        description: '서브관리자 초대 이메일이 전송되었습니다.',
+        title: '초대 생성 성공',
+        description: '초대 링크가 생성되었습니다.',
       });
-      setShowInviteDialog(false);
-      setEmail('');
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/subadmins'] });
+      setInvitationUrl(data.invitationUrl);
     },
     onError: (error: Error) => {
       toast({
@@ -79,21 +79,40 @@ export function SubAdminManagement() {
     inviteMutation.mutate(email);
   };
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: '복사 완료',
+        description: '초대 링크가 클립보드에 복사되었습니다.',
+      });
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: '복사 실패',
+        description: '초대 링크 복사에 실패했습니다.',
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <h2 className="text-lg font-bold">{t('admin.subadmins.list')}</h2>
+          <h2 className="text-lg font-bold">서브관리자 관리</h2>
           <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
             <DialogTrigger asChild>
               <Button>
                 <UserPlus className="h-4 w-4 mr-2" />
-                {t('admin.subadmins.invite')}
+                서브관리자 초대
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{t('admin.subadmins.invite')}</DialogTitle>
+                <DialogTitle>서브관리자 초대</DialogTitle>
+                <DialogDescription>
+                  초대할 서브관리자의 이메일 주소를 입력하세요.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleInvite} className="space-y-4 pt-4">
                 <div className="space-y-2">
@@ -107,9 +126,27 @@ export function SubAdminManagement() {
                   />
                 </div>
                 <Button type="submit" className="w-full">
-                  {t('admin.users.send-invite')}
+                  초대 링크 생성
                 </Button>
               </form>
+              {invitationUrl && (
+                <div className="mt-4 space-y-2">
+                  <Label>초대 링크</Label>
+                  <div className="flex gap-2">
+                    <Input value={invitationUrl} readOnly />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => copyToClipboard(invitationUrl)}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    이 링크는 7일간 유효합니다.
+                  </p>
+                </div>
+              )}
             </DialogContent>
           </Dialog>
         </CardHeader>
@@ -120,7 +157,7 @@ export function SubAdminManagement() {
                 <TableHead>ID</TableHead>
                 <TableHead>사용자명</TableHead>
                 <TableHead>이메일</TableHead>
-                <TableHead>관리</TableHead>
+                <TableHead>권한</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -130,10 +167,10 @@ export function SubAdminManagement() {
                   <TableCell>{admin.username}</TableCell>
                   <TableCell>{admin.email}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" className="text-destructive">
-                      <ShieldOff className="h-4 w-4 mr-2" />
-                      {t('admin.subadmins.remove')}
-                    </Button>
+                    <div className="flex items-center">
+                      <Shield className="h-4 w-4 mr-2 text-primary" />
+                      서브관리자
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

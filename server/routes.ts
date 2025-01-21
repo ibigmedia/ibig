@@ -127,22 +127,26 @@ export function registerRoutes(app: Express): Server {
         todayAppointments,
         activeMedications
       ] = await Promise.all([
-        // Exclude admin and subadmin users from the count
-        db.select()
+        // Count only regular users (not admin or subadmin)
+        db.select({ count: sql`count(*)` })
           .from(users)
           .where(eq(users.role, 'user'))
-          .execute()
-          .then(users => users.length),
-        db.select()
+          .then(result => Number(result[0].count)),
+        // Today's appointments
+        db.select({ count: sql`count(*)` })
           .from(appointments)
           .where(sql`DATE(${appointments.date}) = ${today.toISOString().split('T')[0]}`)
-          .execute()
-          .then(appointments => appointments.length),
-        db.select()
+          .then(result => Number(result[0].count)),
+        // Active medications
+        db.select({ count: sql`count(*)` })
           .from(medications)
-          .where(sql`${medications.endDate} IS NULL`)
-          .execute()
-          .then(medications => medications.length)
+          .where(
+            and(
+              sql`${medications.endDate} IS NULL OR ${medications.endDate} >= CURRENT_DATE`,
+              sql`${medications.startDate} <= CURRENT_DATE`
+            )
+          )
+          .then(result => Number(result[0].count))
       ]);
 
       res.json({
@@ -584,11 +588,16 @@ export function registerRoutes(app: Express): Server {
         })
         .returning();
 
-      // TODO: Send invitation email
-
-      res.json({ message: "Invitation sent successfully" });
+      // Here you would typically integrate with an email service
+      // For now, we'll return the invitation token in the response
+      res.json({ 
+        message: "Invitation created successfully",
+        invitationUrl: `${req.protocol}://${req.get('host')}/register?token=${token}`,
+        expiresAt
+      });
     } catch (error) {
-      res.status(500).send("Error sending invitation");
+      console.error('Error creating invitation:', error);
+      res.status(500).send("Error creating invitation");
     }
   });
 

@@ -9,7 +9,6 @@ import AuthPage from "@/pages/auth-page";
 import { useUser } from "@/hooks/use-user";
 import { Loader2 } from "lucide-react";
 import { Header } from "@/components/common/Header";
-import { UserDashboardPage } from "@/pages/UserDashboardPage";
 import { AdminPage } from "@/pages/AdminPage";
 
 function Router() {
@@ -29,11 +28,21 @@ function Router() {
     return <AuthPage />;
   }
 
+  // Show admin dashboard for admin users
+  if (user.role === 'admin') {
+    return (
+      <Switch>
+        <Route path="/" component={AdminPage} />
+        <Route path="/admin" component={AdminPage} />
+        <Route component={NotFound} />
+      </Switch>
+    );
+  }
+
+  // Show regular user pages for non-admin users
   return (
     <Switch>
       <Route path="/" component={HomePage} />
-      <Route path="/dashboard" component={UserDashboardPage} />
-      {user.role === 'admin' && <Route path="/admin" component={AdminPage} />}
       <Route component={NotFound} />
     </Switch>
   );
