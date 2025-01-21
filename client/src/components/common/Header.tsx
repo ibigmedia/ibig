@@ -28,19 +28,14 @@ export function Header() {
 
   const renderUserLinks = () => (
     <>
-      <Link href="/">
-        <Button variant="ghost">
-          대시보드
-        </Button>
-      </Link>
       <Link href="/personal">
         <Button variant="ghost">
           개인정보
         </Button>
       </Link>
-      <Link href="/medical-records">
+      <Link href="/">
         <Button variant="ghost">
-          의료기록
+          대시보드
         </Button>
       </Link>
     </>
