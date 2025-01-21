@@ -7,6 +7,7 @@ import { MedicationManagement } from '@/components/medical/MedicationManagement'
 import { WelcomePage } from '@/components/common/WelcomePage';
 import { EmergencyContacts } from '@/components/medical/EmergencyContacts';
 import { useLocation } from 'wouter';
+import { PersonalInfoForm } from '@/components/personal/PersonalInfoForm';
 
 export function HomePage() {
   const { t } = useLanguage();
@@ -56,7 +57,7 @@ export function HomePage() {
           <div className="grid gap-6">
             <section>
               <h2 className="text-2xl font-semibold mb-4">기본 정보</h2>
-              <MedicalForm />
+              <PersonalInfoForm />
             </section>
             <section>
               <h2 className="text-2xl font-semibold mb-4">비상 연락망</h2>
@@ -69,7 +70,7 @@ export function HomePage() {
         <TabsContent value="health">
           <div className="space-y-6">
             <h2 className="text-2xl font-semibold">건강 기록</h2>
-            <MedicalForm isHealthRecordOnly />
+            <MedicalForm />
           </div>
         </TabsContent>
 

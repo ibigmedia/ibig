@@ -1,7 +1,6 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,15 +8,7 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { MedicalExport } from './MedicalExport';
 import { Save, Plus } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -26,10 +17,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { EmergencyContacts } from './EmergencyContacts';
 
-interface Props {
-  isHealthRecordOnly?: boolean;
+interface MedicalFormData {
+  isDiabetic: boolean;
+  drugAllergies?: string;
+  foodAllergies?: string;
 }
 
 interface DiseaseHistoryData {
@@ -46,23 +38,7 @@ interface BloodPressureData {
   notes?: string;
 }
 
-interface BloodSugarData {
-  bloodSugar: number;
-  measurementType: string;
-  notes?: string;
-}
-
-interface MedicalFormData {
-  name: string;
-  birthDate: string;
-  isDiabetic: boolean;
-  notes?: string;
-  drugAllergies?: string;
-  foodAllergies?: string;
-}
-
-export function MedicalForm({ isHealthRecordOnly = false }: Props) {
-  const { t } = useLanguage();
+export function MedicalForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -75,50 +51,15 @@ export function MedicalForm({ isHealthRecordOnly = false }: Props) {
     queryKey: ['/api/blood-pressure'],
   });
 
-  const { data: bloodSugarRecords = [] } = useQuery({
-    queryKey: ['/api/blood-sugar'],
-  });
-
   const { data: diseaseHistories = [] } = useQuery({
     queryKey: ['/api/disease-histories'],
   });
 
   const { register, handleSubmit, setValue, watch } = useForm<MedicalFormData>({
     defaultValues: {
-      name: '',
-      birthDate: '',
       isDiabetic: false,
-      notes: '',
       drugAllergies: '',
       foodAllergies: '',
-    },
-  });
-
-  // Blood Pressure Form
-  const {
-    register: registerBP,
-    handleSubmit: handleSubmitBP,
-    reset: resetBP,
-  } = useForm<BloodPressureData>({
-    defaultValues: {
-      systolic: 120,
-      diastolic: 80,
-      pulse: 72,
-      notes: '',
-    },
-  });
-
-  // Blood Sugar Form
-  const {
-    register: registerBS,
-    handleSubmit: handleSubmitBS,
-    setValue: setValueBS,
-    reset: resetBS,
-  } = useForm<BloodSugarData>({
-    defaultValues: {
-      bloodSugar: 100,
-      measurementType: 'before_meal',
-      notes: '',
     },
   });
 
@@ -136,12 +77,23 @@ export function MedicalForm({ isHealthRecordOnly = false }: Props) {
     },
   });
 
+  // Blood Pressure Form
+  const {
+    register: registerBP,
+    handleSubmit: handleSubmitBP,
+    reset: resetBP,
+  } = useForm<BloodPressureData>({
+    defaultValues: {
+      systolic: 120,
+      diastolic: 80,
+      pulse: 72,
+      notes: '',
+    },
+  });
+
   React.useEffect(() => {
     if (medicalRecord) {
-      setValue('name', medicalRecord.name);
-      setValue('birthDate', medicalRecord.birthDate);
       setValue('isDiabetic', medicalRecord.isDiabetic);
-      setValue('notes', medicalRecord.notes);
       setValue('drugAllergies', medicalRecord.drugAllergies);
       setValue('foodAllergies', medicalRecord.foodAllergies);
     }
@@ -167,15 +119,50 @@ export function MedicalForm({ isHealthRecordOnly = false }: Props) {
     },
     onSuccess: () => {
       toast({
-        title: t('success'),
-        description: t('medical.saveSuccess'),
+        title: '성공',
+        description: '건강정보가 저장되었습니다.',
       });
       queryClient.invalidateQueries({ queryKey: ['/api/medical-records'] });
     },
     onError: (error: Error) => {
       toast({
         variant: 'destructive',
-        title: t('error'),
+        title: '오류',
+        description: error.message,
+      });
+    },
+  });
+
+  // Disease History Mutation
+  const diseaseHistoryMutation = useMutation({
+    mutationFn: async (data: DiseaseHistoryData) => {
+      const response = await fetch('/api/disease-histories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: '성공',
+        description: '과거 병력이 추가되었습니다.',
+      });
+      resetDH();
+      queryClient.invalidateQueries({ queryKey: ['/api/disease-histories'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: '오류',
         description: error.message,
       });
     },
@@ -204,8 +191,8 @@ export function MedicalForm({ isHealthRecordOnly = false }: Props) {
     },
     onSuccess: () => {
       toast({
-        title: t('success'),
-        description: t('medical.bloodPressureSaveSuccess'),
+        title: '성공',
+        description: '혈압 기록이 추가되었습니다.',
       });
       resetBP();
       queryClient.invalidateQueries({ queryKey: ['/api/blood-pressure'] });
@@ -213,80 +200,7 @@ export function MedicalForm({ isHealthRecordOnly = false }: Props) {
     onError: (error: Error) => {
       toast({
         variant: 'destructive',
-        title: t('error'),
-        description: error.message,
-      });
-    },
-  });
-
-  // Blood Sugar Mutation
-  const bloodSugarMutation = useMutation({
-    mutationFn: async (data: BloodSugarData) => {
-      const response = await fetch('/api/blood-sugar', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...data,
-          measuredAt: new Date().toISOString(),
-        }),
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: t('success'),
-        description: t('medical.bloodSugarSaveSuccess'),
-      });
-      resetBS();
-      queryClient.invalidateQueries({ queryKey: ['/api/blood-sugar'] });
-    },
-    onError: (error: Error) => {
-      toast({
-        variant: 'destructive',
-        title: t('error'),
-        description: error.message,
-      });
-    },
-  });
-
-  // Disease History Mutation
-  const diseaseHistoryMutation = useMutation({
-    mutationFn: async (data: DiseaseHistoryData) => {
-      const response = await fetch('/api/disease-histories', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: t('success'),
-        description: t('medical.diseaseHistorySaveSuccess'),
-      });
-      resetDH();
-      queryClient.invalidateQueries({ queryKey: ['/api/disease-histories'] });
-    },
-    onError: (error: Error) => {
-      toast({
-        variant: 'destructive',
-        title: t('error'),
+        title: '오류',
         description: error.message,
       });
     },
@@ -296,58 +210,16 @@ export function MedicalForm({ isHealthRecordOnly = false }: Props) {
     mutation.mutate(data);
   });
 
-  const onSubmitBP = handleSubmitBP((data) => {
-    bloodPressureMutation.mutate(data);
-  });
-
-  const onSubmitBS = handleSubmitBS((data) => {
-    bloodSugarMutation.mutate(data);
-  });
-
   const onSubmitDH = handleSubmitDH((data) => {
     diseaseHistoryMutation.mutate(data);
   });
 
-  const isDiabetic = watch('isDiabetic');
+  const onSubmitBP = handleSubmitBP((data) => {
+    bloodPressureMutation.mutate(data);
+  });
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <Button onClick={onSubmit} className="flex items-center gap-2">
-          <Save className="h-4 w-4" />
-          저장
-        </Button>
-        {!isHealthRecordOnly && (
-          <div className="w-48">
-            <MedicalExport />
-          </div>
-        )}
-      </div>
-
-      {!isHealthRecordOnly && (
-        <Card>
-          <CardHeader>
-            <h3 className="text-xl font-semibold">기본 정보</h3>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>이름</Label>
-                <Input {...register('name')} />
-              </div>
-              <div>
-                <Label>생년월일</Label>
-                <Input type="date" {...register('birthDate')} />
-              </div>
-            </div>
-            <div>
-              <Label>메모</Label>
-              <Textarea {...register('notes')} />
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       <Card>
         <CardHeader>
           <h3 className="text-xl font-semibold">건강 정보</h3>
@@ -356,7 +228,7 @@ export function MedicalForm({ isHealthRecordOnly = false }: Props) {
           <div className="flex items-center space-x-2">
             <Checkbox
               id="diabetesCheck"
-              checked={isDiabetic}
+              checked={watch('isDiabetic')}
               onCheckedChange={(checked) => setValue('isDiabetic', checked as boolean)}
             />
             <Label htmlFor="diabetesCheck">당뇨병 여부</Label>
@@ -375,12 +247,16 @@ export function MedicalForm({ isHealthRecordOnly = false }: Props) {
               placeholder="음식 알레르기가 있다면 입력해주세요."
             />
           </div>
+          <Button onClick={onSubmit} className="w-full">
+            <Save className="h-4 w-4 mr-2" />
+            저장
+          </Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <h3 className="text-lg font-bold">과거 병력</h3>
+          <h3 className="text-xl font-semibold">과거 병력</h3>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={onSubmitDH} className="grid grid-cols-2 gap-4">
@@ -430,8 +306,10 @@ export function MedicalForm({ isHealthRecordOnly = false }: Props) {
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <h3 className="text-lg font-bold">혈압 관리</h3>
+        <CardHeader>
+          <h3 className="text-xl font-semibold">혈압 관리</h3>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <form onSubmit={onSubmitBP} className="flex items-center gap-2">
             <div className="grid grid-cols-4 gap-2">
               <Input
@@ -457,13 +335,12 @@ export function MedicalForm({ isHealthRecordOnly = false }: Props) {
                 {...registerBP('notes')}
               />
             </div>
-            <Button type="submit" size="sm">
-              <Plus className="h-4 w-4" />
+            <Button type="submit">
+              <Plus className="h-4 w-4 mr-2" />
               기록추가
             </Button>
           </form>
-        </CardHeader>
-        <CardContent>
+
           <Table>
             <TableHeader>
               <TableRow>
@@ -490,72 +367,6 @@ export function MedicalForm({ isHealthRecordOnly = false }: Props) {
           </Table>
         </CardContent>
       </Card>
-
-      {isDiabetic && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <h3 className="text-lg font-bold">혈당 관리</h3>
-            <form onSubmit={onSubmitBS} className="flex items-center gap-2">
-              <div className="grid grid-cols-3 gap-2">
-                <Input
-                  type="number"
-                  placeholder="혈당"
-                  className="w-24"
-                  {...registerBS('bloodSugar', { required: true })}
-                />
-                <Select
-                  onValueChange={(value) => setValueBS('measurementType', value)}
-                  defaultValue="before_meal"
-                >
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="측정시기" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="before_meal">식전</SelectItem>
-                    <SelectItem value="after_meal">식후</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  placeholder="메모"
-                  {...registerBS('notes')}
-                />
-              </div>
-              <Button type="submit" size="sm">
-                <Plus className="h-4 w-4" />
-                기록추가
-              </Button>
-            </form>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>날짜</TableHead>
-                  <TableHead>혈당</TableHead>
-                  <TableHead>측정시기</TableHead>
-                  <TableHead>메모</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bloodSugarRecords.map((record: any) => (
-                  <TableRow key={record.id}>
-                    <TableCell>
-                      {new Date(record.measuredAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>{record.bloodSugar}</TableCell>
-                    <TableCell>
-                      {record.measurementType === 'before_meal' ? '식전' : '식후'}
-                    </TableCell>
-                    <TableCell>{record.notes}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
-
-      <EmergencyContacts />
     </div>
   );
 }
