@@ -9,6 +9,8 @@ import { promisify } from "util";
 import nodemailer from "nodemailer";
 import type { Request, Response, NextFunction } from "express";
 import { getPatientProfile, updatePatientProfile } from "./routes/patient-profile";
+import { encryption } from './utils/encryption'; // Add encryption import
+import { logger } from "./logger";  // Change from '../logger' to './logger'
 
 
 const scryptAsync = promisify(scrypt);
@@ -29,6 +31,7 @@ const crypto = {
     )) as Buffer;
     return timingSafeEqual(hashedPasswordBuf, suppliedPasswordBuf);
   },
+  randomBytes: randomBytes //Added for exportId generation
 };
 
 export async function createAdminUser() {
@@ -708,11 +711,73 @@ export function registerRoutes(app: Express): Server {
         appointments: userAppointments,
         medications: userMedications,
         exportDate: new Date().toISOString(),
+        exportedBy: req.user.username,
+        exportId: crypto.randomBytes(16).toString('hex'),
       };
 
-      res.json(exportData);
+      // Generate a one-time encryption key
+      const exportKey = encryption.generateExportKey();
+
+      // Encrypt the export data
+      const encryptedData = encryption.encrypt(exportData);
+
+      // Log the export attempt
+      logger.info({
+        event: 'medical_record_export',
+        userId: req.user.id,
+        exportId: exportData.exportId,
+        timestamp: new Date().toISOString()
+      });
+
+      res.json({
+        encryptedData,
+        exportKey,
+        // Include instructions and metadata
+        metadata: {
+          exportId: exportData.exportId,
+          timestamp: exportData.exportDate,
+          format: 'AES-encrypted JSON',
+          contentType: 'medical_records_export_v1'
+        }
+      });
     } catch (error) {
+      logger.error('Error exporting medical history:', error);
       res.status(500).send("Error exporting medical history");
+    }
+  });
+
+  app.post("/api/medical-records/validate-export", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    const { encryptedData, exportKey } = req.body;
+
+    try {
+      // Attempt to decrypt and validate the data
+      const decryptedData = encryption.decrypt(encryptedData, exportKey); // Added exportKey
+
+      // Verify the data structure
+      if (!decryptedData.exportId || !decryptedData.patientInfo) {
+        return res.status(400).json({
+          valid: false,
+          message: "Invalid export data structure"
+        });
+      }
+
+      res.json({
+        valid: true,
+        metadata: {
+          exportId: decryptedData.exportId,
+          exportDate: decryptedData.exportDate,
+          patientName: decryptedData.patientInfo.name
+        }
+      });
+    } catch (error) {
+      res.status(400).json({
+        valid: false,
+        message: "Failed to validate exported data"
+      });
     }
   });
 
@@ -841,7 +906,7 @@ export function registerRoutes(app: Express): Server {
     }
 
     const userAppointments = await db.query.appointments.findMany({
-      where: eq(appointments.userId, req.user.id),
+      where: eq(appointments.userId, req.userid),
     });
     res.json(userAppointments);
   });
