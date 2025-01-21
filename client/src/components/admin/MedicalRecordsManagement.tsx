@@ -28,8 +28,6 @@ import { Label } from "@/components/ui/label";
 import { Plus, Eye, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { SelectMedicalRecord } from "@db/schema";
-import CryptoJS from 'crypto-js';
-import { SiGoogletranslate } from 'react-icons/si';
 
 interface Medication {
   id: number;
@@ -287,44 +285,6 @@ export function MedicalRecordsManagement() {
     }
   };
 
-  const translateRecord = async (text: string, sourceLang: 'ko' | 'en') => {
-    try {
-      const response = await fetch('/api/translate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text,
-          sourceLang,
-          targetLang: sourceLang === 'ko' ? 'en' : 'ko'
-        }),
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        const bytes = CryptoJS.AES.decrypt(data.translatedText, process.env.ENCRYPTION_KEY || '');
-        const translatedText = bytes.toString(CryptoJS.enc.Utf8);
-        return translatedText;
-      }
-
-      throw new Error('Translation failed');
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: '번역 오류',
-        description: error.message,
-      });
-      return null;
-    }
-  };
-
   return (
     <div className="space-y-6">
       <Card>
@@ -348,8 +308,7 @@ export function MedicalRecordsManagement() {
                     <TableHead>생년월일</TableHead>
                     <TableHead>당뇨여부</TableHead>
                     <TableHead>특이사항</TableHead>
-                    <TableHead className="w-[120px]">번역</TableHead>
-                    <TableHead className="w-[120px]">관리</TableHead>
+                    <TableHead className="w-[100px]">관리</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -359,24 +318,6 @@ export function MedicalRecordsManagement() {
                       <TableCell>{record.birthDate}</TableCell>
                       <TableCell>{record.isDiabetic ? '예' : '아니오'}</TableCell>
                       <TableCell>{record.notes}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={async () => {
-                            const translated = await translateRecord(record.notes || '', 'ko');
-                            if (translated) {
-                              toast({
-                                title: '번역 결과',
-                                description: translated,
-                              });
-                            }
-                          }}
-                          className="w-9 h-9"
-                        >
-                          <SiGoogletranslate className="h-5 w-5" />
-                        </Button>
-                      </TableCell>
                       <TableCell>
                         <Button
                           variant="ghost"
