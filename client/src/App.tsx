@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { HomePage } from "@/pages/HomePage";
 import { UserDashboardPage } from "@/pages/UserDashboardPage";
+import { PersonalInfoPage } from "@/pages/PersonalInfoPage";
 import AuthPage from "@/pages/auth-page";
 import { useUser } from "@/hooks/use-user";
 import { Loader2 } from "lucide-react";
@@ -17,7 +18,6 @@ import { InvitationPage } from "@/pages/InvitationPage";
 function Router() {
   const { user, isLoading } = useUser();
 
-  // Show loading spinner while checking auth status
   if (isLoading) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-background">
@@ -26,18 +26,15 @@ function Router() {
     );
   }
 
-  // Invitation page should be accessible without authentication
   const token = new URLSearchParams(window.location.search).get('token');
   if (token) {
     return <InvitationPage />;
   }
 
-  // Show auth page if not logged in
   if (!user) {
     return <AuthPage />;
   }
 
-  // Show admin dashboard for admin users
   if (user.role === 'admin') {
     return (
       <Switch>
@@ -48,7 +45,6 @@ function Router() {
     );
   }
 
-  // Show subadmin dashboard for subadmin users
   if (user.role === 'subadmin') {
     return (
       <Switch>
@@ -59,11 +55,11 @@ function Router() {
     );
   }
 
-  // Show regular user pages for non-admin users
   return (
     <Switch>
       <Route path="/" component={HomePage} />
       <Route path="/dashboard" component={UserDashboardPage} />
+      <Route path="/personal-info" component={PersonalInfoPage} />
       <Route component={NotFound} />
     </Switch>
   );
