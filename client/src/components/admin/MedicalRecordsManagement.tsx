@@ -142,7 +142,7 @@ export function MedicalRecordsManagement() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <h2 className="text-lg font-bold">Grace River Health</h2>
+          <h2 className="text-lg font-bold">진료 기록</h2>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="records">
