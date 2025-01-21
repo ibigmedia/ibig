@@ -2,7 +2,7 @@ import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserDashboard } from '@/components/user/UserDashboard';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { MedicationTracker } from '@/components/medications/MedicationTracker';
 import { useQuery } from '@tanstack/react-query';
 import { AppointmentScheduler } from '@/components/appointments/AppointmentScheduler';
@@ -35,13 +35,17 @@ export function HomePage() {
               </TabsList>
 
               <TabsContent value="health">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">건강 기록</h3>
-                  <p className="text-muted-foreground">
-                    귀하의 건강 기록을 확인하고 관리하세요
-                  </p>
-                  <MedicalHistory />
-                </div>
+                <Card>
+                  <CardHeader>
+                    <h3 className="text-lg font-semibold">건강 기록</h3>
+                    <p className="text-sm text-muted-foreground">
+                      귀하의 건강 기록을 확인하고 관리하세요
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <MedicalHistory />
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="medication">

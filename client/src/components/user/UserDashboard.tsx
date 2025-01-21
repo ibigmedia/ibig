@@ -18,6 +18,18 @@ export function UserDashboard() {
   const { t } = useLanguage();
   const { toast } = useToast();
 
+  const handleTabChange = (tabValue: string) => {
+    const tabElement = document.querySelector(`[value="${tabValue}"]`) as HTMLElement;
+    if (tabElement) {
+      tabElement.click();
+      // Scroll to the tabs section
+      const tabsSection = document.querySelector('.tabs-section');
+      if (tabsSection) {
+        tabsSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -55,7 +67,7 @@ export function UserDashboard() {
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => document.querySelector('[value="medication"]')?.click()}
+                onClick={() => handleTabChange('medication')}
               >
                 투약관리 보기
               </Button>
@@ -72,7 +84,7 @@ export function UserDashboard() {
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => document.querySelector('[value="appointment"]')?.click()}
+                onClick={() => handleTabChange('appointment')}
               >
                 예약 확인하기
               </Button>
