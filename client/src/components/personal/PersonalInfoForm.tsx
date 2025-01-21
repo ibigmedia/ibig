@@ -83,36 +83,36 @@ export function PersonalInfoForm() {
         <CardContent className="space-y-4 p-3 sm:p-6">
           <div className="grid gap-4 sm:gap-6">
             <div className="space-y-2">
-              <Label className="text-sm font-medium">이름</Label>
+              <Label className="text-sm font-medium block mb-1.5">이름</Label>
               <Input 
                 {...register('name')}
-                className="w-full"
+                className="w-full h-12 sm:h-10 text-base sm:text-sm"
                 placeholder="이름을 입력하세요"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-sm font-medium">생년월일</Label>
+              <Label className="text-sm font-medium block mb-1.5">생년월일</Label>
               <Input 
                 type="date"
                 {...register('birthDate')}
-                className="w-full"
+                className="w-full h-12 sm:h-10 text-base sm:text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-sm font-medium">메모</Label>
+              <Label className="text-sm font-medium block mb-1.5">메모</Label>
               <Textarea 
                 {...register('notes')}
-                className="min-h-[80px] w-full resize-none"
+                className="min-h-[100px] sm:min-h-[80px] w-full resize-none text-base sm:text-sm p-4"
                 placeholder="추가 정보를 입력하세요"
               />
             </div>
           </div>
-          <div className="pt-2">
+          <div className="pt-4">
             <Button 
               type="submit"
-              className="w-full sm:w-auto sm:min-w-[120px]"
+              className="w-full h-12 sm:h-10 text-base sm:text-sm"
             >
-              <Save className="h-4 w-4 mr-2" />
+              <Save className="h-5 w-5 sm:h-4 sm:w-4 mr-2" />
               저장
             </Button>
           </div>
