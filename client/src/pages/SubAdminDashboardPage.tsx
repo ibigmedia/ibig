@@ -19,7 +19,7 @@ export function SubAdminDashboardPage() {
       <Card className="mb-6 p-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold mb-2">{t('admin.dashboard')}</h1>
+            <h1 className="text-2xl font-bold mb-2">서브관리자 대시보드</h1>
             <p className="text-muted-foreground">
               서브관리자 대시보드입니다. 의료 기록, 예약 및 응급 연락처를 관리할 수 있습니다.
             </p>
@@ -38,15 +38,10 @@ export function SubAdminDashboardPage() {
 
       <Tabs defaultValue="medical-records" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="medical-records">{t('admin.tabs.medical-records')}</TabsTrigger>
-          <TabsTrigger value="appointments">{t('admin.tabs.appointments')}</TabsTrigger>
-          <TabsTrigger value="emergency">{t('admin.tabs.emergency')}</TabsTrigger>
-          <TabsTrigger value="users">{t('admin.tabs.users')}</TabsTrigger>
+          <TabsTrigger value="medical-records">의료 기록</TabsTrigger>
+          <TabsTrigger value="appointments">예약 관리</TabsTrigger>
+          <TabsTrigger value="emergency">응급 연락처</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="users">
-          <UserManagement />
-        </TabsContent>
 
         <TabsContent value="medical-records">
           <MedicalRecordsManagement />
