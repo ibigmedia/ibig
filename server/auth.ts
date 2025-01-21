@@ -46,15 +46,19 @@ export function setupAuth(app: Express) {
     secret: process.env.REPL_ID || "grace-river-health",
     resave: false,
     saveUninitialized: false,
-    cookie: {},
+    cookie: {
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      httpOnly: true,
+    },
     store: new MemoryStore({
-      checkPeriod: 86400000,
+      checkPeriod: 86400000, // 24 hours
     }),
   };
 
   if (app.get("env") === "production") {
     app.set("trust proxy", 1);
     sessionSettings.cookie = {
+      ...sessionSettings.cookie,
       secure: true,
     };
   }
@@ -97,6 +101,11 @@ export function setupAuth(app: Express) {
         .from(users)
         .where(eq(users.id, id))
         .limit(1);
+
+      if (!user) {
+        return done(null, false);
+      }
+
       done(null, user);
     } catch (err) {
       done(err);
@@ -154,7 +163,7 @@ export function setupAuth(app: Express) {
         .send("Invalid input: " + result.error.issues.map(i => i.message).join(", "));
     }
 
-    const cb = (err: any, user: Express.User, info: IVerifyOptions) => {
+    passport.authenticate("local", (err: any, user: Express.User, info: IVerifyOptions) => {
       if (err) {
         return next(err);
       }
@@ -170,11 +179,10 @@ export function setupAuth(app: Express) {
 
         return res.json({
           message: t('auth.loginSuccess'),
-          user: { id: user.id, username: user.username },
+          user: { id: user.id, username: user.username, role: user.role },
         });
       });
-    };
-    passport.authenticate("local", cb)(req, res, next);
+    })(req, res, next);
   });
 
   app.post("/api/logout", (req, res) => {

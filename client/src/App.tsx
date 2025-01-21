@@ -12,24 +12,26 @@ import { useUser } from "@/hooks/use-user";
 function Router() {
   const { user, isLoading } = useUser();
 
+  // Show loading spinner while checking auth status
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="min-h-screen w-full flex items-center justify-center bg-background">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
       </div>
     );
   }
 
+  // Show auth page if not logged in
   if (!user) {
     return <AuthPage />;
   }
 
-  // Admin users see admin dashboard
+  // Show admin page for admin users
   if (user.role === 'admin') {
     return <AdminPage />;
   }
 
-  // Regular users see home page
+  // Show home page for regular users
   return <HomePage />;
 }
 
