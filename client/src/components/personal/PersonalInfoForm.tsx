@@ -1,7 +1,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -78,24 +78,37 @@ export function PersonalInfoForm() {
   });
 
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={onSubmit} className="w-full">
       <Card>
-        <CardContent className="space-y-4 pt-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>이름</Label>
-              <Input {...register('name')} />
+        <CardContent className="space-y-6 p-4 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">이름</Label>
+              <Input 
+                {...register('name')}
+                className="w-full"
+              />
             </div>
-            <div>
-              <Label>생년월일</Label>
-              <Input type="date" {...register('birthDate')} />
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">생년월일</Label>
+              <Input 
+                type="date"
+                {...register('birthDate')}
+                className="w-full"
+              />
             </div>
           </div>
-          <div>
-            <Label>메모</Label>
-            <Textarea {...register('notes')} />
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">메모</Label>
+            <Textarea 
+              {...register('notes')}
+              className="min-h-[100px] w-full"
+            />
           </div>
-          <Button type="submit" className="w-full">
+          <Button 
+            type="submit"
+            className="w-full sm:w-auto"
+          >
             <Save className="h-4 w-4 mr-2" />
             저장
           </Button>
