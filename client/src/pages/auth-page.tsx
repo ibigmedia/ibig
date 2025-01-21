@@ -83,7 +83,7 @@ export default function AuthPage() {
           <CardDescription>
             {isRegistering
               ? "새로운 계정을 만들어주세요"
-              : "이메일 주소로 로그인하세요"}
+              : "아이디와 비밀번호를 입력하세요"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -94,12 +94,12 @@ export default function AuthPage() {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>이메일 주소</FormLabel>
+                    <FormLabel>아이디</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="example@domain.com" {...field} />
+                      <Input placeholder="아이디를 입력하세요" {...field} />
                     </FormControl>
                     <FormDescription>
-                      {isRegistering ? "이메일 주소를 아이디로 사용합니다" : "등록된 이메일 주소를 입력하세요"}
+                      {isRegistering ? "사용하실 아이디를 입력해주세요" : "등록된 아이디를 입력하세요"}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

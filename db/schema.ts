@@ -15,6 +15,20 @@ export const users = pgTable("users", {
   role: text("role").$type<UserRole>().notNull().default('user'),
 });
 
+// Create a base schema for user validation
+const userBaseSchema = {
+  username: z.string().min(3, "아이디는 최소 3자 이상이어야 합니다"),
+  password: z.string().min(6, "비밀번호는 최소 6자 이상이어야 합니다"),
+  email: z.string().email().optional(),
+  role: UserRole.optional(),
+};
+
+// Schema for users
+export const insertUserSchema = z.object(userBaseSchema);
+export const selectUserSchema = createSelectSchema(users);
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type SelectUser = typeof users.$inferSelect;
+
 export const medicalRecords = pgTable("medical_records", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
@@ -116,17 +130,12 @@ export const smtpSettings = pgTable("smtp_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Schema for users
-export const insertUserSchema = createInsertSchema(users);
-export const selectUserSchema = createSelectSchema(users);
-export type InsertUser = typeof users.$inferInsert;
-export type SelectUser = typeof users.$inferSelect;
-
 // Schema for medical records
 export const insertMedicalRecordSchema = createInsertSchema(medicalRecords);
 export const selectMedicalRecordSchema = createSelectSchema(medicalRecords);
 export type InsertMedicalRecord = typeof medicalRecords.$inferInsert;
 export type SelectMedicalRecord = typeof medicalRecords.$inferSelect;
+
 
 // Create schemas for medications
 export const insertMedicationSchema = createInsertSchema(medications);
