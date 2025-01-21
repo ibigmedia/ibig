@@ -86,6 +86,34 @@ async function setupMailer() {
   }
 }
 
+async function sendNotificationEmail(subject: string, text: string) {
+  if (!mailer) {
+    console.log('Mailer not configured, skipping email notification');
+    return;
+  }
+
+  try {
+    const [settings] = await db
+      .select()
+      .from(smtpSettings)
+      .limit(1);
+
+    if (!settings) {
+      console.log('No SMTP settings found');
+      return;
+    }
+
+    await mailer.sendMail({
+      from: settings.fromEmail,
+      to: settings.fromEmail, // 관리자 이메일로 발송
+      subject,
+      text,
+    });
+  } catch (error) {
+    console.error('Error sending notification email:', error);
+  }
+}
+
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
 
@@ -346,6 +374,57 @@ export function registerRoutes(app: Express): Server {
     res.json(records);
   });
 
+  app.post("/api/register", async (req, res, next) => {
+    try {
+      const result = insertUserSchema.safeParse(req.body);
+      if (!result.success) {
+        return res
+          .status(400)
+          .send("Invalid input: " + result.error.issues.map(i => i.message).join(", "));
+      }
+
+      const { username, password } = result.data;
+
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.username, username))
+        .limit(1);
+
+      if (existingUser) {
+        return res.status(400).send("Username already exists");
+      }
+
+      const hashedPassword = await crypto.hash(password);
+
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          ...result.data,
+          password: hashedPassword,
+        })
+        .returning();
+
+      // Send notification email for new user registration
+      await sendNotificationEmail(
+        '새 회원 가입 알림',
+        `새로운 회원이 가입했습니다.\n\n사용자명: ${username}\n가입일시: ${new Date().toLocaleString('ko-KR')}`
+      );
+
+      req.login(newUser, (err) => {
+        if (err) {
+          return next(err);
+        }
+        return res.json({
+          message: "Registration successful",
+          user: { id: newUser.id, username: newUser.username },
+        });
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   app.post("/api/medical-records", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -356,28 +435,33 @@ export function registerRoutes(app: Express): Server {
         where: eq(medicalRecords.userId, req.user.id),
       });
 
-      if (existingRecord) {
-        const [updatedRecord] = await db
-          .update(medicalRecords)
-          .set({
-            ...req.body,
-            updatedAt: new Date(),
-          })
-          .where(eq(medicalRecords.id, existingRecord.id))
-          .returning();
+      const record = existingRecord
+        ? (await db
+            .update(medicalRecords)
+            .set({
+              ...req.body,
+              updatedAt: new Date(),
+            })
+            .where(eq(medicalRecords.id, existingRecord.id))
+            .returning())[0]
+        : (await db
+            .insert(medicalRecords)
+            .values({
+              ...req.body,
+              userId: req.user.id,
+            })
+            .returning())[0];
 
-        return res.json(updatedRecord);
-      }
+      // Send notification email for medical record update
+      await sendNotificationEmail(
+        '의료 기록 업데이트 알림',
+        `사용자의 의료 기록이 ${existingRecord ? '수정' : '생성'}되었습니다.\n\n` +
+          `사용자: ${req.user.username}\n` +
+          `시간: ${new Date().toLocaleString('ko-KR')}\n` +
+          `변경 내용: ${JSON.stringify(req.body, null, 2)}`
+      );
 
-      const [newRecord] = await db
-        .insert(medicalRecords)
-        .values({
-          ...req.body,
-          userId: req.user.id,
-        })
-        .returning();
-
-      res.json(newRecord);
+      res.json(record);
     } catch (error) {
       console.error('Error saving medical record:', error);
       res.status(500).send("Error saving medical record");
@@ -477,7 +561,7 @@ export function registerRoutes(app: Express): Server {
       ]);
 
       const exportData = {
-        patientInfo: records[0], 
+        patientInfo: records[0],
         appointments: userAppointments,
         medications: userMedications,
         exportDate: new Date().toISOString(),
@@ -516,6 +600,18 @@ export function registerRoutes(app: Express): Server {
           userId: req.user.id,
         })
         .returning();
+
+      // Send notification email for new emergency contact
+      await sendNotificationEmail(
+        '비상 연락처 추가 알림',
+        `사용자가 새로운 비상 연락처를 추가했습니다.\n\n` +
+          `사용자: ${req.user.username}\n` +
+          `연락처 정보:\n` +
+          `이름: ${contact.name}\n` +
+          `관계: ${contact.relationship}\n` +
+          `전화번호: ${contact.phoneNumber}\n` +
+          `시간: ${new Date().toLocaleString('ko-KR')}`
+      );
 
       res.json(contact);
     } catch (error) {
@@ -655,7 +751,7 @@ export function registerRoutes(app: Express): Server {
 
       const token = randomBytes(32).toString('hex');
       const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7); 
+      expiresAt.setDate(expiresAt.getDate() + 7);
 
       const [invitation] = await db
         .insert(invitations)
@@ -961,7 +1057,7 @@ export function registerRoutes(app: Express): Server {
 
     try {
       const { name, dosage, startDate, endDate, frequency, notes } = req.body;
-      console.log('Medication data received:', req.body); 
+      console.log('Medication data received:', req.body);
 
       if (!name || !dosage || !startDate || !frequency) {
         return res.status(400).send("필수 입력값이 누락되었습니다");
@@ -982,7 +1078,7 @@ export function registerRoutes(app: Express): Server {
         })
         .returning();
 
-      console.log('Medication saved:', record); 
+      console.log('Medication saved:', record);
       res.json(record);
     } catch (error) {
       console.error('Error saving medication:', error);
