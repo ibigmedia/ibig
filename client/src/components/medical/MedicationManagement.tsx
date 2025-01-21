@@ -40,8 +40,17 @@ export function MedicationManagement() {
     notes: '',
   });
 
-  const { data: medications, isError, isLoading } = useQuery<Medication[]>({
+  const { data: medications, isError, isLoading, error } = useQuery<Medication[]>({
     queryKey: ['/api/medications'],
+    retry: 3,
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "약물 정보를 불러오는데 실패했습니다. 다시 시도해주세요.",
+      });
+      console.error('Medication fetch error:', error);
+    }
   });
 
   const addMedicationMutation = useMutation({
