@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Shield, Copy } from "lucide-react";
+import { UserPlus, Shield, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { SelectUser } from "@db/schema";
 
@@ -31,7 +31,6 @@ export function SubAdminManagement() {
   const queryClient = useQueryClient();
   const [showInviteDialog, setShowInviteDialog] = React.useState(false);
   const [email, setEmail] = React.useState('');
-  const [invitationUrl, setInvitationUrl] = React.useState('');
 
   const { data: subadmins = [] } = useQuery<SelectUser[]>({
     queryKey: ['/api/admin/subadmins'],
@@ -59,10 +58,11 @@ export function SubAdminManagement() {
     },
     onSuccess: (data) => {
       toast({
-        title: '초대 생성 성공',
-        description: '초대 링크가 생성되었습니다.',
+        title: '초대 이메일 발송 완료',
+        description: '서브관리자 초대 이메일이 발송되었습니다.',
       });
-      setInvitationUrl(data.invitationUrl);
+      setShowInviteDialog(false);
+      setEmail('');
     },
     onError: (error: Error) => {
       toast({
@@ -77,22 +77,6 @@ export function SubAdminManagement() {
     e.preventDefault();
     if (!email) return;
     inviteMutation.mutate(email);
-  };
-
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast({
-        title: '복사 완료',
-        description: '초대 링크가 클립보드에 복사되었습니다.',
-      });
-    } catch (err) {
-      toast({
-        variant: 'destructive',
-        title: '복사 실패',
-        description: '초대 링크 복사에 실패했습니다.',
-      });
-    }
   };
 
   return (
@@ -111,7 +95,7 @@ export function SubAdminManagement() {
               <DialogHeader>
                 <DialogTitle>서브관리자 초대</DialogTitle>
                 <DialogDescription>
-                  초대할 서브관리자의 이메일 주소를 입력하세요.
+                  초대할 서브관리자의 이메일 주소를 입력하세요. 초대 링크가 포함된 이메일이 발송됩니다.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleInvite} className="space-y-4 pt-4">
@@ -125,28 +109,24 @@ export function SubAdminManagement() {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full">
-                  초대 링크 생성
+                <Button 
+                  type="submit" 
+                  className="w-full"
+                  disabled={inviteMutation.isPending}
+                >
+                  {inviteMutation.isPending ? (
+                    <>
+                      <Mail className="h-4 w-4 mr-2 animate-spin" />
+                      초대 메일 발송 중...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="h-4 w-4 mr-2" />
+                      초대 메일 발송
+                    </>
+                  )}
                 </Button>
               </form>
-              {invitationUrl && (
-                <div className="mt-4 space-y-2">
-                  <Label>초대 링크</Label>
-                  <div className="flex gap-2">
-                    <Input value={invitationUrl} readOnly />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => copyToClipboard(invitationUrl)}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    이 링크는 7일간 유효합니다.
-                  </p>
-                </div>
-              )}
             </DialogContent>
           </Dialog>
         </CardHeader>

@@ -11,6 +11,7 @@ import { useUser } from "@/hooks/use-user";
 import { Loader2 } from "lucide-react";
 import { Header } from "@/components/common/Header";
 import { AdminPage } from "@/pages/AdminPage";
+import { InvitationPage } from "@/pages/InvitationPage";
 
 function Router() {
   const { user, isLoading } = useUser();
@@ -22,6 +23,12 @@ function Router() {
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
+  }
+
+  // Invitation page should be accessible without authentication
+  const token = new URLSearchParams(window.location.search).get('token');
+  if (token) {
+    return <InvitationPage />;
   }
 
   // Show auth page if not logged in

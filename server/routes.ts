@@ -206,6 +206,30 @@ function generateEmergencyContactEmailHtml(username: string, contactData: any, t
   `;
 }
 
+// Add this function after other email templates
+function generateInvitationEmailHtml(invitationUrl: string) {
+  return `
+    <div style="font-family: Arial, sans-serif;">
+      <h2 style="color: #2563eb;">서브관리자 초대</h2>
+      <div style="margin: 20px 0; padding: 20px; background-color: #f3f4f6; border-radius: 8px;">
+        <p style="margin-bottom: 20px;">
+          의료 관리 시스템의 서브관리자로 초대되었습니다. 
+          아래 링크를 클릭하여 계정을 생성하고 서브관리자 권한을 받으세요.
+        </p>
+        <a 
+          href="${invitationUrl}" 
+          style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px;"
+        >
+          계정 생성하기
+        </a>
+        <p style="margin-top: 20px; font-size: 14px; color: #6b7280;">
+          이 링크는 7일간 유효합니다. 보안을 위해 다른 사람과 공유하지 마세요.
+        </p>
+      </div>
+    </div>
+  `;
+}
+
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
 
@@ -870,9 +894,20 @@ export function registerRoutes(app: Express): Server {
         })
         .returning();
 
+      const invitationUrl = `${req.protocol}://${req.get('host')}/register?token=${token}`;
+
+      // Send invitation email
+      await sendNotificationEmail(
+        '서브관리자 초대',
+        {
+          text: `의료 관리 시스템의 서브관리자로 초대되었습니다.\n\n초대 링크: ${invitationUrl}\n\n이 링크는 7일간 유효합니다.`,
+          html: generateInvitationEmailHtml(invitationUrl)
+        }
+      );
+
       res.json({
-        message: "Invitation created successfully",
-        invitationUrl: `${req.protocol}://${req.get('host')}/register?token=${token}`,
+        message: "Invitation sent successfully",
+        invitationUrl,
         expiresAt
       });
     } catch (error) {

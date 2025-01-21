@@ -11,7 +11,7 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").unique().notNull(),
   password: text("password").notNull(),
-  email: text("email"),
+  email: text("email").unique(),
   role: text("role").$type<UserRole>().notNull().default('user'),
 });
 
