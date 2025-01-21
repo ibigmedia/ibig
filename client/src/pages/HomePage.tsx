@@ -33,8 +33,11 @@ export function HomePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Tabs defaultValue="health" className="space-y-6">
+      <Tabs defaultValue="personal" className="space-y-6">
         <TabsList className="flex w-full justify-start border-b">
+          <TabsTrigger value="personal" className="text-lg px-6 py-2">
+            {t('nav.personal')}
+          </TabsTrigger>
           <TabsTrigger value="health" className="text-lg px-6 py-2">
             {t('nav.health')}
           </TabsTrigger>
@@ -44,10 +47,34 @@ export function HomePage() {
           <TabsTrigger value="appointment" className="text-lg px-6 py-2">
             {t('nav.appointment')}
           </TabsTrigger>
-          <TabsTrigger value="personal" className="text-lg px-6 py-2">
-            {t('nav.personal')}
-          </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="personal">
+          <div className="grid gap-6">
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">{t('personal.basicInfo')}</h2>
+              <Card className="mb-6">
+                <CardContent className="pt-6">
+                  <p className="text-muted-foreground">
+                    {t('personal.basicInfoDescription')}
+                  </p>
+                </CardContent>
+              </Card>
+              <PersonalInfoForm />
+            </section>
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">{t('personal.emergency')}</h2>
+              <Card className="mb-6">
+                <CardContent className="pt-6">
+                  <p className="text-muted-foreground">
+                    {t('personal.emergencyDescription')}
+                  </p>
+                </CardContent>
+              </Card>
+              <EmergencyContacts />
+            </section>
+          </div>
+        </TabsContent>
 
         <TabsContent value="health">
           <div className="space-y-6">
@@ -87,33 +114,6 @@ export function HomePage() {
               </CardContent>
             </Card>
             <AppointmentScheduler />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="personal">
-          <div className="grid gap-6">
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">{t('personal.basicInfo')}</h2>
-              <Card className="mb-6">
-                <CardContent className="pt-6">
-                  <p className="text-muted-foreground">
-                    {t('personal.basicInfoDescription')}
-                  </p>
-                </CardContent>
-              </Card>
-              <PersonalInfoForm />
-            </section>
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">{t('personal.emergency')}</h2>
-              <Card className="mb-6">
-                <CardContent className="pt-6">
-                  <p className="text-muted-foreground">
-                    {t('personal.emergencyDescription')}
-                  </p>
-                </CardContent>
-              </Card>
-              <EmergencyContacts />
-            </section>
           </div>
         </TabsContent>
       </Tabs>
