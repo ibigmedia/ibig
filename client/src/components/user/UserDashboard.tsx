@@ -1,13 +1,7 @@
 import React from 'react';
 import { useUser } from '@/hooks/use-user';
 import { useLanguage } from '@/contexts/LanguageContext';
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'wouter';
@@ -19,17 +13,24 @@ export function UserDashboard() {
   const { toast } = useToast();
 
   const handleTabChange = (tabValue: string) => {
-    const tabElement = document.querySelector(`[value="${tabValue}"]`) as HTMLElement;
-    if (tabElement) {
-      tabElement.click();
-      // Scroll to the tabs section smoothly
-      const tabsSection = document.querySelector('.tabs-section');
-      if (tabsSection) {
-        setTimeout(() => {
-          tabsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-      }
-    }
+    // Find the tabs container
+    const tabsContainer = document.querySelector('.tabs-section');
+    if (!tabsContainer) return;
+
+    // Find the specific tab trigger
+    const tabTrigger = tabsContainer.querySelector(`[value="${tabValue}"]`) as HTMLElement;
+    if (!tabTrigger) return;
+
+    // Click the tab
+    tabTrigger.click();
+
+    // Scroll to the tabs section
+    setTimeout(() => {
+      tabsContainer.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start'
+      });
+    }, 100);
   };
 
   return (
