@@ -26,6 +26,26 @@ export function Header() {
     }
   };
 
+  const renderUserLinks = () => (
+    <>
+      <Link href="/">
+        <Button variant="ghost">
+          대시보드
+        </Button>
+      </Link>
+      <Link href="/personal">
+        <Button variant="ghost">
+          개인정보
+        </Button>
+      </Link>
+      <Link href="/medical-records">
+        <Button variant="ghost">
+          의료기록
+        </Button>
+      </Link>
+    </>
+  );
+
   return (
     <header className="border-b">
       <div className="container mx-auto px-4 h-16">
@@ -48,20 +68,7 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
-            {user && user.role === 'user' && (
-              <>
-                <Link href="/personal">
-                  <Button variant="ghost">
-                    {t('nav.personal')}
-                  </Button>
-                </Link>
-                <Link href="/medical-records">
-                  <Button variant="ghost">
-                    {t('nav.health')}
-                  </Button>
-                </Link>
-              </>
-            )}
+            {user && user.role === 'user' && renderUserLinks()}
 
             {user && user.role === 'admin' && (
               <Link href="/admin">
@@ -117,18 +124,9 @@ export function Header() {
         {isMenuOpen && (
           <div className="md:hidden border-t py-4 space-y-2">
             {user && user.role === 'user' && (
-              <>
-                <Link href="/personal">
-                  <Button variant="ghost" className="w-full justify-start">
-                    {t('nav.personal')}
-                  </Button>
-                </Link>
-                <Link href="/medical-records">
-                  <Button variant="ghost" className="w-full justify-start">
-                    {t('nav.health')}
-                  </Button>
-                </Link>
-              </>
+              <div className="flex flex-col space-y-2">
+                {renderUserLinks()}
+              </div>
             )}
 
             {user && user.role === 'admin' && (
