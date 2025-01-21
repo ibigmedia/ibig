@@ -19,9 +19,9 @@ export function PersonalInfoPage() {
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
           <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="w-full justify-start overflow-x-auto px-4 sm:px-0">
-              <TabsTrigger value="profile" className="flex-1 sm:flex-none">기본 정보</TabsTrigger>
-              <TabsTrigger value="emergency" className="flex-1 sm:flex-none">비상연락처</TabsTrigger>
+            <TabsList className="w-full grid grid-cols-2 gap-2 p-2">
+              <TabsTrigger value="profile" className="text-sm px-2 py-1.5">기본 정보</TabsTrigger>
+              <TabsTrigger value="emergency" className="text-sm px-2 py-1.5">비상연락처</TabsTrigger>
             </TabsList>
 
             <div className="p-4 sm:p-0">
