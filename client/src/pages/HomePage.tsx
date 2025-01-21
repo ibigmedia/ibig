@@ -4,35 +4,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MedicalForm } from '@/components/medical/MedicalForm';
 import { AppointmentScheduler } from '@/components/appointments/AppointmentScheduler';
 import { MedicationManagement } from '@/components/medical/MedicationManagement';
-import { WelcomePage } from '@/components/common/WelcomePage';
 import { EmergencyContacts } from '@/components/medical/EmergencyContacts';
-import { useLocation } from 'wouter';
 import { PersonalInfoForm } from '@/components/personal/PersonalInfoForm';
 
 export function HomePage() {
   const { t } = useLanguage();
-  const [location] = useLocation();
-  const [showWelcome, setShowWelcome] = React.useState(true);
-
-  const handleStartClick = () => {
-    setShowWelcome(false);
-  };
-
-  if (showWelcome) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <WelcomePage />
-        <div className="flex justify-center mt-8">
-          <button
-            onClick={handleStartClick}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-          >
-            {t('common.start')}
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">

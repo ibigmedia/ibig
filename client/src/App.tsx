@@ -4,9 +4,7 @@ import { Switch, Route } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import { Header } from "@/components/common/Header";
 import { HomePage } from "@/pages/HomePage";
-import { AdminPage } from "@/pages/AdminPage";
 import AuthPage from "@/pages/auth-page";
 import { useUser } from "@/hooks/use-user";
 import { Loader2 } from "lucide-react";
@@ -28,12 +26,6 @@ function Router() {
     return <AuthPage />;
   }
 
-  // Show admin page for admin users
-  if (user.role === 'admin') {
-    return <AdminPage />;
-  }
-
-  // Show regular user routes
   return (
     <Switch>
       <Route path="/" component={HomePage} />
@@ -47,7 +39,6 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <div className="min-h-screen bg-background">
-          <Header />
           <main>
             <Router />
           </main>
