@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { MedicalExport } from './MedicalExport';
+import { EmergencyContacts } from './EmergencyContacts';
 
 export function MedicalForm() {
   const { t } = useLanguage();
@@ -44,6 +45,8 @@ export function MedicalForm() {
           </div>
         </CardContent>
       </Card>
+
+      <EmergencyContacts />
 
       <Card>
         <CardHeader>

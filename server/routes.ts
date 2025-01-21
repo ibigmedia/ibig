@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { db } from "@db";
-import { appointments, medications, medicalRecords } from "@db/schema";
+import { appointments, medications, medicalRecords, emergencyContacts } from "@db/schema";
 import { eq } from "drizzle-orm";
 
 export function registerRoutes(app: Express): Server {
@@ -50,6 +50,79 @@ export function registerRoutes(app: Express): Server {
       res.json(exportData);
     } catch (error) {
       res.status(500).send("Error exporting medical history");
+    }
+  });
+
+  // Emergency Contacts API
+  app.get("/api/emergency-contacts", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const contacts = await db.query.emergencyContacts.findMany({
+        where: eq(emergencyContacts.userId, req.user.id),
+      });
+      res.json(contacts);
+    } catch (error) {
+      res.status(500).send("Error fetching emergency contacts");
+    }
+  });
+
+  app.post("/api/emergency-contacts", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const [contact] = await db.insert(emergencyContacts)
+        .values({
+          ...req.body,
+          userId: req.user.id,
+        })
+        .returning();
+      res.json(contact);
+    } catch (error) {
+      res.status(500).send("Error creating emergency contact");
+    }
+  });
+
+  app.put("/api/emergency-contacts/:id", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const [contact] = await db.update(emergencyContacts)
+        .set(req.body)
+        .where(eq(emergencyContacts.id, parseInt(req.params.id)))
+        .returning();
+      res.json(contact);
+    } catch (error) {
+      res.status(500).send("Error updating emergency contact");
+    }
+  });
+
+  app.put("/api/emergency-contacts/:id/main", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      // First, unset all main contacts
+      await db.update(emergencyContacts)
+        .set({ isMainContact: false })
+        .where(eq(emergencyContacts.userId, req.user.id));
+
+      // Then set the new main contact
+      const [contact] = await db.update(emergencyContacts)
+        .set({ isMainContact: true })
+        .where(eq(emergencyContacts.id, parseInt(req.params.id)))
+        .returning();
+
+      res.json(contact);
+    } catch (error) {
+      res.status(500).send("Error setting main emergency contact");
     }
   });
 

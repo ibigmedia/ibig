@@ -20,6 +20,19 @@ export const medicalRecords = pgTable("medical_records", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const emergencyContacts = pgTable("emergency_contacts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  relationship: text("relationship").notNull(),
+  phoneNumber: text("phone_number").notNull(),
+  email: text("email"),
+  address: text("address"),
+  isMainContact: boolean("is_main_contact").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const appointments = pgTable("appointments", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
@@ -45,7 +58,14 @@ export const usersRelations = relations(users, ({ many }) => ({
   medicalRecords: many(medicalRecords),
   appointments: many(appointments),
   medications: many(medications),
+  emergencyContacts: many(emergencyContacts),
 }));
+
+// Schema for emergency contacts
+export const insertEmergencyContactSchema = createInsertSchema(emergencyContacts);
+export const selectEmergencyContactSchema = createSelectSchema(emergencyContacts);
+export type InsertEmergencyContact = typeof emergencyContacts.$inferInsert;
+export type SelectEmergencyContact = typeof emergencyContacts.$inferSelect;
 
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
