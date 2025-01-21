@@ -105,6 +105,17 @@ export const invitations = pgTable("invitations", {
   createdById: integer("created_by_id").notNull().references(() => users.id),
 });
 
+export const smtpSettings = pgTable("smtp_settings", {
+  id: serial("id").primaryKey(),
+  host: text("host").notNull(),
+  port: integer("port").notNull(),
+  username: text("username").notNull(),
+  password: text("password").notNull(),
+  fromEmail: text("from_email").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Schema for users
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
@@ -123,6 +134,12 @@ export const selectMedicationSchema = createSelectSchema(medications);
 export type InsertMedication = typeof medications.$inferInsert;
 export type SelectMedication = typeof medications.$inferSelect;
 
+
+// Create schemas for SMTP settings
+export const insertSmtpSettingsSchema = createInsertSchema(smtpSettings);
+export const selectSmtpSettingsSchema = createSelectSchema(smtpSettings);
+export type InsertSmtpSettings = typeof smtpSettings.$inferInsert;
+export type SelectSmtpSettings = typeof smtpSettings.$inferSelect;
 
 // Define relationships
 export const usersRelations = relations(users, ({ many }) => ({

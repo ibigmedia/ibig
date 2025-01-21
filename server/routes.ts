@@ -2,10 +2,11 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { db } from "@db";
-import { users, appointments, medications, medicalRecords, emergencyContacts, invitations, bloodPressureRecords, bloodSugarRecords, diseaseHistories } from "@db/schema";
+import { users, appointments, medications, medicalRecords, emergencyContacts, invitations, bloodPressureRecords, bloodSugarRecords, diseaseHistories, smtpSettings } from "@db/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import nodemailer from "nodemailer";
 
 const scryptAsync = promisify(scrypt);
 
@@ -29,7 +30,6 @@ const crypto = {
 
 export async function createAdminUser() {
   try {
-    // Check if admin user exists
     const [existingAdmin] = await db
       .select()
       .from(users)
@@ -40,7 +40,6 @@ export async function createAdminUser() {
       return existingAdmin;
     }
 
-    // Create new admin user with hashed password
     const hashedPassword = await crypto.hash('admin123');
     const [newAdmin] = await db.insert(users)
       .values({
@@ -58,13 +57,40 @@ export async function createAdminUser() {
   }
 }
 
+let mailer: nodemailer.Transporter | null = null;
+
+async function setupMailer() {
+  try {
+    const [settings] = await db
+      .select()
+      .from(smtpSettings)
+      .limit(1);
+
+    if (!settings) {
+      mailer = null;
+      return;
+    }
+
+    mailer = nodemailer.createTransport({
+      host: settings.host,
+      port: settings.port,
+      secure: settings.port === 465,
+      auth: {
+        user: settings.username,
+        pass: settings.password,
+      },
+    });
+  } catch (error) {
+    console.error('Error setting up mailer:', error);
+    mailer = null;
+  }
+}
+
 export function registerRoutes(app: Express): Server {
-  // Setup authentication first before other routes
   setupAuth(app);
 
   createAdminUser().catch(console.error);
 
-  // Admin routes
   app.get("/api/admin/users", async (req, res) => {
     if (!req.user || req.user.role !== 'admin') {
       return res.status(403).send("Unauthorized");
@@ -127,17 +153,14 @@ export function registerRoutes(app: Express): Server {
         todayAppointments,
         activeMedications
       ] = await Promise.all([
-        // Count only regular users (not admin or subadmin)
         db.select({ count: sql`count(*)` })
           .from(users)
           .where(eq(users.role, 'user'))
           .then(result => Number(result[0].count)),
-        // Today's appointments
         db.select({ count: sql`count(*)` })
           .from(appointments)
           .where(sql`DATE(${appointments.date}) = ${today.toISOString().split('T')[0]}`)
           .then(result => Number(result[0].count)),
-        // Active medications
         db.select({ count: sql`count(*)` })
           .from(medications)
           .where(
@@ -160,7 +183,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Admin routes for medical records and related data
   app.get("/api/admin/medical-records", async (req, res) => {
     if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
       return res.status(403).send("Unauthorized");
@@ -281,7 +303,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Password change API
   app.post("/api/user/change-password", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("인증되지 않은 사용자입니다");
@@ -290,7 +311,6 @@ export function registerRoutes(app: Express): Server {
     const { currentPassword, newPassword } = req.body;
 
     try {
-      // Verify current password
       const [user] = await db
         .select()
         .from(users)
@@ -302,10 +322,8 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).send("현재 비밀번호가 일치하지 않습니다");
       }
 
-      // Hash new password
       const hashedPassword = await crypto.hash(newPassword);
 
-      // Update password
       await db
         .update(users)
         .set({ password: hashedPassword })
@@ -317,7 +335,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Medical Records API
   app.get("/api/medical-records", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -329,20 +346,17 @@ export function registerRoutes(app: Express): Server {
     res.json(records);
   });
 
-  //Add medical records API endpoints
   app.post("/api/medical-records", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
     }
 
     try {
-      // Check if user already has a medical record
       const existingRecord = await db.query.medicalRecords.findFirst({
         where: eq(medicalRecords.userId, req.user.id),
       });
 
       if (existingRecord) {
-        // Update existing record
         const [updatedRecord] = await db
           .update(medicalRecords)
           .set({
@@ -355,7 +369,6 @@ export function registerRoutes(app: Express): Server {
         return res.json(updatedRecord);
       }
 
-      // Create new record
       const [newRecord] = await db
         .insert(medicalRecords)
         .values({
@@ -379,7 +392,6 @@ export function registerRoutes(app: Express): Server {
     try {
       const recordId = parseInt(req.params.id);
 
-      // Verify the record belongs to the user
       const [existingRecord] = await db
         .select()
         .from(medicalRecords)
@@ -419,7 +431,6 @@ export function registerRoutes(app: Express): Server {
     try {
       const recordId = parseInt(req.params.id);
 
-      // Verify the record belongs to the user
       const [existingRecord] = await db
         .select()
         .from(medicalRecords)
@@ -447,14 +458,12 @@ export function registerRoutes(app: Express): Server {
   });
 
 
-  // Medical History Export API
   app.get("/api/medical-records/export", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
     }
 
     try {
-      // Fetch all medical related data for the user
       const [records, userAppointments, userMedications] = await Promise.all([
         db.query.medicalRecords.findMany({
           where: eq(medicalRecords.userId, req.user.id),
@@ -468,7 +477,7 @@ export function registerRoutes(app: Express): Server {
       ]);
 
       const exportData = {
-        patientInfo: records[0], // Basic medical information
+        patientInfo: records[0], 
         appointments: userAppointments,
         medications: userMedications,
         exportDate: new Date().toISOString(),
@@ -480,7 +489,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Emergency Contacts API
   app.get("/api/emergency-contacts", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -523,7 +531,6 @@ export function registerRoutes(app: Express): Server {
     try {
       const contactId = parseInt(req.params.id);
 
-      // Verify the contact belongs to the user
       const [existingContact] = await db
         .select()
         .from(emergencyContacts)
@@ -559,7 +566,6 @@ export function registerRoutes(app: Express): Server {
     try {
       const contactId = parseInt(req.params.id);
 
-      // Verify the contact belongs to the user
       const [existingContact] = await db
         .select()
         .from(emergencyContacts)
@@ -585,7 +591,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Appointments API
   app.get("/api/appointments", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -597,7 +602,6 @@ export function registerRoutes(app: Express): Server {
     res.json(userAppointments);
   });
 
-  // Medications API
   app.get("/api/medications", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -609,7 +613,6 @@ export function registerRoutes(app: Express): Server {
     res.json(userMedications);
   });
 
-  // Admin routes for sub-admin management
   app.get("/api/admin/subadmins", async (req, res) => {
     if (!req.user || req.user.role !== 'admin') {
       return res.status(403).send("Unauthorized");
@@ -625,7 +628,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Invitation routes
   app.post("/api/admin/invite", async (req, res) => {
     if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
       return res.status(403).send("Unauthorized");
@@ -636,13 +638,11 @@ export function registerRoutes(app: Express): Server {
       return res.status(400).send("Invalid input");
     }
 
-    // Sub-admins can only invite regular users
     if (req.user.role === 'subadmin' && role === 'subadmin') {
       return res.status(403).send("Sub-admins cannot invite other sub-admins");
     }
 
     try {
-      // Check if user already exists
       const [existingUser] = await db
         .select()
         .from(users)
@@ -653,10 +653,9 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).send("User with this email already exists");
       }
 
-      // Generate invitation token
       const token = randomBytes(32).toString('hex');
       const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7); // Expires in 7 days
+      expiresAt.setDate(expiresAt.getDate() + 7); 
 
       const [invitation] = await db
         .insert(invitations)
@@ -669,8 +668,6 @@ export function registerRoutes(app: Express): Server {
         })
         .returning();
 
-      // Here you would typically integrate with an email service
-      // For now, we'll return the invitation token in the response
       res.json({
         message: "Invitation created successfully",
         invitationUrl: `${req.protocol}://${req.get('host')}/register?token=${token}`,
@@ -682,13 +679,11 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Accept invitation
   app.post("/api/invitations/:token/accept", async (req, res) => {
     const { token } = req.params;
     const { username, password } = req.body;
 
     try {
-      // Find and validate invitation
       const [invitation] = await db
         .select()
         .from(invitations)
@@ -704,7 +699,6 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).send("Invalid or expired invitation");
       }
 
-      // Create user account
       const hashedPassword = await crypto.hash(password);
       const [user] = await db
         .insert(users)
@@ -716,12 +710,10 @@ export function registerRoutes(app: Express): Server {
         })
         .returning();
 
-      // Delete used invitation
       await db
         .delete(invitations)
         .where(eq(invitations.id, invitation.id));
 
-      // Log the user in
       req.login(user, (err) => {
         if (err) {
           return res.status(500).send("Error logging in");
@@ -733,7 +725,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Admin routes for emergency contacts
   app.get("/api/admin/emergency-contacts", async (req, res) => {
     if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
       return res.status(403).send("Unauthorized");
@@ -789,7 +780,6 @@ export function registerRoutes(app: Express): Server {
     }
 
     try {
-      // First check if this update would create a duplicate for the user
       if (req.body.userId) {
         const existingContact = await db.query.emergencyContacts.findFirst({
           where: and(
@@ -815,7 +805,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Blood Pressure API endpoints
   app.get("/api/blood-pressure", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -861,7 +850,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Blood Sugar API endpoints
   app.get("/api/blood-sugar", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -906,7 +894,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Disease History API endpoints
   app.get("/api/disease-histories", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -951,7 +938,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // 약물 관리 API
   app.get("/api/admin/medications", async (req, res) => {
     if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
       return res.status(403).send("Unauthorized");
@@ -975,7 +961,7 @@ export function registerRoutes(app: Express): Server {
 
     try {
       const { name, dosage, startDate, endDate, frequency, notes } = req.body;
-      console.log('Medication data received:', req.body); // Debug log
+      console.log('Medication data received:', req.body); 
 
       if (!name || !dosage || !startDate || !frequency) {
         return res.status(400).send("필수 입력값이 누락되었습니다");
@@ -996,7 +982,7 @@ export function registerRoutes(app: Express): Server {
         })
         .returning();
 
-      console.log('Medication saved:', record); // Debug log
+      console.log('Medication saved:', record); 
       res.json(record);
     } catch (error) {
       console.error('Error saving medication:', error);
@@ -1004,7 +990,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Disease History DELETE endpoint
   app.delete("/api/disease-histories/:id", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -1013,7 +998,6 @@ export function registerRoutes(app: Express): Server {
     try {
       const recordId = parseInt(req.params.id);
 
-      // Verify the record exists and belongs to the user
       const [existingRecord] = await db
         .select()
         .from(diseaseHistories)
@@ -1029,7 +1013,6 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).send("Record not found");
       }
 
-      // Delete the record
       const [deletedRecord] = await db
         .delete(diseaseHistories)
         .where(
@@ -1047,7 +1030,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Blood Pressure DELETE endpoint
   app.delete("/api/blood-pressure/:id", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -1056,7 +1038,6 @@ export function registerRoutes(app: Express): Server {
     try {
       const recordId = parseInt(req.params.id);
 
-      // Verify the record exists and belongs to the user
       const [existingRecord] = await db
         .select()
         .from(bloodPressureRecords)
@@ -1072,7 +1053,6 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).send("Record not found");
       }
 
-      // Delete the record
       const [deletedRecord] = await db
         .delete(bloodPressureRecords)
         .where(
@@ -1089,6 +1069,94 @@ export function registerRoutes(app: Express): Server {
       res.status(500).send("Error deleting blood pressure record");
     }
   });
+
+  app.get("/api/admin/smtp-settings", async (req, res) => {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).send("Unauthorized");
+    }
+
+    try {
+      const [settings] = await db
+        .select({
+          id: smtpSettings.id,
+          host: smtpSettings.host,
+          port: smtpSettings.port,
+          username: smtpSettings.username,
+          fromEmail: smtpSettings.fromEmail,
+        })
+        .from(smtpSettings)
+        .limit(1);
+
+      res.json(settings || null);
+    } catch (error) {
+      res.status(500).send("Error fetching SMTP settings");
+    }
+  });
+
+  app.post("/api/admin/smtp-settings", async (req, res) => {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).send("Unauthorized");
+    }
+
+    try {
+      const { host, port, username, password, fromEmail } = req.body;
+
+      if (!host || !port || !username || !fromEmail) {
+        return res.status(400).send("Missing required fields");
+      }
+
+      const [existingSettings] = await db
+        .select()
+        .from(smtpSettings)
+        .limit(1);
+
+      let settings;
+      if (existingSettings) {
+        [settings] = await db
+          .update(smtpSettings)
+          .set({
+            host,
+            port,
+            username,
+            ...(password ? { password } : {}),
+            fromEmail,
+            updatedAt: new Date(),
+          })
+          .where(eq(smtpSettings.id, existingSettings.id))
+          .returning();
+      } else {
+        if (!password) {
+          return res.status(400).send("Password is required for initial setup");
+        }
+
+        [settings] = await db
+          .insert(smtpSettings)
+          .values({
+            host,
+            port,
+            username,
+            password,
+            fromEmail,
+          })
+          .returning();
+      }
+
+      await setupMailer();
+
+      res.json({
+        id: settings.id,
+        host: settings.host,
+        port: settings.port,
+        username: settings.username,
+        fromEmail: settings.fromEmail,
+      });
+    } catch (error) {
+      console.error('Error saving SMTP settings:', error);
+      res.status(500).send("Error saving SMTP settings");
+    }
+  });
+
+  setupMailer().catch(console.error);
 
   const httpServer = createServer(app);
   return httpServer;

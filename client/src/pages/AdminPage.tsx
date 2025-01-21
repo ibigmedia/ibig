@@ -1,3 +1,4 @@
+typescript
 import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Dashboard } from '@/components/admin/Dashboard';
@@ -9,12 +10,14 @@ import { AppointmentManagement } from '@/components/admin/AppointmentManagement'
 import { EmergencyContactsManagement } from '@/components/admin/EmergencyContactsManagement';
 import { SubAdminManagement } from '@/components/admin/SubAdminManagement';
 import { Button } from "@/components/ui/button";
-import { Settings } from "lucide-react";
+import { Settings, Mail } from "lucide-react";
 import { ChangePasswordDialog } from '@/components/admin/ChangePasswordDialog';
+import { SmtpSettingsDialog } from '@/components/admin/SmtpSettingsDialog';
 
 export function AdminPage() {
   const { t } = useLanguage();
   const [showPasswordDialog, setShowPasswordDialog] = React.useState(false);
+  const [showSmtpDialog, setShowSmtpDialog] = React.useState(false);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -26,13 +29,22 @@ export function AdminPage() {
               {t('admin.dashboard.description')}
             </p>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => setShowPasswordDialog(true)}
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            비밀번호 변경
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowSmtpDialog(true)}
+            >
+              <Mail className="h-4 w-4 mr-2" />
+              이메일 설정
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowPasswordDialog(true)}
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              비밀번호 변경
+            </Button>
+          </div>
         </div>
       </Card>
 
@@ -74,6 +86,10 @@ export function AdminPage() {
       <ChangePasswordDialog
         open={showPasswordDialog}
         onOpenChange={setShowPasswordDialog}
+      />
+      <SmtpSettingsDialog
+        open={showSmtpDialog}
+        onOpenChange={setShowSmtpDialog}
       />
     </div>
   );
