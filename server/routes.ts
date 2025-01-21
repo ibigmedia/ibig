@@ -2,8 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { db } from "@db";
-import { users, appointments, medications, medicalRecords, emergencyContacts, invitations } from "@db/schema"; // Added invitations
-import { eq, and } from "drizzle-orm"; // Added and
+import { users, appointments, medications, medicalRecords, emergencyContacts, invitations } from "@db/schema";
+import { eq, and, sql } from "drizzle-orm";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 
@@ -29,8 +29,16 @@ const crypto = {
 
 export async function createAdminUser() {
   try {
-    // Delete existing admin user
-    await db.delete(users).where(eq(users.username, 'admin'));
+    // Check if admin user exists
+    const [existingAdmin] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, 'admin'))
+      .limit(1);
+
+    if (existingAdmin) {
+      return existingAdmin;
+    }
 
     // Create new admin user with hashed password
     const hashedPassword = await crypto.hash('admin123');
@@ -38,7 +46,7 @@ export async function createAdminUser() {
       .values({
         username: 'admin',
         password: hashedPassword,
-        role: 'admin' // Assuming a 'role' column exists in the users table
+        role: 'admin'
       })
       .returning();
 
@@ -109,6 +117,9 @@ export function registerRoutes(app: Express): Server {
     }
 
     try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
       const [
         userCount,
         todayAppointments,
@@ -117,12 +128,12 @@ export function registerRoutes(app: Express): Server {
         db.select().from(users).execute().then(users => users.length),
         db.select()
           .from(appointments)
-          .where(eq(appointments.date, new Date().toISOString().split('T')[0]))
+          .where(sql`DATE(${appointments.date}) = ${today.toISOString().split('T')[0]}`)
           .execute()
           .then(appointments => appointments.length),
         db.select()
           .from(medications)
-          .where(eq(medications.endDate, null))
+          .where(sql`${medications.endDate} IS NULL`)
           .execute()
           .then(medications => medications.length)
       ]);
@@ -133,6 +144,7 @@ export function registerRoutes(app: Express): Server {
         activePresciptions: activeMedications
       });
     } catch (error) {
+      console.error('Error fetching stats:', error);
       res.status(500).send("Error fetching statistics");
     }
   });
@@ -444,7 +456,7 @@ export function registerRoutes(app: Express): Server {
         .where(
           and(
             eq(invitations.token, token),
-            eq(invitations.expiresAt, new Date(), 'gt')
+            sql`${invitations.expiresAt} > NOW()`
           )
         )
         .limit(1);
