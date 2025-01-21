@@ -73,9 +73,9 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
-      <Card className="w-full max-w-[400px] shadow-lg">
-        <CardHeader className="space-y-2 pb-6">
+    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-8 sm:py-12">
+      <Card className="w-full max-w-[400px] mx-auto shadow-lg">
+        <CardHeader className="space-y-2 pb-4 sm:pb-6">
           <CardTitle className="text-xl sm:text-2xl font-semibold text-center">
             {isRegistering ? "회원가입" : "로그인"}
           </CardTitle>
@@ -87,7 +87,7 @@ export default function AuthPage() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
               <FormField
                 control={form.control}
                 name="username"
@@ -97,7 +97,7 @@ export default function AuthPage() {
                     <FormControl>
                       <Input 
                         placeholder="아이디를 입력하세요" 
-                        className="h-11 text-base"
+                        className="h-10 sm:h-11 text-sm sm:text-base"
                         {...field} 
                       />
                     </FormControl>
@@ -116,7 +116,7 @@ export default function AuthPage() {
                       <Input 
                         type="password" 
                         placeholder="비밀번호를 입력하세요" 
-                        className="h-11 text-base"
+                        className="h-10 sm:h-11 text-sm sm:text-base"
                         {...field} 
                       />
                     </FormControl>
@@ -125,15 +125,18 @@ export default function AuthPage() {
                 )}
               />
 
-              <div className="space-y-3 pt-2">
-                <Button type="submit" className="w-full h-11 text-base font-medium">
+              <div className="space-y-3 pt-2 sm:pt-4">
+                <Button 
+                  type="submit" 
+                  className="w-full h-10 sm:h-11 text-sm sm:text-base font-medium"
+                >
                   {isRegistering ? "회원가입" : "로그인"}
                 </Button>
 
                 <Button
                   type="button"
                   variant="ghost"
-                  className="w-full h-11 text-sm sm:text-base"
+                  className="w-full h-10 sm:h-11 text-xs sm:text-sm"
                   onClick={() => setIsRegistering(!isRegistering)}
                 >
                   {isRegistering
