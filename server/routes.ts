@@ -522,7 +522,6 @@ export function registerRoutes(app: Express): Server {
     res.json(userMedications);
   });
 
-
   // Admin routes for sub-admin management
   app.get("/api/admin/subadmins", async (req, res) => {
     if (!req.user || req.user.role !== 'admin') {
@@ -857,6 +856,58 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error('Error saving disease history:', error);
       res.status(500).send("Error saving disease history");
+    }
+  });
+
+  // 약물 관리 API
+  app.get("/api/admin/medications", async (req, res) => {
+    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
+      return res.status(403).send("Unauthorized");
+    }
+
+    try {
+      const records = await db
+        .select({
+          ...medications,
+          user: {
+            name: users.username,
+          },
+        })
+        .from(medications)
+        .leftJoin(users, eq(medications.userId, users.id))
+        .orderBy(desc(medications.createdAt));
+      res.json(records);
+    } catch (error) {
+      console.error('Error fetching medications:', error);
+      res.status(500).send("Error fetching medications");
+    }
+  });
+
+  app.post("/api/medications", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const { name, dosage, startDate, endDate, frequency, notes } = req.body;
+
+      const [record] = await db
+        .insert(medications)
+        .values({
+          userId: req.user.id,
+          name,
+          dosage,
+          startDate: new Date(startDate),
+          endDate: endDate ? new Date(endDate) : null,
+          frequency,
+          notes,
+        })
+        .returning();
+
+      res.json(record);
+    } catch (error) {
+      console.error('Error saving medication:', error);
+      res.status(500).send("Error saving medication");
     }
   });
 

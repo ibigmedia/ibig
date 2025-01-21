@@ -35,7 +35,7 @@ export function MedicalRecordsManagement() {
   const [selectedRecord, setSelectedRecord] = React.useState<SelectMedicalRecord | null>(null);
   const [showDetails, setShowDetails] = React.useState(false);
   const [showAddDialog, setShowAddDialog] = React.useState(false);
-  const [dialogType, setDialogType] = React.useState<'bloodPressure' | 'bloodSugar' | 'disease' | null>(null);
+  const [dialogType, setDialogType] = React.useState<'bloodPressure' | 'bloodSugar' | 'disease' | 'medication' | null>(null);
   const [newRecord, setNewRecord] = React.useState<any>({});
 
   const { data: records = [] } = useQuery<SelectMedicalRecord[]>({
@@ -52,6 +52,10 @@ export function MedicalRecordsManagement() {
 
   const { data: diseaseHistories = [] } = useQuery({
     queryKey: ['/api/admin/disease-histories'],
+  });
+
+  const { data: medications = [] } = useQuery({
+    queryKey: ['/api/admin/medications'],
   });
 
   const updateMutation = useMutation({
@@ -190,6 +194,40 @@ export function MedicalRecordsManagement() {
     },
   });
 
+  const addMedicationMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch('/api/medications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: '성공',
+        description: '약물 정보가 추가되었습니다.',
+      });
+      setShowAddDialog(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/medications'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: '오류',
+        description: error.message,
+      });
+    },
+  });
+
   const handleSave = () => {
     if (selectedRecord) {
       updateMutation.mutate(selectedRecord);
@@ -215,6 +253,11 @@ export function MedicalRecordsManagement() {
           ...newRecord,
         });
         break;
+      case 'medication':
+        addMedicationMutation.mutate({
+          ...newRecord,
+        });
+        break;
     }
   };
 
@@ -230,6 +273,7 @@ export function MedicalRecordsManagement() {
               <TabsTrigger value="basic">기본 정보</TabsTrigger>
               <TabsTrigger value="history">과거 병력</TabsTrigger>
               <TabsTrigger value="records">건강 기록</TabsTrigger>
+              <TabsTrigger value="medications">약물 관리</TabsTrigger>
             </TabsList>
 
             <TabsContent value="basic">
@@ -392,6 +436,47 @@ export function MedicalRecordsManagement() {
                 </TabsContent>
               </Tabs>
             </TabsContent>
+
+            <TabsContent value="medications">
+              <div className="flex justify-end mb-4">
+                <Button
+                  onClick={() => {
+                    setDialogType('medication');
+                    setShowAddDialog(true);
+                    setNewRecord({});
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  새 약물 추가
+                </Button>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>약물명</TableHead>
+                    <TableHead>복용량</TableHead>
+                    <TableHead>시작일</TableHead>
+                    <TableHead>종료일</TableHead>
+                    <TableHead>복용주기</TableHead>
+                    <TableHead>메모</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {medications.map((medication: any) => (
+                    <TableRow key={medication.id}>
+                      <TableCell>{medication.name}</TableCell>
+                      <TableCell>{medication.dosage}</TableCell>
+                      <TableCell>{new Date(medication.startDate).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        {medication.endDate ? new Date(medication.endDate).toLocaleDateString() : '-'}
+                      </TableCell>
+                      <TableCell>{medication.frequency}</TableCell>
+                      <TableCell>{medication.notes}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
@@ -465,7 +550,9 @@ export function MedicalRecordsManagement() {
                 ? '새 혈압 기록'
                 : dialogType === 'bloodSugar'
                 ? '새 혈당 기록'
-                : '새 질병 이력'}
+                : dialogType === 'disease'
+                ? '새 질병 이력'
+                : '새 약물 추가'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
@@ -534,6 +621,48 @@ export function MedicalRecordsManagement() {
                   <Input
                     value={newRecord.treatment || ''}
                     onChange={(e) => setNewRecord({ ...newRecord, treatment: e.target.value })}
+                  />
+                </div>
+              </>
+            )}
+            {dialogType === 'medication' && (
+              <>
+                <div className="space-y-2">
+                  <Label>약물명</Label>
+                  <Input
+                    value={newRecord.name || ''}
+                    onChange={(e) => setNewRecord({ ...newRecord, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>복용량</Label>
+                  <Input
+                    value={newRecord.dosage || ''}
+                    onChange={(e) => setNewRecord({ ...newRecord, dosage: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>시작일</Label>
+                  <Input
+                    type="date"
+                    value={newRecord.startDate || ''}
+                    onChange={(e) => setNewRecord({ ...newRecord, startDate: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>종료일 (선택사항)</Label>
+                  <Input
+                    type="date"
+                    value={newRecord.endDate || ''}
+                    onChange={(e) => setNewRecord({ ...newRecord, endDate: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>복용주기</Label>
+                  <Input
+                    value={newRecord.frequency || ''}
+                    onChange={(e) => setNewRecord({ ...newRecord, frequency: e.target.value })}
+                    placeholder="예: 하루 3회"
                   />
                 </div>
               </>
