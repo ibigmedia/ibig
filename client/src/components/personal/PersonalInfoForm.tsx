@@ -81,12 +81,13 @@ export function PersonalInfoForm() {
     <form onSubmit={onSubmit}>
       <Card className="shadow-sm">
         <CardContent className="space-y-4 p-3 sm:p-6">
-          <div className="space-y-4">
+          <div className="grid gap-4 sm:gap-6">
             <div className="space-y-2">
               <Label className="text-sm font-medium">이름</Label>
               <Input 
                 {...register('name')}
                 className="w-full"
+                placeholder="이름을 입력하세요"
               />
             </div>
             <div className="space-y-2">
@@ -97,18 +98,19 @@ export function PersonalInfoForm() {
                 className="w-full"
               />
             </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">메모</Label>
+              <Textarea 
+                {...register('notes')}
+                className="min-h-[80px] w-full resize-none"
+                placeholder="추가 정보를 입력하세요"
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">메모</Label>
-            <Textarea 
-              {...register('notes')}
-              className="min-h-[80px] w-full resize-none"
-            />
-          </div>
-          <div className="pt-2">
+          <div className="pt-2 flex justify-end">
             <Button 
               type="submit"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto min-w-[120px]"
             >
               <Save className="h-4 w-4 mr-2" />
               저장
