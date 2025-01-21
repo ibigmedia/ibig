@@ -348,8 +348,8 @@ export function MedicalRecordsManagement() {
                     <TableHead>생년월일</TableHead>
                     <TableHead>당뇨여부</TableHead>
                     <TableHead>특이사항</TableHead>
-                    <TableHead>번역</TableHead>
-                    <TableHead>관리</TableHead>
+                    <TableHead className="w-[120px]">번역</TableHead>
+                    <TableHead className="w-[120px]">관리</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -362,7 +362,7 @@ export function MedicalRecordsManagement() {
                       <TableCell>
                         <Button
                           variant="outline"
-                          size="sm"
+                          size="icon"
                           onClick={async () => {
                             const translated = await translateRecord(record.notes || '', 'ko');
                             if (translated) {
@@ -372,9 +372,9 @@ export function MedicalRecordsManagement() {
                               });
                             }
                           }}
+                          className="w-9 h-9"
                         >
-                          <SiGoogletranslate className="h-4 w-4 mr-2" />
-                          번역
+                          <SiGoogletranslate className="h-5 w-5" />
                         </Button>
                       </TableCell>
                       <TableCell>
