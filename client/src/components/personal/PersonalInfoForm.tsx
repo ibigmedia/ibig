@@ -107,10 +107,10 @@ export function PersonalInfoForm() {
               />
             </div>
           </div>
-          <div className="pt-2 flex justify-end">
+          <div className="pt-2">
             <Button 
               type="submit"
-              className="w-full sm:w-auto min-w-[120px]"
+              className="w-full sm:w-auto sm:min-w-[120px]"
             >
               <Save className="h-4 w-4 mr-2" />
               저장
