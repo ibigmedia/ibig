@@ -502,15 +502,6 @@ export function registerRoutes(app: Express): Server {
     }
 
     try {
-      // Check if user already has an emergency contact
-      const existingContact = await db.query.emergencyContacts.findFirst({
-        where: eq(emergencyContacts.userId, req.user.id),
-      });
-
-      if (existingContact) {
-        return res.status(400).send("You already have an emergency contact");
-      }
-
       const [contact] = await db.insert(emergencyContacts)
         .values({
           ...req.body,
@@ -530,24 +521,28 @@ export function registerRoutes(app: Express): Server {
     }
 
     try {
-      // First check if this update would create a duplicate for the user
-      if (req.body.userId) {
-        const existingContact = await db.query.emergencyContacts.findFirst({
-          where: and(
-            eq(emergencyContacts.userId, req.body.userId),
-            sql`${emergencyContacts.id} != ${parseInt(req.params.id)}`
-          ),
-        });
+      const contactId = parseInt(req.params.id);
 
-        if (existingContact) {
-          return res.status(400).send("User already has an emergency contact");
-        }
+      // Verify the contact belongs to the user
+      const [existingContact] = await db
+        .select()
+        .from(emergencyContacts)
+        .where(
+          and(
+            eq(emergencyContacts.id, contactId),
+            eq(emergencyContacts.userId, req.user.id)
+          )
+        )
+        .limit(1);
+
+      if (!existingContact) {
+        return res.status(404).send("Contact not found");
       }
 
       const [updatedContact] = await db
         .update(emergencyContacts)
         .set(req.body)
-        .where(eq(emergencyContacts.id, parseInt(req.params.id)))
+        .where(eq(emergencyContacts.id, contactId))
         .returning();
 
       res.json(updatedContact);
@@ -556,26 +551,37 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.put("/api/emergency-contacts/:id/main", async (req, res) => {
+  app.delete("/api/emergency-contacts/:id", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
     }
 
     try {
-      // First, unset all main contacts
-      await db.update(emergencyContacts)
-        .set({ isMainContact: false })
-        .where(eq(emergencyContacts.userId, req.user.id));
+      const contactId = parseInt(req.params.id);
 
-      // Then set the new main contact
-      const [contact] = await db.update(emergencyContacts)
-        .set({ isMainContact: true })
-        .where(eq(emergencyContacts.id, parseInt(req.params.id)))
-        .returning();
+      // Verify the contact belongs to the user
+      const [existingContact] = await db
+        .select()
+        .from(emergencyContacts)
+        .where(
+          and(
+            eq(emergencyContacts.id, contactId),
+            eq(emergencyContacts.userId, req.user.id)
+          )
+        )
+        .limit(1);
 
-      res.json(contact);
+      if (!existingContact) {
+        return res.status(404).send("Contact not found");
+      }
+
+      await db
+        .delete(emergencyContacts)
+        .where(eq(emergencyContacts.id, contactId));
+
+      res.json({ message: "Contact deleted successfully" });
     } catch (error) {
-      res.status(500).send("Error setting main emergency contact");
+      res.status(500).send("Error deleting emergency contact");
     }
   });
 

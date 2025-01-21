@@ -36,11 +36,18 @@ export function Header() {
 
         <div className="flex items-center space-x-4">
           {user && user.role !== 'admin' && (
-            <Link href="/">
-              <Button variant="ghost">
-                {t('nav.dashboard')}
-              </Button>
-            </Link>
+            <>
+              <Link href="/">
+                <Button variant="ghost">
+                  {t('nav.dashboard')}
+                </Button>
+              </Link>
+              <Link href="/health">
+                <Button variant="ghost">
+                  {t('nav.health')}
+                </Button>
+              </Link>
+            </>
           )}
 
           {user && user.role === 'admin' && (

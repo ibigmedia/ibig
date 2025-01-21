@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { HomePage } from "@/pages/HomePage";
+import { UserDashboardPage } from "@/pages/UserDashboardPage";
 import AuthPage from "@/pages/auth-page";
 import { useUser } from "@/hooks/use-user";
 import { Loader2 } from "lucide-react";
@@ -42,7 +43,8 @@ function Router() {
   // Show regular user pages for non-admin users
   return (
     <Switch>
-      <Route path="/" component={HomePage} />
+      <Route path="/" component={UserDashboardPage} />
+      <Route path="/health" component={HomePage} />
       <Route component={NotFound} />
     </Switch>
   );
