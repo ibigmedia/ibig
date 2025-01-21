@@ -21,7 +21,7 @@ export function HomePage() {
 
         <Card>
           <CardContent className="p-6">
-            <Tabs defaultValue="health" className="space-y-6">
+            <Tabs defaultValue="health" className="space-y-6 tabs-section">
               <TabsList className="flex w-full justify-start border-b">
                 <TabsTrigger value="health" className="text-lg px-6 py-2">
                   건강기록
@@ -34,18 +34,10 @@ export function HomePage() {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="health">
-                <Card>
-                  <CardHeader>
-                    <h3 className="text-lg font-semibold">건강 기록</h3>
-                    <p className="text-sm text-muted-foreground">
-                      귀하의 건강 기록을 확인하고 관리하세요
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <MedicalHistory />
-                  </CardContent>
-                </Card>
+              <TabsContent value="health" className="mt-0 focus-visible:outline-none">
+                <div className="bg-card rounded-lg p-4 sm:p-6">
+                  <MedicalHistory />
+                </div>
               </TabsContent>
 
               <TabsContent value="medication">

@@ -22,10 +22,12 @@ export function UserDashboard() {
     const tabElement = document.querySelector(`[value="${tabValue}"]`) as HTMLElement;
     if (tabElement) {
       tabElement.click();
-      // Scroll to the tabs section
+      // Scroll to the tabs section smoothly
       const tabsSection = document.querySelector('.tabs-section');
       if (tabsSection) {
-        tabsSection.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => {
+          tabsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
       }
     }
   };
