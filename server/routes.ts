@@ -537,17 +537,9 @@ export function registerRoutes(app: Express): Server {
         .values({
           ...result.data,
           password: hashedPassword,
+          role: result.data.role || 'user',  // Ensure role is set
         })
         .returning();
-
-      // Send HTML formatted notification email for new user registration
-      await sendNotificationEmail(
-        '새 회원 가입 알림',
-        {
-          text: `새로운 회원이 가입했습니다.\n\n사용자명: ${username}\n가입일시: ${new Date().toLocaleString('ko-KR')}`,
-          html: generateRegistrationEmailHtml(username, new Date().toLocaleString('ko-KR'))
-        }
-      );
 
       req.login(newUser, (err) => {
         if (err) {
@@ -555,7 +547,7 @@ export function registerRoutes(app: Express): Server {
         }
         return res.json({
           message: "Registration successful",
-          user: { id: newUser.id, username: newUser.username },
+          user: { id: newUser.id, username: newUser.username, role: newUser.role },  // Include role in response
         });
       });
     } catch (error) {

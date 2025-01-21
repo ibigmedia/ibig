@@ -93,7 +93,7 @@ export default function AuthPage() {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>아이디</FormLabel>
+                    <FormLabel>아이디 (이메일)</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
