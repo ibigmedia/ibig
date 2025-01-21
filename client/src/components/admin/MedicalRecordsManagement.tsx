@@ -199,24 +199,20 @@ export function MedicalRecordsManagement() {
   const handleAdd = () => {
     if (!dialogType) return;
 
-    const now = new Date().toISOString();
     switch (dialogType) {
       case 'bloodPressure':
         addBloodPressureMutation.mutate({
           ...newRecord,
-          measuredAt: now,
         });
         break;
       case 'bloodSugar':
         addBloodSugarMutation.mutate({
           ...newRecord,
-          measuredAt: now,
         });
         break;
       case 'disease':
         addDiseaseHistoryMutation.mutate({
           ...newRecord,
-          diagnosisDate: now,
         });
         break;
     }

@@ -748,11 +748,18 @@ export function registerRoutes(app: Express): Server {
     }
 
     try {
+      const { systolic, diastolic, pulse, notes } = req.body;
+      const measuredAt = new Date();
+
       const [record] = await db
         .insert(bloodPressureRecords)
         .values({
-          ...req.body,
           userId: req.user.id,
+          systolic,
+          diastolic,
+          pulse,
+          notes,
+          measuredAt,
         })
         .returning();
 
@@ -787,11 +794,17 @@ export function registerRoutes(app: Express): Server {
     }
 
     try {
+      const { bloodSugar, measurementType, notes } = req.body;
+      const measuredAt = new Date();
+
       const [record] = await db
         .insert(bloodSugarRecords)
         .values({
-          ...req.body,
           userId: req.user.id,
+          bloodSugar,
+          measurementType,
+          notes,
+          measuredAt,
         })
         .returning();
 
@@ -826,11 +839,17 @@ export function registerRoutes(app: Express): Server {
     }
 
     try {
+      const { diseaseName, treatment, notes } = req.body;
+      const diagnosisDate = new Date();
+
       const [record] = await db
         .insert(diseaseHistories)
         .values({
-          ...req.body,
           userId: req.user.id,
+          diseaseName,
+          treatment,
+          diagnosisDate,
+          notes,
         })
         .returning();
 
