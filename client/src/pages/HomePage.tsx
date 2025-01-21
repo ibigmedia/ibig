@@ -4,9 +4,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MedicalForm } from '@/components/medical/MedicalForm';
 import { AppointmentScheduler } from '@/components/appointments/AppointmentScheduler';
 import { MedicationTracker } from '@/components/medications/MedicationTracker';
+import { WelcomePage } from '@/components/common/WelcomePage';
 
 export function HomePage() {
   const { t } = useLanguage();
+  const [showWelcome, setShowWelcome] = React.useState(true);
+
+  if (showWelcome) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <WelcomePage />
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={() => setShowWelcome(false)}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+          >
+            시작하기
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
