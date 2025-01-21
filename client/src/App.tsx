@@ -7,6 +7,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { HomePage } from "@/pages/HomePage";
 import { UserDashboardPage } from "@/pages/UserDashboardPage";
 import { MedicalRecordsPage } from "@/pages/MedicalRecordsPage";
+import { PersonalInfoPage } from "@/pages/PersonalInfoPage";
 import AuthPage from "@/pages/auth-page";
 import { useUser } from "@/hooks/use-user";
 import { Loader2 } from "lucide-react";
@@ -60,6 +61,7 @@ function Router() {
       <Route path="/" component={HomePage} />
       <Route path="/dashboard" component={UserDashboardPage} />
       <Route path="/medical-records" component={MedicalRecordsPage} />
+      <Route path="/personal" component={PersonalInfoPage} />
       <Route component={NotFound} />
     </Switch>
   );

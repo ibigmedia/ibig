@@ -50,14 +50,14 @@ export function Header() {
           <div className="hidden md:flex items-center space-x-4">
             {user && user.role === 'user' && (
               <>
-                <Link href="/dashboard">
+                <Link href="/personal">
                   <Button variant="ghost">
-                    {t('nav.dashboard')}
+                    {t('nav.personal')}
                   </Button>
                 </Link>
                 <Link href="/medical-records">
                   <Button variant="ghost">
-                    {t('nav.records')}
+                    {t('nav.health')}
                   </Button>
                 </Link>
               </>
@@ -118,14 +118,14 @@ export function Header() {
           <div className="md:hidden border-t py-4 space-y-2">
             {user && user.role === 'user' && (
               <>
-                <Link href="/dashboard">
+                <Link href="/personal">
                   <Button variant="ghost" className="w-full justify-start">
-                    {t('nav.dashboard')}
+                    {t('nav.personal')}
                   </Button>
                 </Link>
                 <Link href="/medical-records">
                   <Button variant="ghost" className="w-full justify-start">
-                    {t('nav.records')}
+                    {t('nav.health')}
                   </Button>
                 </Link>
               </>
