@@ -9,29 +9,52 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useQuery } from '@tanstack/react-query';
+
+interface DashboardStats {
+  totalPatients: number;
+  todayAppointments: number;
+  activePresciptions: number;
+}
+
+interface RecentAppointment {
+  id: number;
+  patientName: string;
+  date: string;
+  department: string;
+  status: string;
+}
 
 export function Dashboard() {
   const { t } = useLanguage();
+
+  const { data: stats } = useQuery<DashboardStats>({
+    queryKey: ['/api/admin/stats'],
+  });
+
+  const { data: appointments } = useQuery<RecentAppointment[]>({
+    queryKey: ['/api/admin/recent-appointments'],
+  });
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <h3 className="text-lg font-bold">Dashboard Overview</h3>
+          <h3 className="text-lg font-bold">대시보드 개요</h3>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 bg-primary/10 rounded-lg">
-              <h4 className="font-medium">Total Patients</h4>
-              <p className="text-2xl font-bold">1,234</p>
+              <h4 className="font-medium">전체 환자</h4>
+              <p className="text-2xl font-bold">{stats?.totalPatients ?? '-'}</p>
             </div>
             <div className="p-4 bg-primary/10 rounded-lg">
-              <h4 className="font-medium">Today's Appointments</h4>
-              <p className="text-2xl font-bold">45</p>
+              <h4 className="font-medium">오늘의 예약</h4>
+              <p className="text-2xl font-bold">{stats?.todayAppointments ?? '-'}</p>
             </div>
             <div className="p-4 bg-primary/10 rounded-lg">
-              <h4 className="font-medium">Active Prescriptions</h4>
-              <p className="text-2xl font-bold">89</p>
+              <h4 className="font-medium">활성 처방</h4>
+              <p className="text-2xl font-bold">{stats?.activePresciptions ?? '-'}</p>
             </div>
           </div>
         </CardContent>
@@ -39,30 +62,35 @@ export function Dashboard() {
 
       <Card>
         <CardHeader>
-          <h3 className="text-lg font-bold">Recent Appointments</h3>
+          <h3 className="text-lg font-bold">최근 예약</h3>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Patient</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>환자</TableHead>
+                <TableHead>날짜</TableHead>
+                <TableHead>진료과</TableHead>
+                <TableHead>상태</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow>
-                <TableCell>John Doe</TableCell>
-                <TableCell>2024-03-20</TableCell>
-                <TableCell>Cardiology</TableCell>
-                <TableCell>
-                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                    Completed
-                  </span>
-                </TableCell>
-              </TableRow>
-              {/* Add more rows as needed */}
+              {appointments?.map((appointment) => (
+                <TableRow key={appointment.id}>
+                  <TableCell>{appointment.patientName}</TableCell>
+                  <TableCell>{appointment.date}</TableCell>
+                  <TableCell>{appointment.department}</TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 ${
+                      appointment.status === 'completed' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-yellow-100 text-yellow-800'
+                    } rounded-full text-sm`}>
+                      {appointment.status === 'completed' ? '완료' : '예약됨'}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </CardContent>

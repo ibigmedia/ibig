@@ -55,9 +55,13 @@ export function Header() {
 
           {user ? (
             <>
-              {user.role === 'admin' && (
+              {user.role === 'admin' ? (
                 <Link href="/admin">
                   <Button variant="ghost">{t('nav.admin')}</Button>
+                </Link>
+              ) : (
+                <Link href="/dashboard">
+                  <Button variant="ghost">내 정보</Button>
                 </Link>
               )}
               <Button variant="outline" onClick={() => logout()}>
@@ -65,9 +69,9 @@ export function Header() {
               </Button>
             </>
           ) : (
-            <Button variant="outline">
-              <Link href="/auth">{t('auth.login')}</Link>
-            </Button>
+            <Link href="/auth">
+              <Button variant="outline">{t('auth.login')}</Button>
+            </Link>
           )}
         </div>
       </div>
