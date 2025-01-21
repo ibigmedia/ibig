@@ -883,6 +883,7 @@ export function registerRoutes(app: Express): Server {
 
     try {
       const { name, dosage, startDate, endDate, frequency, notes } = req.body;
+      console.log('Medication data received:', req.body); // Debug log
 
       if (!name || !dosage || !startDate || !frequency) {
         return res.status(400).send("필수 입력값이 누락되었습니다");
@@ -894,13 +895,16 @@ export function registerRoutes(app: Express): Server {
           userId: req.user.id,
           name,
           dosage,
-          startDate: new Date(startDate),
-          endDate: endDate ? new Date(endDate) : null,
+          startDate: new Date(startDate).toISOString(),
+          endDate: endDate ? new Date(endDate).toISOString() : null,
           frequency,
           notes,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         })
         .returning();
 
+      console.log('Medication saved:', record); // Debug log
       res.json(record);
     } catch (error) {
       console.error('Error saving medication:', error);

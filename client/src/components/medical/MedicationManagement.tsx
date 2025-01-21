@@ -38,12 +38,13 @@ export function MedicationManagement() {
     notes: '',
   });
 
-  const { data: medications = [] } = useQuery<Medication[]>({
+  const { data: medications = [], isError } = useQuery<Medication[]>({
     queryKey: ['/api/medications'],
   });
 
   const addMedicationMutation = useMutation({
     mutationFn: async (data: typeof newRecord) => {
+      console.log('Submitting medication data:', data); // Debug log
       const response = await fetch('/api/medications', {
         method: 'POST',
         headers: {
@@ -57,7 +58,8 @@ export function MedicationManagement() {
       });
 
       if (!response.ok) {
-        throw new Error(await response.text());
+        const errorText = await response.text();
+        throw new Error(errorText);
       }
 
       return response.json();
@@ -79,6 +81,7 @@ export function MedicationManagement() {
       queryClient.invalidateQueries({ queryKey: ['/api/medications'] });
     },
     onError: (error: Error) => {
+      console.error('Medication save error:', error); // Debug log
       toast({
         variant: 'destructive',
         title: '오류',
@@ -89,6 +92,7 @@ export function MedicationManagement() {
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Handling form submission:', newRecord); // Debug log
     if (!newRecord.name || !newRecord.dosage || !newRecord.startDate || !newRecord.frequency) {
       toast({
         variant: 'destructive',
@@ -99,6 +103,14 @@ export function MedicationManagement() {
     }
     addMedicationMutation.mutate(newRecord);
   };
+
+  if (isError) {
+    return (
+      <div className="p-4">
+        <p className="text-red-500">약물 정보를 불러오는 중 오류가 발생했습니다.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
