@@ -2,8 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { db } from "@db";
-import { users, appointments, medications, medicalRecords, emergencyContacts } from "@db/schema";
-import { eq } from "drizzle-orm";
+import { users, appointments, medications, medicalRecords, emergencyContacts, invitations } from "@db/schema"; // Added invitations
+import { eq, and } from "drizzle-orm"; // Added and
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 
@@ -360,6 +360,140 @@ export function registerRoutes(app: Express): Server {
       where: eq(medications.userId, req.user.id),
     });
     res.json(userMedications);
+  });
+
+
+  // Admin routes for sub-admin management
+  app.get("/api/admin/subadmins", async (req, res) => {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).send("Unauthorized");
+    }
+
+    try {
+      const subadmins = await db.query.users.findMany({
+        where: eq(users.role, 'subadmin'),
+      });
+      res.json(subadmins);
+    } catch (error) {
+      res.status(500).send("Error fetching sub-admins");
+    }
+  });
+
+  // Invitation routes
+  app.post("/api/admin/invite", async (req, res) => {
+    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
+      return res.status(403).send("Unauthorized");
+    }
+
+    const { email, role } = req.body;
+    if (!email || !role || !['user', 'subadmin'].includes(role)) {
+      return res.status(400).send("Invalid input");
+    }
+
+    // Sub-admins can only invite regular users
+    if (req.user.role === 'subadmin' && role === 'subadmin') {
+      return res.status(403).send("Sub-admins cannot invite other sub-admins");
+    }
+
+    try {
+      // Check if user already exists
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      if (existingUser) {
+        return res.status(400).send("User with this email already exists");
+      }
+
+      // Generate invitation token
+      const token = randomBytes(32).toString('hex');
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // Expires in 7 days
+
+      const [invitation] = await db
+        .insert(invitations)
+        .values({
+          email,
+          role,
+          token,
+          expiresAt,
+          createdById: req.user.id,
+        })
+        .returning();
+
+      // TODO: Send invitation email
+
+      res.json({ message: "Invitation sent successfully" });
+    } catch (error) {
+      res.status(500).send("Error sending invitation");
+    }
+  });
+
+  // Accept invitation
+  app.post("/api/invitations/:token/accept", async (req, res) => {
+    const { token } = req.params;
+    const { username, password } = req.body;
+
+    try {
+      // Find and validate invitation
+      const [invitation] = await db
+        .select()
+        .from(invitations)
+        .where(
+          and(
+            eq(invitations.token, token),
+            eq(invitations.expiresAt, new Date(), 'gt')
+          )
+        )
+        .limit(1);
+
+      if (!invitation) {
+        return res.status(400).send("Invalid or expired invitation");
+      }
+
+      // Create user account
+      const hashedPassword = await crypto.hash(password);
+      const [user] = await db
+        .insert(users)
+        .values({
+          username,
+          password: hashedPassword,
+          email: invitation.email,
+          role: invitation.role,
+        })
+        .returning();
+
+      // Delete used invitation
+      await db
+        .delete(invitations)
+        .where(eq(invitations.id, invitation.id));
+
+      // Log the user in
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).send("Error logging in");
+        }
+        res.json({ message: "Account created successfully" });
+      });
+    } catch (error) {
+      res.status(500).send("Error accepting invitation");
+    }
+  });
+
+  // Admin routes for emergency contacts
+  app.get("/api/admin/emergency-contacts", async (req, res) => {
+    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
+      return res.status(403).send("Unauthorized");
+    }
+
+    try {
+      const contacts = await db.query.emergencyContacts.findMany();
+      res.json(contacts);
+    } catch (error) {
+      res.status(500).send("Error fetching emergency contacts");
+    }
   });
 
   const httpServer = createServer(app);

@@ -1,12 +1,28 @@
 import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { relations } from 'drizzle-orm';
+import { z } from 'zod';
+
+// Define role type
+export const UserRole = z.enum(['admin', 'subadmin', 'user']);
+export type UserRole = z.infer<typeof UserRole>;
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").unique().notNull(),
   password: text("password").notNull(),
-  role: text("role").notNull().default('user'),
+  email: text("email").unique(),
+  role: text("role").$type<UserRole>().notNull().default('user'),
+});
+
+export const invitations = pgTable("invitations", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  role: text("role").$type<UserRole>().notNull(),
+  token: text("token").unique().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  createdById: integer("created_by_id").notNull().references(() => users.id),
 });
 
 export const medicalRecords = pgTable("medical_records", {
@@ -53,11 +69,21 @@ export const medications = pgTable("medications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Define relationships
 export const usersRelations = relations(users, ({ many }) => ({
   medicalRecords: many(medicalRecords),
   appointments: many(appointments),
   medications: many(medications),
   emergencyContacts: many(emergencyContacts),
+  createdInvitations: many(invitations, { relationName: "createdInvitations" }),
+}));
+
+export const invitationsRelations = relations(invitations, ({ one }) => ({
+  createdBy: one(users, {
+    fields: [invitations.createdById],
+    references: [users.id],
+    relationName: "createdInvitations"
+  }),
 }));
 
 // Schema for emergency contacts
@@ -66,7 +92,14 @@ export const selectEmergencyContactSchema = createSelectSchema(emergencyContacts
 export type InsertEmergencyContact = typeof emergencyContacts.$inferInsert;
 export type SelectEmergencyContact = typeof emergencyContacts.$inferSelect;
 
+// Schema for users
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 export type InsertUser = typeof users.$inferInsert;
 export type SelectUser = typeof users.$inferSelect;
+
+// Schema for invitations
+export const insertInvitationSchema = createInsertSchema(invitations);
+export const selectInvitationSchema = createSelectSchema(invitations);
+export type InsertInvitation = typeof invitations.$inferInsert;
+export type SelectInvitation = typeof invitations.$inferSelect;
