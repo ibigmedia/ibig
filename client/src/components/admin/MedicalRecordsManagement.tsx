@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Eye, Save } from "lucide-react";
+import { Plus, Eye, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { SelectMedicalRecord } from "@db/schema";
 
@@ -34,6 +34,9 @@ export function MedicalRecordsManagement() {
   const queryClient = useQueryClient();
   const [selectedRecord, setSelectedRecord] = React.useState<SelectMedicalRecord | null>(null);
   const [showDetails, setShowDetails] = React.useState(false);
+  const [showAddDialog, setShowAddDialog] = React.useState(false);
+  const [dialogType, setDialogType] = React.useState<'bloodPressure' | 'bloodSugar' | 'disease' | null>(null);
+  const [newRecord, setNewRecord] = React.useState<any>({});
 
   const { data: records = [] } = useQuery<SelectMedicalRecord[]>({
     queryKey: ['/api/admin/medical-records'],
@@ -85,9 +88,137 @@ export function MedicalRecordsManagement() {
     },
   });
 
+  const addBloodPressureMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch('/api/blood-pressure', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: '성공',
+        description: '혈압 기록이 추가되었습니다.',
+      });
+      setShowAddDialog(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/blood-pressure'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: '오류',
+        description: error.message,
+      });
+    },
+  });
+
+  const addBloodSugarMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch('/api/blood-sugar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: '성공',
+        description: '혈당 기록이 추가되었습니다.',
+      });
+      setShowAddDialog(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/blood-sugar'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: '오류',
+        description: error.message,
+      });
+    },
+  });
+
+  const addDiseaseHistoryMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch('/api/disease-histories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: '성공',
+        description: '질병 이력이 추가되었습니다.',
+      });
+      setShowAddDialog(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/disease-histories'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: '오류',
+        description: error.message,
+      });
+    },
+  });
+
   const handleSave = () => {
     if (selectedRecord) {
       updateMutation.mutate(selectedRecord);
+    }
+  };
+
+  const handleAdd = () => {
+    if (!dialogType) return;
+
+    const now = new Date().toISOString();
+    switch (dialogType) {
+      case 'bloodPressure':
+        addBloodPressureMutation.mutate({
+          ...newRecord,
+          measuredAt: now,
+        });
+        break;
+      case 'bloodSugar':
+        addBloodSugarMutation.mutate({
+          ...newRecord,
+          measuredAt: now,
+        });
+        break;
+      case 'disease':
+        addDiseaseHistoryMutation.mutate({
+          ...newRecord,
+          diagnosisDate: now,
+        });
+        break;
     }
   };
 
@@ -143,6 +274,18 @@ export function MedicalRecordsManagement() {
             </TabsContent>
 
             <TabsContent value="history">
+              <div className="flex justify-end mb-4">
+                <Button
+                  onClick={() => {
+                    setDialogType('disease');
+                    setShowAddDialog(true);
+                    setNewRecord({});
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  새 질병 이력 추가
+                </Button>
+              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -175,6 +318,18 @@ export function MedicalRecordsManagement() {
                 </TabsList>
 
                 <TabsContent value="bp">
+                  <div className="flex justify-end mb-4">
+                    <Button
+                      onClick={() => {
+                        setDialogType('bloodPressure');
+                        setShowAddDialog(true);
+                        setNewRecord({});
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      새 혈압 기록 추가
+                    </Button>
+                  </div>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -202,6 +357,18 @@ export function MedicalRecordsManagement() {
                 </TabsContent>
 
                 <TabsContent value="sugar">
+                  <div className="flex justify-end mb-4">
+                    <Button
+                      onClick={() => {
+                        setDialogType('bloodSugar');
+                        setShowAddDialog(true);
+                        setNewRecord({});
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      새 혈당 기록 추가
+                    </Button>
+                  </div>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -291,6 +458,102 @@ export function MedicalRecordsManagement() {
               </Button>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {dialogType === 'bloodPressure'
+                ? '새 혈압 기록'
+                : dialogType === 'bloodSugar'
+                ? '새 혈당 기록'
+                : '새 질병 이력'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {dialogType === 'bloodPressure' && (
+              <>
+                <div className="space-y-2">
+                  <Label>수축기 혈압</Label>
+                  <Input
+                    type="number"
+                    value={newRecord.systolic || ''}
+                    onChange={(e) => setNewRecord({ ...newRecord, systolic: parseInt(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>이완기 혈압</Label>
+                  <Input
+                    type="number"
+                    value={newRecord.diastolic || ''}
+                    onChange={(e) => setNewRecord({ ...newRecord, diastolic: parseInt(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>맥박</Label>
+                  <Input
+                    type="number"
+                    value={newRecord.pulse || ''}
+                    onChange={(e) => setNewRecord({ ...newRecord, pulse: parseInt(e.target.value) })}
+                  />
+                </div>
+              </>
+            )}
+            {dialogType === 'bloodSugar' && (
+              <>
+                <div className="space-y-2">
+                  <Label>혈당</Label>
+                  <Input
+                    type="number"
+                    value={newRecord.bloodSugar || ''}
+                    onChange={(e) => setNewRecord({ ...newRecord, bloodSugar: parseInt(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>측정시기</Label>
+                  <select
+                    className="w-full rounded-md border border-input bg-background px-3 py-2"
+                    value={newRecord.measurementType || 'before_meal'}
+                    onChange={(e) => setNewRecord({ ...newRecord, measurementType: e.target.value })}
+                  >
+                    <option value="before_meal">식전</option>
+                    <option value="after_meal">식후</option>
+                  </select>
+                </div>
+              </>
+            )}
+            {dialogType === 'disease' && (
+              <>
+                <div className="space-y-2">
+                  <Label>질병명</Label>
+                  <Input
+                    value={newRecord.diseaseName || ''}
+                    onChange={(e) => setNewRecord({ ...newRecord, diseaseName: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>치료내용</Label>
+                  <Input
+                    value={newRecord.treatment || ''}
+                    onChange={(e) => setNewRecord({ ...newRecord, treatment: e.target.value })}
+                  />
+                </div>
+              </>
+            )}
+            <div className="space-y-2">
+              <Label>메모</Label>
+              <Textarea
+                value={newRecord.notes || ''}
+                onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
+              />
+            </div>
+            <Button onClick={handleAdd} className="w-full">
+              <Save className="h-4 w-4 mr-2" />
+              저장하기
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
