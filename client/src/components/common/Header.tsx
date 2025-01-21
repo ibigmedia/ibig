@@ -35,7 +35,8 @@ export function Header() {
         </Link>
 
         <div className="flex items-center space-x-4">
-          {user && user.role !== 'admin' && (
+          {/* Remove dashboard link for subadmin */}
+          {user && user.role === 'user' && (
             <Link href="/dashboard">
               <Button variant="ghost">
                 {t('nav.dashboard')}
