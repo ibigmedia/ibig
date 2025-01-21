@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import promClient from "prom-client";
+import * as promClient from "prom-client";
 import { logger } from "./logger";
 
 // Initialize metrics registry
