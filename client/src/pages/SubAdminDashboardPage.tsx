@@ -61,8 +61,8 @@ export function SubAdminDashboardPage() {
         </TabsContent>
       </Tabs>
 
-      <ChangePasswordDialog
-        open={showPasswordDialog}
+      <ChangePasswordDialog 
+        open={showPasswordDialog} 
         onOpenChange={setShowPasswordDialog}
       />
     </div>
