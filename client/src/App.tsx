@@ -11,6 +11,7 @@ import { useUser } from "@/hooks/use-user";
 import { Loader2 } from "lucide-react";
 import { Header } from "@/components/common/Header";
 import { AdminPage } from "@/pages/AdminPage";
+import { SubAdminDashboardPage } from "@/pages/SubAdminDashboardPage";
 import { InvitationPage } from "@/pages/InvitationPage";
 
 function Router() {
@@ -42,6 +43,17 @@ function Router() {
       <Switch>
         <Route path="/" component={AdminPage} />
         <Route path="/admin" component={AdminPage} />
+        <Route component={NotFound} />
+      </Switch>
+    );
+  }
+
+  // Show subadmin dashboard for subadmin users
+  if (user.role === 'subadmin') {
+    return (
+      <Switch>
+        <Route path="/" component={SubAdminDashboardPage} />
+        <Route path="/subadmin" component={SubAdminDashboardPage} />
         <Route component={NotFound} />
       </Switch>
     );
