@@ -299,12 +299,22 @@ export function registerRoutes(app: Express): Server {
     }
 
     try {
+      // Check if user already has an emergency contact
+      const existingContact = await db.query.emergencyContacts.findFirst({
+        where: eq(emergencyContacts.userId, req.user.id),
+      });
+
+      if (existingContact) {
+        return res.status(400).send("You already have an emergency contact");
+      }
+
       const [contact] = await db.insert(emergencyContacts)
         .values({
           ...req.body,
           userId: req.user.id,
         })
         .returning();
+
       res.json(contact);
     } catch (error) {
       res.status(500).send("Error creating emergency contact");
@@ -317,11 +327,27 @@ export function registerRoutes(app: Express): Server {
     }
 
     try {
-      const [contact] = await db.update(emergencyContacts)
+      // First check if this update would create a duplicate for the user
+      if (req.body.userId) {
+        const existingContact = await db.query.emergencyContacts.findFirst({
+          where: and(
+            eq(emergencyContacts.userId, req.body.userId),
+            sql`${emergencyContacts.id} != ${parseInt(req.params.id)}`
+          ),
+        });
+
+        if (existingContact) {
+          return res.status(400).send("User already has an emergency contact");
+        }
+      }
+
+      const [updatedContact] = await db
+        .update(emergencyContacts)
         .set(req.body)
         .where(eq(emergencyContacts.id, parseInt(req.params.id)))
         .returning();
-      res.json(contact);
+
+      res.json(updatedContact);
     } catch (error) {
       res.status(500).send("Error updating emergency contact");
     }
@@ -526,6 +552,56 @@ export function registerRoutes(app: Express): Server {
       res.status(500).send("Error fetching emergency contacts");
     }
   });
+
+  app.delete("/api/admin/emergency-contacts/:id", async (req, res) => {
+    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
+      return res.status(403).send("Unauthorized");
+    }
+
+    try {
+      const [deletedContact] = await db
+        .delete(emergencyContacts)
+        .where(eq(emergencyContacts.id, parseInt(req.params.id)))
+        .returning();
+
+      res.json(deletedContact);
+    } catch (error) {
+      res.status(500).send("Error deleting emergency contact");
+    }
+  });
+
+  app.put("/api/admin/emergency-contacts/:id", async (req, res) => {
+    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
+      return res.status(403).send("Unauthorized");
+    }
+
+    try {
+      // First check if this update would create a duplicate for the user
+      if (req.body.userId) {
+        const existingContact = await db.query.emergencyContacts.findFirst({
+          where: and(
+            eq(emergencyContacts.userId, req.body.userId),
+            sql`${emergencyContacts.id} != ${parseInt(req.params.id)}`
+          ),
+        });
+
+        if (existingContact) {
+          return res.status(400).send("User already has an emergency contact");
+        }
+      }
+
+      const [updatedContact] = await db
+        .update(emergencyContacts)
+        .set(req.body)
+        .where(eq(emergencyContacts.id, parseInt(req.params.id)))
+        .returning();
+
+      res.json(updatedContact);
+    } catch (error) {
+      res.status(500).send("Error updating emergency contact");
+    }
+  });
+
 
   const httpServer = createServer(app);
   return httpServer;
