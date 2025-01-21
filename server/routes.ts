@@ -473,6 +473,26 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.post("/api/appointments", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const [appointment] = await db.insert(appointments)
+        .values({
+          ...req.body,
+          userId: req.user.id,
+        })
+        .returning();
+
+      res.json(appointment);
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      res.status(500).send("Error creating appointment");
+    }
+  });
+
   app.post("/api/user/change-password", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("인증되지 않은 사용자입니다");

@@ -6,10 +6,70 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { CheckSquare, CalendarClock, RefreshCw } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export function AppointmentScheduler() {
   const { t } = useLanguage();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const [time, setTime] = React.useState<string>("");
+  const [department, setDepartment] = React.useState<string>("");
+
+  const createAppointment = useMutation({
+    mutationFn: async () => {
+      if (!date || !time || !department) {
+        throw new Error("모든 필드를 입력해주세요");
+      }
+
+      const appointmentDate = new Date(date);
+      const [hours, minutes] = time.split(':');
+      appointmentDate.setHours(parseInt(hours), parseInt(minutes));
+
+      const response = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          date: appointmentDate.toISOString(),
+          department,
+          status: 'pending',
+        }),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "예약 완료",
+        description: "진료 예약이 성공적으로 생성되었습니다.",
+      });
+      // Reset form
+      setTime("");
+      setDepartment("");
+      // Refresh appointments list
+      queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "예약 실패",
+        description: error.message,
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createAppointment.mutate();
+  };
 
   return (
     <div className="space-y-6">
@@ -44,7 +104,7 @@ export function AppointmentScheduler() {
         </CardContent>
       </Card>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <h3 className="text-lg font-bold">진료 일정</h3>
@@ -64,7 +124,7 @@ export function AppointmentScheduler() {
             <h3 className="text-lg font-bold">진료 시간 선택</h3>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Select>
+            <Select value={time} onValueChange={setTime}>
               <SelectTrigger>
                 <SelectValue placeholder="시간 선택" />
               </SelectTrigger>
@@ -78,7 +138,7 @@ export function AppointmentScheduler() {
               </SelectContent>
             </Select>
 
-            <Select>
+            <Select value={department} onValueChange={setDepartment}>
               <SelectTrigger>
                 <SelectValue placeholder="진료과 선택" />
               </SelectTrigger>
@@ -90,10 +150,16 @@ export function AppointmentScheduler() {
               </SelectContent>
             </Select>
 
-            <Button className="w-full">진료 예약하기</Button>
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={createAppointment.isPending || !date || !time || !department}
+            >
+              {createAppointment.isPending ? "예약 중..." : "진료 예약하기"}
+            </Button>
           </CardContent>
         </Card>
-      </div>
+      </form>
     </div>
   );
 }
