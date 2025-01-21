@@ -1004,6 +1004,92 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Disease History DELETE endpoint
+  app.delete("/api/disease-histories/:id", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const recordId = parseInt(req.params.id);
+
+      // Verify the record exists and belongs to the user
+      const [existingRecord] = await db
+        .select()
+        .from(diseaseHistories)
+        .where(
+          and(
+            eq(diseaseHistories.id, recordId),
+            eq(diseaseHistories.userId, req.user.id)
+          )
+        )
+        .limit(1);
+
+      if (!existingRecord) {
+        return res.status(404).send("Record not found");
+      }
+
+      // Delete the record
+      const [deletedRecord] = await db
+        .delete(diseaseHistories)
+        .where(
+          and(
+            eq(diseaseHistories.id, recordId),
+            eq(diseaseHistories.userId, req.user.id)
+          )
+        )
+        .returning();
+
+      res.json({ success: true, deletedRecord });
+    } catch (error) {
+      console.error('Error deleting disease history:', error);
+      res.status(500).send("Error deleting disease history");
+    }
+  });
+
+  // Blood Pressure DELETE endpoint
+  app.delete("/api/blood-pressure/:id", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const recordId = parseInt(req.params.id);
+
+      // Verify the record exists and belongs to the user
+      const [existingRecord] = await db
+        .select()
+        .from(bloodPressureRecords)
+        .where(
+          and(
+            eq(bloodPressureRecords.id, recordId),
+            eq(bloodPressureRecords.userId, req.user.id)
+          )
+        )
+        .limit(1);
+
+      if (!existingRecord) {
+        return res.status(404).send("Record not found");
+      }
+
+      // Delete the record
+      const [deletedRecord] = await db
+        .delete(bloodPressureRecords)
+        .where(
+          and(
+            eq(bloodPressureRecords.id, recordId),
+            eq(bloodPressureRecords.userId, req.user.id)
+          )
+        )
+        .returning();
+
+      res.json({ success: true, deletedRecord });
+    } catch (error) {
+      console.error('Error deleting blood pressure record:', error);
+      res.status(500).send("Error deleting blood pressure record");
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

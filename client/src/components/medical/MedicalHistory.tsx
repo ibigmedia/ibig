@@ -78,6 +78,36 @@ export function MedicalHistory() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/disease-histories/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: '성공',
+        description: '질병 이력이 삭제되었습니다.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/disease-histories'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: '오류',
+        description: error.message,
+      });
+    },
+  });
+
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newRecord.diseaseName || !newRecord.diagnosisDate || !newRecord.treatment) {
@@ -118,6 +148,7 @@ export function MedicalHistory() {
                   </p>
                 )}
               </div>
+              <Button onClick={() => deleteMutation.mutate(record.id)} variant="destructive">삭제</Button>
             </CardContent>
           </Card>
         ))}
