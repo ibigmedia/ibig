@@ -52,9 +52,137 @@ export async function createAdminUser() {
 
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
-
-  // Create admin user on startup
   createAdminUser().catch(console.error);
+
+  // Admin routes
+  app.get("/api/admin/users", async (req, res) => {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).send("Unauthorized");
+    }
+
+    const allUsers = await db.query.users.findMany();
+    res.json(allUsers);
+  });
+
+  app.get("/api/admin/user-details/:userId", async (req, res) => {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).send("Unauthorized");
+    }
+
+    const userId = parseInt(req.params.userId);
+
+    try {
+      const [
+        userMedicalRecords,
+        userAppointments,
+        userMedications,
+        userEmergencyContacts
+      ] = await Promise.all([
+        db.query.medicalRecords.findMany({
+          where: eq(medicalRecords.userId, userId)
+        }),
+        db.query.appointments.findMany({
+          where: eq(appointments.userId, userId)
+        }),
+        db.query.medications.findMany({
+          where: eq(medications.userId, userId)
+        }),
+        db.query.emergencyContacts.findMany({
+          where: eq(emergencyContacts.userId, userId)
+        })
+      ]);
+
+      res.json({
+        medicalRecords: userMedicalRecords,
+        appointments: userAppointments,
+        medications: userMedications,
+        emergencyContacts: userEmergencyContacts
+      });
+    } catch (error) {
+      res.status(500).send("Error fetching user details");
+    }
+  });
+
+  app.get("/api/admin/stats", async (req, res) => {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).send("Unauthorized");
+    }
+
+    try {
+      const [
+        userCount,
+        todayAppointments,
+        activeMedications
+      ] = await Promise.all([
+        db.select().from(users).execute().then(users => users.length),
+        db.select()
+          .from(appointments)
+          .where(eq(appointments.date, new Date().toISOString().split('T')[0]))
+          .execute()
+          .then(appointments => appointments.length),
+        db.select()
+          .from(medications)
+          .where(eq(medications.endDate, null))
+          .execute()
+          .then(medications => medications.length)
+      ]);
+
+      res.json({
+        totalPatients: userCount,
+        todayAppointments,
+        activePresciptions: activeMedications
+      });
+    } catch (error) {
+      res.status(500).send("Error fetching statistics");
+    }
+  });
+
+  // Admin routes for medical records and appointments
+  app.get("/api/admin/medical-records", async (req, res) => {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).send("Unauthorized");
+    }
+
+    try {
+      const records = await db.query.medicalRecords.findMany();
+      res.json(records);
+    } catch (error) {
+      res.status(500).send("Error fetching medical records");
+    }
+  });
+
+  app.get("/api/admin/appointments", async (req, res) => {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).send("Unauthorized");
+    }
+
+    try {
+      const allAppointments = await db.query.appointments.findMany();
+      res.json(allAppointments);
+    } catch (error) {
+      res.status(500).send("Error fetching appointments");
+    }
+  });
+
+  app.put("/api/admin/appointments/:id/status", async (req, res) => {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).send("Unauthorized");
+    }
+
+    const appointmentId = parseInt(req.params.id);
+    const { status } = req.body;
+
+    try {
+      const [appointment] = await db
+        .update(appointments)
+        .set({ status })
+        .where(eq(appointments.id, appointmentId))
+        .returning();
+      res.json(appointment);
+    } catch (error) {
+      res.status(500).send("Error updating appointment status");
+    }
+  });
 
   // Password change API
   app.post("/api/user/change-password", async (req, res) => {
