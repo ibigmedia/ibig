@@ -36,7 +36,7 @@ export function Header() {
 
         <div className="flex items-center space-x-4">
           {user && (
-            <Link href="/">
+            <Link href="/dashboard">
               <Button variant="ghost">
                 {t('nav.dashboard')}
               </Button>

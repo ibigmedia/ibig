@@ -9,6 +9,7 @@ import AuthPage from "@/pages/auth-page";
 import { useUser } from "@/hooks/use-user";
 import { Loader2 } from "lucide-react";
 import { Header } from "@/components/common/Header";
+import { UserDashboardPage } from "@/pages/UserDashboardPage";
 
 function Router() {
   const { user, isLoading } = useUser();
@@ -30,6 +31,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={HomePage} />
+      <Route path="/dashboard" component={UserDashboardPage} />
       <Route component={NotFound} />
     </Switch>
   );

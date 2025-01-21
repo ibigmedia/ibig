@@ -12,13 +12,13 @@ export function UserDashboardPage() {
       <div className="mb-6">
         <nav className="flex space-x-4">
           <Link href="/">
-            <Button variant="ghost">{t('nav.medical')}</Button>
+            <Button variant="ghost">{t('nav.health')}</Button>
           </Link>
           <Link href="/?tab=appointments">
-            <Button variant="ghost">{t('nav.appointments')}</Button>
+            <Button variant="ghost">{t('nav.appointment')}</Button>
           </Link>
           <Link href="/?tab=medications">
-            <Button variant="ghost">{t('nav.medications')}</Button>
+            <Button variant="ghost">{t('nav.medication')}</Button>
           </Link>
         </nav>
       </div>
