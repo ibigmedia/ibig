@@ -125,7 +125,12 @@ export function registerRoutes(app: Express): Server {
         todayAppointments,
         activeMedications
       ] = await Promise.all([
-        db.select().from(users).execute().then(users => users.length),
+        // Exclude admin and subadmin users from the count
+        db.select()
+          .from(users)
+          .where(eq(users.role, 'user'))
+          .execute()
+          .then(users => users.length),
         db.select()
           .from(appointments)
           .where(sql`DATE(${appointments.date}) = ${today.toISOString().split('T')[0]}`)
@@ -243,6 +248,49 @@ export function registerRoutes(app: Express): Server {
     });
     res.json(records);
   });
+
+  //Add medical records API endpoints
+  app.post("/api/medical-records", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      // Check if user already has a medical record
+      const existingRecord = await db.query.medicalRecords.findFirst({
+        where: eq(medicalRecords.userId, req.user.id),
+      });
+
+      if (existingRecord) {
+        // Update existing record
+        const [updatedRecord] = await db
+          .update(medicalRecords)
+          .set({
+            ...req.body,
+            updatedAt: new Date(),
+          })
+          .where(eq(medicalRecords.id, existingRecord.id))
+          .returning();
+
+        return res.json(updatedRecord);
+      }
+
+      // Create new record
+      const [newRecord] = await db
+        .insert(medicalRecords)
+        .values({
+          ...req.body,
+          userId: req.user.id,
+        })
+        .returning();
+
+      res.json(newRecord);
+    } catch (error) {
+      console.error('Error saving medical record:', error);
+      res.status(500).send("Error saving medical record");
+    }
+  });
+
 
   // Medical History Export API
   app.get("/api/medical-records/export", async (req, res) => {
