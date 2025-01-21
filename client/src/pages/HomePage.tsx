@@ -4,11 +4,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MedicalForm } from '@/components/medical/MedicalForm';
 import { AppointmentScheduler } from '@/components/appointments/AppointmentScheduler';
 import { MedicationManagement } from '@/components/medical/MedicationManagement';
-import { EmergencyContacts } from '@/components/medical/EmergencyContacts';
-import { PersonalInfoForm } from '@/components/personal/PersonalInfoForm';
-import { WelcomePage } from '@/components/common/WelcomePage';
 import { Card, CardContent } from '@/components/ui/card';
 import { useUser } from '@/hooks/use-user';
+import { WelcomePage } from '@/components/common/WelcomePage';
 
 export function HomePage() {
   const { t } = useLanguage();
@@ -33,11 +31,8 @@ export function HomePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Tabs defaultValue="personal" className="space-y-6">
+      <Tabs defaultValue="health" className="space-y-6">
         <TabsList className="flex w-full justify-start border-b">
-          <TabsTrigger value="personal" className="text-lg px-6 py-2">
-            {t('nav.personal')}
-          </TabsTrigger>
           <TabsTrigger value="health" className="text-lg px-6 py-2">
             {t('nav.health')}
           </TabsTrigger>
@@ -48,33 +43,6 @@ export function HomePage() {
             {t('nav.appointment')}
           </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="personal">
-          <div className="grid gap-6">
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">{t('personal.basicInfo')}</h2>
-              <Card className="mb-6">
-                <CardContent className="pt-6">
-                  <p className="text-muted-foreground">
-                    {t('personal.basicInfoDescription')}
-                  </p>
-                </CardContent>
-              </Card>
-              <PersonalInfoForm />
-            </section>
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">{t('personal.emergency')}</h2>
-              <Card className="mb-6">
-                <CardContent className="pt-6">
-                  <p className="text-muted-foreground">
-                    {t('personal.emergencyDescription')}
-                  </p>
-                </CardContent>
-              </Card>
-              <EmergencyContacts />
-            </section>
-          </div>
-        </TabsContent>
 
         <TabsContent value="health">
           <div className="space-y-6">
