@@ -181,94 +181,57 @@ export function MedicalRecordsManagement() {
           <h2 className="text-lg font-bold">의료 기록 관리</h2>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="basic">
+          <Tabs defaultValue="records">
             <TabsList>
-              <TabsTrigger value="basic">기본 정보</TabsTrigger>
-              <TabsTrigger value="history">과거 병력</TabsTrigger>
               <TabsTrigger value="records">건강 기록</TabsTrigger>
+              <TabsTrigger value="history">과거 병력</TabsTrigger>
               <TabsTrigger value="medications">약물 관리</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="basic">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>이름</TableHead>
-                    <TableHead>생년월일</TableHead>
-                    <TableHead>당뇨여부</TableHead>
-                    <TableHead>특이사항</TableHead>
-                    <TableHead className="w-[100px]">관리</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {records.map((record) => (
-                    <TableRow key={record.id}>
-                      <TableCell>{record.name}</TableCell>
-                      <TableCell>{record.birthDate}</TableCell>
-                      <TableCell>{record.isDiabetic ? '예' : '아니오'}</TableCell>
-                      <TableCell>{record.notes}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedRecord(record);
-                            setShowDetails(true);
-                          }}
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          상세보기
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TabsContent>
-
-            <TabsContent value="history">
-              <div className="flex justify-end mb-4">
-                <Button
-                  onClick={() => {
-                    setDialogType('disease');
-                    setShowAddDialog(true);
-                    setNewRecord({});
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  새 질병 이력 추가
-                </Button>
-              </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>환자명</TableHead>
-                    <TableHead>질병명</TableHead>
-                    <TableHead>진단일</TableHead>
-                    <TableHead>치료내용</TableHead>
-                    <TableHead>비고</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {diseaseHistories.map((history: any) => (
-                    <TableRow key={history.id}>
-                      <TableCell>{history.user?.name || ''}</TableCell>
-                      <TableCell>{history.diseaseName}</TableCell>
-                      <TableCell>{new Date(history.diagnosisDate).toLocaleDateString()}</TableCell>
-                      <TableCell>{history.treatment}</TableCell>
-                      <TableCell>{history.notes}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TabsContent>
-
             <TabsContent value="records">
-              <Tabs defaultValue="bp">
+              <Tabs defaultValue="personal">
                 <TabsList>
+                  <TabsTrigger value="personal">기본 정보</TabsTrigger>
                   <TabsTrigger value="bp">혈압</TabsTrigger>
                   <TabsTrigger value="sugar">혈당</TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="personal">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>이름</TableHead>
+                        <TableHead>생년월일</TableHead>
+                        <TableHead>당뇨여부</TableHead>
+                        <TableHead>특이사항</TableHead>
+                        <TableHead className="w-[100px]">관리</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {records.map((record) => (
+                        <TableRow key={record.id}>
+                          <TableCell>{record.name}</TableCell>
+                          <TableCell>{record.birthDate}</TableCell>
+                          <TableCell>{record.isDiabetic ? '예' : '아니오'}</TableCell>
+                          <TableCell>{record.notes}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedRecord(record);
+                                setShowDetails(true);
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              상세보기
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TabsContent>
 
                 <TabsContent value="bp">
                   <div className="flex justify-end mb-4">
@@ -344,6 +307,43 @@ export function MedicalRecordsManagement() {
                   </Table>
                 </TabsContent>
               </Tabs>
+            </TabsContent>
+
+            <TabsContent value="history">
+              <div className="flex justify-end mb-4">
+                <Button
+                  onClick={() => {
+                    setDialogType('disease');
+                    setShowAddDialog(true);
+                    setNewRecord({});
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  새 질병 이력 추가
+                </Button>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>환자명</TableHead>
+                    <TableHead>질병명</TableHead>
+                    <TableHead>진단일</TableHead>
+                    <TableHead>치료내용</TableHead>
+                    <TableHead>비고</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {diseaseHistories.map((history: any) => (
+                    <TableRow key={history.id}>
+                      <TableCell>{history.user?.name || ''}</TableCell>
+                      <TableCell>{history.diseaseName}</TableCell>
+                      <TableCell>{new Date(history.diagnosisDate).toLocaleDateString()}</TableCell>
+                      <TableCell>{history.treatment}</TableCell>
+                      <TableCell>{history.notes}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </TabsContent>
 
             <TabsContent value="medications">
