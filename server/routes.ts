@@ -9,9 +9,9 @@ import { promisify } from "util";
 import nodemailer from "nodemailer";
 import type { Request, Response, NextFunction } from "express";
 import { getPatientProfile, updatePatientProfile } from "./routes/patient-profile";
-import { encryption } from './utils/encryption'; // Add encryption import
-import { logger } from "./logger";  // Change from '../logger' to './logger'
-
+import { encryption } from './utils/encryption';
+import { logger } from "./logger";
+import translationRouter from './routes/translation';
 
 const scryptAsync = promisify(scrypt);
 
@@ -31,7 +31,7 @@ const crypto = {
     )) as Buffer;
     return timingSafeEqual(hashedPasswordBuf, suppliedPasswordBuf);
   },
-  randomBytes: randomBytes //Added for exportId generation
+  randomBytes: randomBytes
 };
 
 export async function createAdminUser() {
@@ -263,6 +263,8 @@ export function registerRoutes(app: Express): Server {
   // Patient profile routes
   app.get("/api/patient-profile", getPatientProfile);
   app.put("/api/patient-profile", updatePatientProfile);
+
+  app.use('/api', translationRouter);
 
   app.get("/api/admin/users", async (req, res) => {
     if (!req.user || req.user.role !== 'admin') {
@@ -547,7 +549,7 @@ export function registerRoutes(app: Express): Server {
         .values({
           ...result.data,
           password: hashedPassword,
-          role: result.data.role || 'user',  // Ensure role is set
+          role: result.data.role || 'user',
         })
         .returning();
 
@@ -557,7 +559,7 @@ export function registerRoutes(app: Express): Server {
         }
         return res.json({
           message: "Registration successful",
-          user: { id: newUser.id, username: newUser.username, role: newUser.role },  // Include role in response
+          user: { id: newUser.id, username: newUser.username, role: newUser.role },
         });
       });
     } catch (error) {
@@ -755,7 +757,7 @@ export function registerRoutes(app: Express): Server {
 
     try {
       // Attempt to decrypt and validate the data
-      const decryptedData = encryption.decrypt(encryptedData, exportKey); // Added exportKey
+      const decryptedData = encryption.decrypt(encryptedData, exportKey);
 
       // Verify the data structure
       if (!decryptedData.exportId || !decryptedData.patientInfo) {
@@ -986,7 +988,7 @@ export function registerRoutes(app: Express): Server {
           text: `의료 관리 시스템의 서브관리자로 초대되었습니다.\n\n초대 링크: ${invitationUrl}\n\n이 링크는 7일간 유효합니다.`,
           html: generateInvitationEmailHtml(invitationUrl)
         },
-        email // Pass the invitation recipient's email
+        email
       );
 
       res.json({
