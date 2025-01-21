@@ -72,10 +72,10 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="w-full min-h-screen flex items-center justify-center p-4 bg-background">
+    <div className="flex-1 flex items-center justify-center p-4">
       <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-center">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl text-center">
             {isRegistering ? "회원가입" : "로그인"}
           </CardTitle>
         </CardHeader>
