@@ -348,6 +348,7 @@ export function MedicalRecordsManagement() {
                     <TableHead>생년월일</TableHead>
                     <TableHead>당뇨여부</TableHead>
                     <TableHead>특이사항</TableHead>
+                    <TableHead>번역</TableHead>
                     <TableHead>관리</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -357,25 +358,24 @@ export function MedicalRecordsManagement() {
                       <TableCell>{record.name}</TableCell>
                       <TableCell>{record.birthDate}</TableCell>
                       <TableCell>{record.isDiabetic ? '예' : '아니오'}</TableCell>
+                      <TableCell>{record.notes}</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span>{record.notes}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={async () => {
-                              const translated = await translateRecord(record.notes || '', 'ko');
-                              if (translated) {
-                                toast({
-                                  title: '번역 결과',
-                                  description: translated,
-                                });
-                              }
-                            }}
-                          >
-                            <SiGoogletranslate className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={async () => {
+                            const translated = await translateRecord(record.notes || '', 'ko');
+                            if (translated) {
+                              toast({
+                                title: '번역 결과',
+                                description: translated,
+                              });
+                            }
+                          }}
+                        >
+                          <SiGoogletranslate className="h-4 w-4 mr-2" />
+                          번역
+                        </Button>
                       </TableCell>
                       <TableCell>
                         <Button
@@ -461,7 +461,6 @@ export function MedicalRecordsManagement() {
                         <TableHead>수축기</TableHead>
                         <TableHead>이완기</TableHead>
                         <TableHead>맥박</TableHead>
-                        <TableHead>메모</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -472,7 +471,6 @@ export function MedicalRecordsManagement() {
                           <TableCell>{record.systolic}</TableCell>
                           <TableCell>{record.diastolic}</TableCell>
                           <TableCell>{record.pulse}</TableCell>
-                          <TableCell>{record.notes}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
