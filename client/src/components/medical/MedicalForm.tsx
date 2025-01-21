@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { MedicalExport } from './MedicalExport';
 
 export function MedicalForm() {
   const { t } = useLanguage();
@@ -12,6 +13,12 @@ export function MedicalForm() {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <div className="w-48">
+          <MedicalExport />
+        </div>
+      </div>
+
       <Card>
         <CardHeader>
           <h3 className="text-lg font-bold">{t('medical.basicInfo')}</h3>

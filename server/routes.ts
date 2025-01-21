@@ -20,6 +20,39 @@ export function registerRoutes(app: Express): Server {
     res.json(records);
   });
 
+  // Medical History Export API
+  app.get("/api/medical-records/export", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      // Fetch all medical related data for the user
+      const [records, userAppointments, userMedications] = await Promise.all([
+        db.query.medicalRecords.findMany({
+          where: eq(medicalRecords.userId, req.user.id),
+        }),
+        db.query.appointments.findMany({
+          where: eq(appointments.userId, req.user.id),
+        }),
+        db.query.medications.findMany({
+          where: eq(medications.userId, req.user.id),
+        }),
+      ]);
+
+      const exportData = {
+        patientInfo: records[0], // Basic medical information
+        appointments: userAppointments,
+        medications: userMedications,
+        exportDate: new Date().toISOString(),
+      };
+
+      res.json(exportData);
+    } catch (error) {
+      res.status(500).send("Error exporting medical history");
+    }
+  });
+
   // Appointments API
   app.get("/api/appointments", async (req, res) => {
     if (!req.user) {
