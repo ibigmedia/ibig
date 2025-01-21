@@ -122,7 +122,7 @@ export function HomePage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="medication">
+              <TabsContent value="medication" className="mt-0 focus-visible:outline-none">
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">투약 관리</h3>
                   <p className="text-muted-foreground">
@@ -132,7 +132,7 @@ export function HomePage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="appointment">
+              <TabsContent value="appointment" className="mt-0 focus-visible:outline-none">
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">진료 예약</h3>
                   <p className="text-muted-foreground">

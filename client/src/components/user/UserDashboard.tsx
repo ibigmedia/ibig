@@ -18,11 +18,11 @@ export function UserDashboard() {
     if (!tabsContainer) return;
 
     // Find the specific tab trigger
-    const tabTrigger = tabsContainer.querySelector(`[value="${tabValue}"]`) as HTMLElement;
+    const tabTrigger = tabsContainer.querySelector(`button[value="${tabValue}"]`);
     if (!tabTrigger) return;
 
     // Click the tab
-    tabTrigger.click();
+    (tabTrigger as HTMLElement).click();
 
     // Scroll to the tabs section
     setTimeout(() => {
