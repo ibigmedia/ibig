@@ -11,12 +11,29 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { MedicalExport } from './MedicalExport';
 import { EmergencyContacts } from './EmergencyContacts';
-import { Save } from 'lucide-react';
+import { Save, Plus } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface MedicalFormData {
   name: string;
   birthDate: string;
   isDiabetic: boolean;
+  notes?: string;
+  drugAllergies?: string;
+  foodAllergies?: string;
+}
+
+interface BloodPressureData {
+  systolic: number;
+  diastolic: number;
+  pulse: number;
   notes?: string;
 }
 
@@ -30,11 +47,30 @@ export function MedicalForm() {
     select: (records: any[]) => records[0],
   });
 
+  const { data: bloodPressureRecords = [] } = useQuery({
+    queryKey: ['/api/blood-pressure'],
+  });
+
   const { register, handleSubmit, setValue, watch } = useForm<MedicalFormData>({
     defaultValues: {
       name: '',
       birthDate: '',
       isDiabetic: false,
+      notes: '',
+      drugAllergies: '',
+      foodAllergies: '',
+    },
+  });
+
+  const {
+    register: registerBP,
+    handleSubmit: handleSubmitBP,
+    reset: resetBP,
+  } = useForm<BloodPressureData>({
+    defaultValues: {
+      systolic: 120,
+      diastolic: 80,
+      pulse: 72,
       notes: '',
     },
   });
@@ -46,6 +82,8 @@ export function MedicalForm() {
       setValue('birthDate', medicalRecord.birthDate);
       setValue('isDiabetic', medicalRecord.isDiabetic);
       setValue('notes', medicalRecord.notes);
+      setValue('drugAllergies', medicalRecord.drugAllergies);
+      setValue('foodAllergies', medicalRecord.foodAllergies);
     }
   }, [medicalRecord, setValue]);
 
@@ -82,8 +120,49 @@ export function MedicalForm() {
     },
   });
 
+  const bloodPressureMutation = useMutation({
+    mutationFn: async (data: BloodPressureData) => {
+      const response = await fetch('/api/blood-pressure', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          measuredAt: new Date().toISOString(),
+        }),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: '저장 완료',
+        description: '혈압 기록이 저장되었습니다.',
+      });
+      resetBP();
+      queryClient.invalidateQueries({ queryKey: ['/api/blood-pressure'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: '저장 실패',
+        description: error.message,
+      });
+    },
+  });
+
   const onSubmit = handleSubmit((data) => {
     mutation.mutate(data);
+  });
+
+  const onSubmitBP = handleSubmitBP((data) => {
+    bloodPressureMutation.mutate(data);
   });
 
   const isDiabetic = watch('isDiabetic');
@@ -130,8 +209,85 @@ export function MedicalForm() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <h3 className="text-lg font-bold">{t('medical.allergies')}</h3>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>{t('medical.drugAllergy')}</Label>
+            <Textarea {...register('drugAllergies')} placeholder="약물 알러지가 있다면 입력해주세요." />
+          </div>
+          <div>
+            <Label>{t('medical.foodAllergy')}</Label>
+            <Textarea {...register('foodAllergies')} placeholder="음식 알러지가 있다면 입력해주세요." />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <h3 className="text-lg font-bold">혈압 관리</h3>
+          <form onSubmit={onSubmitBP} className="flex items-center gap-2">
+            <div className="grid grid-cols-4 gap-2">
+              <Input
+                type="number"
+                placeholder="수축기"
+                className="w-20"
+                {...registerBP('systolic', { required: true })}
+              />
+              <Input
+                type="number"
+                placeholder="이완기"
+                className="w-20"
+                {...registerBP('diastolic', { required: true })}
+              />
+              <Input
+                type="number"
+                placeholder="맥박"
+                className="w-20"
+                {...registerBP('pulse', { required: true })}
+              />
+              <Input
+                placeholder="메모"
+                {...registerBP('notes')}
+              />
+            </div>
+            <Button type="submit" size="sm">
+              <Plus className="h-4 w-4" />
+              기록추가
+            </Button>
+          </form>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>날짜</TableHead>
+                <TableHead>수축기</TableHead>
+                <TableHead>이완기</TableHead>
+                <TableHead>맥박</TableHead>
+                <TableHead>메모</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {bloodPressureRecords.map((record: any) => (
+                <TableRow key={record.id}>
+                  <TableCell>
+                    {new Date(record.measuredAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>{record.systolic}</TableCell>
+                  <TableCell>{record.diastolic}</TableCell>
+                  <TableCell>{record.pulse}</TableCell>
+                  <TableCell>{record.notes}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
       <EmergencyContacts />
-      
     </div>
   );
 }

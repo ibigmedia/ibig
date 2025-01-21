@@ -15,6 +15,30 @@ export const users = pgTable("users", {
   role: text("role").$type<UserRole>().notNull().default('user'),
 });
 
+export const medicalRecords = pgTable("medical_records", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  birthDate: text("birth_date").notNull(),
+  isDiabetic: boolean("is_diabetic").default(false),
+  notes: text("notes"),
+  drugAllergies: text("drug_allergies"),
+  foodAllergies: text("food_allergies"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const bloodPressureRecords = pgTable("blood_pressure_records", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  systolic: integer("systolic").notNull(), // 수축기 혈압
+  diastolic: integer("diastolic").notNull(), // 이완기 혈압
+  pulse: integer("pulse").notNull(), // 맥박
+  measuredAt: timestamp("measured_at").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const invitations = pgTable("invitations", {
   id: serial("id").primaryKey(),
   email: text("email").notNull(),
@@ -23,29 +47,6 @@ export const invitations = pgTable("invitations", {
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   createdById: integer("created_by_id").notNull().references(() => users.id),
-});
-
-export const medicalRecords = pgTable("medical_records", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  name: text("name").notNull(),
-  birthDate: text("birth_date").notNull(),
-  isDiabetic: boolean("is_diabetic").default(false),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const emergencyContacts = pgTable("emergency_contacts", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  name: text("name").notNull(),
-  relationship: text("relationship").notNull(),
-  phoneNumber: text("phone_number").notNull(),
-  email: text("email"),
-  isMainContact: boolean("is_main_contact").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const appointments = pgTable("appointments", {
@@ -69,9 +70,23 @@ export const medications = pgTable("medications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const emergencyContacts = pgTable("emergency_contacts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  relationship: text("relationship").notNull(),
+  phoneNumber: text("phone_number").notNull(),
+  email: text("email"),
+  isMainContact: boolean("is_main_contact").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+
 // Define relationships
 export const usersRelations = relations(users, ({ many }) => ({
   medicalRecords: many(medicalRecords),
+  bloodPressureRecords: many(bloodPressureRecords),
   appointments: many(appointments),
   medications: many(medications),
   emergencyContacts: many(emergencyContacts),
@@ -103,3 +118,15 @@ export const insertInvitationSchema = createInsertSchema(invitations);
 export const selectInvitationSchema = createSelectSchema(invitations);
 export type InsertInvitation = typeof invitations.$inferInsert;
 export type SelectInvitation = typeof invitations.$inferSelect;
+
+// Schema for blood pressure records
+export const insertBloodPressureSchema = createInsertSchema(bloodPressureRecords);
+export const selectBloodPressureSchema = createSelectSchema(bloodPressureRecords);
+export type InsertBloodPressure = typeof bloodPressureRecords.$inferInsert;
+export type SelectBloodPressure = typeof bloodPressureRecords.$inferSelect;
+
+// Schema for medical records
+export const insertMedicalRecordSchema = createInsertSchema(medicalRecords);
+export const selectMedicalRecordSchema = createSelectSchema(medicalRecords);
+export type InsertMedicalRecord = typeof medicalRecords.$inferInsert;
+export type SelectMedicalRecord = typeof medicalRecords.$inferSelect;

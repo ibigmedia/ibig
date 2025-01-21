@@ -2,8 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { db } from "@db";
-import { users, appointments, medications, medicalRecords, emergencyContacts, invitations } from "@db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { users, appointments, medications, medicalRecords, emergencyContacts, invitations, bloodPressureRecords } from "@db/schema";
+import { eq, and, sql, desc } from "drizzle-orm";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 
@@ -650,6 +650,44 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Blood Pressure API endpoints
+  app.get("/api/blood-pressure", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const records = await db.query.bloodPressureRecords.findMany({
+        where: eq(bloodPressureRecords.userId, req.user.id),
+        orderBy: [desc(bloodPressureRecords.measuredAt)],
+      });
+      res.json(records);
+    } catch (error) {
+      console.error('Error fetching blood pressure records:', error);
+      res.status(500).send("Error fetching blood pressure records");
+    }
+  });
+
+  app.post("/api/blood-pressure", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const [record] = await db
+        .insert(bloodPressureRecords)
+        .values({
+          ...req.body,
+          userId: req.user.id,
+        })
+        .returning();
+
+      res.json(record);
+    } catch (error) {
+      console.error('Error saving blood pressure record:', error);
+      res.status(500).send("Error saving blood pressure record");
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
