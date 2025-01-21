@@ -38,14 +38,20 @@ export function HomePage() {
       <Tabs defaultValue="personal" className="space-y-6">
         <TabsList className="flex w-full justify-start border-b">
           <TabsTrigger value="personal" className="text-lg px-6 py-2">
-            개인정보 관리
+            개인정보
           </TabsTrigger>
-          <TabsTrigger value="medical" className="text-lg px-6 py-2">
-            의료정보 관리
+          <TabsTrigger value="health" className="text-lg px-6 py-2">
+            건강기록
+          </TabsTrigger>
+          <TabsTrigger value="medication" className="text-lg px-6 py-2">
+            투약관리
+          </TabsTrigger>
+          <TabsTrigger value="appointment" className="text-lg px-6 py-2">
+            진료예약
           </TabsTrigger>
         </TabsList>
 
-        {/* 개인정보 관리 섹션 */}
+        {/* 개인정보 탭 */}
         <TabsContent value="personal">
           <div className="grid gap-6">
             <section>
@@ -59,21 +65,26 @@ export function HomePage() {
           </div>
         </TabsContent>
 
-        {/* 의료정보 관리 섹션 */}
-        <TabsContent value="medical">
-          <div className="grid gap-6">
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">건강 기록</h2>
-              <MedicalForm isHealthRecordOnly />
-            </section>
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">투약 관리</h2>
-              <MedicationManagement />
-            </section>
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">진료 예약</h2>
-              <AppointmentScheduler />
-            </section>
+        {/* 건강기록 탭 */}
+        <TabsContent value="health">
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold">건강 기록</h2>
+            <MedicalForm isHealthRecordOnly />
+          </div>
+        </TabsContent>
+
+        {/* 투약관리 탭 */}
+        <TabsContent value="medication">
+          <div className="space-y-6">
+            <MedicationManagement />
+          </div>
+        </TabsContent>
+
+        {/* 진료예약 탭 */}
+        <TabsContent value="appointment">
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold">진료 예약</h2>
+            <AppointmentScheduler />
           </div>
         </TabsContent>
       </Tabs>
