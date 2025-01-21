@@ -7,10 +7,9 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { Header } from "@/components/common/Header";
 import { HomePage } from "@/pages/HomePage";
 import { AdminPage } from "@/pages/AdminPage";
-import { PersonalInfoPage } from "@/pages/PersonalInfoPage";
-import { MedicalRecordsPage } from "@/pages/MedicalRecordsPage";
 import AuthPage from "@/pages/auth-page";
 import { useUser } from "@/hooks/use-user";
+import { Loader2 } from "lucide-react";
 
 function Router() {
   const { user, isLoading } = useUser();
@@ -19,7 +18,7 @@ function Router() {
   if (isLoading) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-background">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -38,8 +37,6 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={HomePage} />
-      <Route path="/personal-info" component={PersonalInfoPage} />
-      <Route path="/medical-records" component={MedicalRecordsPage} />
       <Route component={NotFound} />
     </Switch>
   );
