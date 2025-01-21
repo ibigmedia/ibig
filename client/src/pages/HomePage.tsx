@@ -12,19 +12,13 @@ export function HomePage() {
   const { t } = useLanguage();
   const [location] = useLocation();
   const [search] = useSearch();
-
-  // Check if welcome page has been shown before
-  const [showWelcome, setShowWelcome] = React.useState(() => {
-    const welcomeShown = localStorage.getItem('welcomeShown');
-    return !welcomeShown;
-  });
+  const [showWelcome, setShowWelcome] = React.useState(true);
 
   // Parse the tab from URL
   const tab = new URLSearchParams(search).get('tab') || 'personal';
 
-  // When user clicks to start, save that welcome has been shown
+  // When user clicks to start, move to main content
   const handleStartClick = () => {
-    localStorage.setItem('welcomeShown', 'true');
     setShowWelcome(false);
   };
 
