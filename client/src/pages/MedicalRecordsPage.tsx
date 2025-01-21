@@ -10,7 +10,7 @@ import { MedicalHistory } from "@/components/medical/MedicalHistory";
 import { DiabetesManagement } from "@/components/medical/DiabetesManagement";
 import { MedicationManagement } from "@/components/medical/MedicationManagement";
 import { PersonalInfoForm } from "@/components/personal/PersonalInfoForm";
-import { EmergencyContacts } from "@/components/medical/EmergencyContacts";
+import { EmergencyContacts } from "@/components/user/EmergencyContacts";
 
 export function MedicalRecordsPage() {
   return (
@@ -27,34 +27,34 @@ export function MedicalRecordsPage() {
         <CardContent className="p-0">
           <Tabs defaultValue="personal" className="w-full">
             <div className="border-b px-3 sm:px-6">
-              <TabsList className="flex w-full overflow-x-auto space-x-2 py-2">
+              <TabsList className="flex w-full overflow-x-auto space-x-2 py-2 scrollbar-none">
                 <TabsTrigger 
                   value="personal" 
-                  className="data-[state=active]:bg-background data-[state=active]:shadow-none text-sm sm:text-base"
+                  className="data-[state=active]:bg-background data-[state=active]:shadow-none text-sm sm:text-base whitespace-nowrap"
                 >
                   기본 정보
                 </TabsTrigger>
                 <TabsTrigger 
                   value="emergency" 
-                  className="data-[state=active]:bg-background data-[state=active]:shadow-none text-sm sm:text-base"
+                  className="data-[state=active]:bg-background data-[state=active]:shadow-none text-sm sm:text-base whitespace-nowrap"
                 >
                   비상연락처
                 </TabsTrigger>
                 <TabsTrigger 
                   value="history" 
-                  className="data-[state=active]:bg-background data-[state=active]:shadow-none text-sm sm:text-base"
+                  className="data-[state=active]:bg-background data-[state=active]:shadow-none text-sm sm:text-base whitespace-nowrap"
                 >
                   병력 기록
                 </TabsTrigger>
                 <TabsTrigger 
                   value="diabetes" 
-                  className="data-[state=active]:bg-background data-[state=active]:shadow-none text-sm sm:text-base"
+                  className="data-[state=active]:bg-background data-[state=active]:shadow-none text-sm sm:text-base whitespace-nowrap"
                 >
                   당뇨 관리
                 </TabsTrigger>
                 <TabsTrigger 
                   value="medications" 
-                  className="data-[state=active]:bg-background data-[state=active]:shadow-none text-sm sm:text-base"
+                  className="data-[state=active]:bg-background data-[state=active]:shadow-none text-sm sm:text-base whitespace-nowrap"
                 >
                   약물 관리
                 </TabsTrigger>
@@ -63,23 +63,43 @@ export function MedicalRecordsPage() {
 
             <div className="px-3 py-4 sm:px-6 sm:py-6">
               <TabsContent value="personal" className="mt-0 focus-visible:outline-none">
-                <PersonalInfoForm />
+                <Card className="shadow-none border-0">
+                  <CardContent className="p-0">
+                    <PersonalInfoForm />
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="emergency" className="mt-0 focus-visible:outline-none">
-                <EmergencyContacts />
+                <Card className="shadow-none border-0">
+                  <CardContent className="p-0">
+                    <EmergencyContacts />
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="history" className="mt-0 focus-visible:outline-none">
-                <MedicalHistory />
+                <Card className="shadow-none border-0">
+                  <CardContent className="p-0">
+                    <MedicalHistory />
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="diabetes" className="mt-0 focus-visible:outline-none">
-                <DiabetesManagement />
+                <Card className="shadow-none border-0">
+                  <CardContent className="p-0">
+                    <DiabetesManagement />
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="medications" className="mt-0 focus-visible:outline-none">
-                <MedicationManagement />
+                <Card className="shadow-none border-0">
+                  <CardContent className="p-0">
+                    <MedicationManagement />
+                  </CardContent>
+                </Card>
               </TabsContent>
             </div>
           </Tabs>

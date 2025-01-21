@@ -49,11 +49,18 @@ export function Header() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
             {user && user.role === 'user' && (
-              <Link href="/dashboard">
-                <Button variant="ghost">
-                  {t('nav.dashboard')}
-                </Button>
-              </Link>
+              <>
+                <Link href="/dashboard">
+                  <Button variant="ghost">
+                    {t('nav.dashboard')}
+                  </Button>
+                </Link>
+                <Link href="/medical-records">
+                  <Button variant="ghost">
+                    {t('nav.records')}
+                  </Button>
+                </Link>
+              </>
             )}
 
             {user && user.role === 'admin' && (
@@ -110,11 +117,18 @@ export function Header() {
         {isMenuOpen && (
           <div className="md:hidden border-t py-4 space-y-2">
             {user && user.role === 'user' && (
-              <Link href="/dashboard">
-                <Button variant="ghost" className="w-full justify-start">
-                  {t('nav.dashboard')}
-                </Button>
-              </Link>
+              <>
+                <Link href="/dashboard">
+                  <Button variant="ghost" className="w-full justify-start">
+                    {t('nav.dashboard')}
+                  </Button>
+                </Link>
+                <Link href="/medical-records">
+                  <Button variant="ghost" className="w-full justify-start">
+                    {t('nav.records')}
+                  </Button>
+                </Link>
+              </>
             )}
 
             {user && user.role === 'admin' && (
