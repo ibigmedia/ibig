@@ -54,9 +54,16 @@ export function Header() {
           </Button>
 
           {user ? (
-            <Button variant="outline" onClick={() => logout()}>
-              {t('auth.logout')}
-            </Button>
+            <>
+              {user.role === 'admin' && (
+                <Link href="/admin">
+                  <Button variant="ghost">{t('nav.admin')}</Button>
+                </Link>
+              )}
+              <Button variant="outline" onClick={() => logout()}>
+                {t('auth.logout')}
+              </Button>
+            </>
           ) : (
             <Button variant="outline">
               <Link href="/auth">{t('auth.login')}</Link>
