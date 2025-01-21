@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Mail } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type SelectSmtpSettings } from "@db/schema";
 
 interface SmtpSettingsDialogProps {
   open: boolean;
@@ -26,7 +27,7 @@ export function SmtpSettingsDialog({ open, onOpenChange }: SmtpSettingsDialogPro
   const [password, setPassword] = useState("");
   const [fromEmail, setFromEmail] = useState("");
 
-  const { data: settings } = useQuery({
+  const { data: settings } = useQuery<SelectSmtpSettings>({
     queryKey: ['/api/admin/smtp-settings'],
     onSuccess: (data) => {
       if (data) {
