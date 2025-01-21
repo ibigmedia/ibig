@@ -5,7 +5,7 @@ import { UserDashboard } from '@/components/user/UserDashboard';
 import { Card, CardContent } from '@/components/ui/card';
 import { MedicationTracker } from '@/components/medications/MedicationTracker';
 import { useQuery } from '@tanstack/react-query';
-import { AppointmentManagement } from '@/components/admin/AppointmentManagement';
+import { AppointmentScheduler } from '@/components/appointments/AppointmentScheduler';
 import { MedicalHistory } from '@/components/medical/MedicalHistory';
 
 export function HomePage() {
@@ -60,7 +60,7 @@ export function HomePage() {
                   <p className="text-muted-foreground">
                     진료 예약을 관리하고 확인하세요
                   </p>
-                  <AppointmentManagement />
+                  <AppointmentScheduler />
                 </div>
               </TabsContent>
             </Tabs>
