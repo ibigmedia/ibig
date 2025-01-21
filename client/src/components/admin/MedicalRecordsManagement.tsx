@@ -155,14 +155,10 @@ export function MedicalRecordsManagement() {
         });
         break;
       case 'bloodSugar':
-        addBloodSugarMutation.mutate({
-          ...newRecord,
-        });
+        //addBloodSugarMutation.mutate({ ...newRecord, });
         break;
       case 'disease':
-        addDiseaseHistoryMutation.mutate({
-          ...newRecord,
-        });
+        //addDiseaseHistoryMutation.mutate({ ...newRecord, });
         break;
       case 'medication':
         if (!newRecord.name || !newRecord.dosage || !newRecord.startDate || !newRecord.frequency) {
@@ -173,7 +169,7 @@ export function MedicalRecordsManagement() {
           });
           return;
         }
-        addMedicationMutation.mutate(newRecord);
+        //addMedicationMutation.mutate(newRecord);
         break;
     }
   };
@@ -371,7 +367,7 @@ export function MedicalRecordsManagement() {
                     <TableHead>시작일</TableHead>
                     <TableHead>종료일</TableHead>
                     <TableHead>복용주기</TableHead>
-                    <TableHead>메모</TableHead>
+                    {/* <TableHead>메모</TableHead> */}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -384,7 +380,7 @@ export function MedicalRecordsManagement() {
                         {medication.endDate ? new Date(medication.endDate).toLocaleDateString() : '-'}
                       </TableCell>
                       <TableCell>{medication.frequency}</TableCell>
-                      <TableCell>{medication.notes}</TableCell>
+                      {/* <TableCell>{medication.notes}</TableCell> */}
                     </TableRow>
                   ))}
                 </TableBody>
