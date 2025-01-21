@@ -3,35 +3,16 @@ import { useUser } from '@/hooks/use-user';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
 import { Link } from 'wouter';
 import { User, Calendar, Pill } from 'lucide-react';
 
-export function UserDashboard() {
+interface UserDashboardProps {
+  onTabChange: (tab: string) => void;
+}
+
+export function UserDashboard({ onTabChange }: UserDashboardProps) {
   const { user } = useUser();
   const { t } = useLanguage();
-  const { toast } = useToast();
-
-  const handleTabChange = (tabValue: string) => {
-    // Find the tabs container
-    const tabsContainer = document.querySelector('.tabs-section');
-    if (!tabsContainer) return;
-
-    // Find the specific tab trigger
-    const tabTrigger = tabsContainer.querySelector(`button[value="${tabValue}"]`);
-    if (!tabTrigger) return;
-
-    // Click the tab
-    (tabTrigger as HTMLElement).click();
-
-    // Scroll to the tabs section
-    setTimeout(() => {
-      tabsContainer.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start'
-      });
-    }, 100);
-  };
 
   return (
     <div className="space-y-6">
@@ -70,7 +51,7 @@ export function UserDashboard() {
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => handleTabChange('medication')}
+                onClick={() => onTabChange('medication')}
               >
                 투약관리 보기
               </Button>
@@ -87,7 +68,7 @@ export function UserDashboard() {
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => handleTabChange('appointment')}
+                onClick={() => onTabChange('appointment')}
               >
                 예약 확인하기
               </Button>

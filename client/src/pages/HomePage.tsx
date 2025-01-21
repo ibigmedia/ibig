@@ -2,7 +2,7 @@ import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserDashboard } from '@/components/user/UserDashboard';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { MedicationTracker } from '@/components/medications/MedicationTracker';
 import { useQuery } from '@tanstack/react-query';
 import { AppointmentScheduler } from '@/components/appointments/AppointmentScheduler';
@@ -19,14 +19,16 @@ export function HomePage() {
     queryKey: ['/api/medical-records'],
   });
 
+  const [activeTab, setActiveTab] = React.useState('health');
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="space-y-6">
-        <UserDashboard />
+        <UserDashboard onTabChange={setActiveTab} />
 
         <Card>
           <CardContent className="p-6">
-            <Tabs defaultValue="health" className="space-y-6 tabs-section">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6" id="main-tabs">
               <TabsList className="flex w-full justify-start border-b">
                 <TabsTrigger value="health" className="text-lg px-6 py-2">
                   건강기록
@@ -39,17 +41,15 @@ export function HomePage() {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="health" className="mt-0 focus-visible:outline-none">
+              <TabsContent value="health" className="mt-0">
                 <div className="space-y-6">
                   {/* 알레르기 반응 */}
                   <Card>
-                    <CardHeader>
+                    <CardContent className="space-y-4 pt-6">
                       <div className="flex items-center space-x-2">
                         <AlertCircle className="h-5 w-5 text-yellow-500" />
                         <h3 className="text-lg font-semibold">알레르기 반응</h3>
                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
                       <div className="grid gap-4">
                         <div>
                           <Label>약물 알레르기</Label>
@@ -75,26 +75,22 @@ export function HomePage() {
 
                   {/* 과거 병력 */}
                   <Card>
-                    <CardHeader>
-                      <div className="flex items-center space-x-2">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center space-x-2 mb-4">
                         <Plus className="h-5 w-5 text-blue-500" />
                         <h3 className="text-lg font-semibold">과거 병력</h3>
                       </div>
-                    </CardHeader>
-                    <CardContent>
                       <MedicalHistory />
                     </CardContent>
                   </Card>
 
                   {/* 혈압 관리 */}
                   <Card>
-                    <CardHeader>
+                    <CardContent className="space-y-4 pt-6">
                       <div className="flex items-center space-x-2">
                         <Heart className="h-5 w-5 text-red-500" />
                         <h3 className="text-lg font-semibold">혈압 관리</h3>
                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label>수축기 혈압 (최고)</Label>
@@ -122,24 +118,12 @@ export function HomePage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="medication" className="mt-0 focus-visible:outline-none">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">투약 관리</h3>
-                  <p className="text-muted-foreground">
-                    복용중인 약물을 관리하고 기록하세요
-                  </p>
-                  <MedicationTracker />
-                </div>
+              <TabsContent value="medication" className="mt-0">
+                <MedicationTracker />
               </TabsContent>
 
-              <TabsContent value="appointment" className="mt-0 focus-visible:outline-none">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">진료 예약</h3>
-                  <p className="text-muted-foreground">
-                    진료 예약을 관리하고 확인하세요
-                  </p>
-                  <AppointmentScheduler />
-                </div>
+              <TabsContent value="appointment" className="mt-0">
+                <AppointmentScheduler />
               </TabsContent>
             </Tabs>
           </CardContent>
