@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 
 interface Medication {
   id: number;
@@ -40,13 +40,12 @@ export function MedicationManagement() {
     notes: '',
   });
 
-  const { data: medications = [], isError } = useQuery<Medication[]>({
+  const { data: medications, isError, isLoading } = useQuery<Medication[]>({
     queryKey: ['/api/medications'],
   });
 
   const addMedicationMutation = useMutation({
     mutationFn: async (data: typeof newRecord) => {
-      console.log('Submitting medication data:', data); // Debug log
       const response = await fetch('/api/medications', {
         method: 'POST',
         headers: {
@@ -80,7 +79,6 @@ export function MedicationManagement() {
       queryClient.invalidateQueries({ queryKey: ['/api/medications'] });
     },
     onError: (error: Error) => {
-      console.error('Medication save error:', error); // Debug log
       toast({
         variant: 'destructive',
         title: '오류',
@@ -91,7 +89,6 @@ export function MedicationManagement() {
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Handling form submission:', newRecord); // Debug log
     if (!newRecord.name || !newRecord.dosage || !newRecord.startDate || !newRecord.frequency) {
       toast({
         variant: 'destructive',
@@ -103,6 +100,14 @@ export function MedicationManagement() {
     addMedicationMutation.mutate(newRecord);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   if (isError) {
     return (
       <div className="p-4">
@@ -113,7 +118,8 @@ export function MedicationManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-semibold">약물 관리</h2>
         <Button onClick={() => setShowAddDialog(true)}>
           <Plus className="h-4 w-4 mr-2" />
           새 약물 추가
@@ -121,32 +127,40 @@ export function MedicationManagement() {
       </div>
 
       <div className="grid gap-4">
-        {medications.map((medication) => (
-          <Card key={medication.id}>
+        {medications?.length === 0 ? (
+          <Card>
             <CardContent className="pt-6">
-              <div className="space-y-2">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold">{medication.name}</h3>
-                    <p className="text-sm">복용량: {medication.dosage}</p>
-                  </div>
-                  <div className="text-sm text-muted-foreground text-right">
-                    <p>시작일: {new Date(medication.startDate).toLocaleDateString()}</p>
-                    {medication.endDate && (
-                      <p>종료일: {new Date(medication.endDate).toLocaleDateString()}</p>
-                    )}
-                  </div>
-                </div>
-                <p className="text-sm">복용주기: {medication.frequency}</p>
-                {medication.notes && (
-                  <p className="text-sm text-muted-foreground">
-                    메모: {medication.notes}
-                  </p>
-                )}
-              </div>
+              <p className="text-muted-foreground text-center">등록된 약물이 없습니다.</p>
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          medications?.map((medication) => (
+            <Card key={medication.id}>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold">{medication.name}</h3>
+                      <p className="text-sm">복용량: {medication.dosage}</p>
+                    </div>
+                    <div className="text-sm text-muted-foreground text-right">
+                      <p>시작일: {new Date(medication.startDate).toLocaleDateString()}</p>
+                      {medication.endDate && (
+                        <p>종료일: {new Date(medication.endDate).toLocaleDateString()}</p>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm">복용주기: {medication.frequency}</p>
+                  {medication.notes && (
+                    <p className="text-sm text-muted-foreground">
+                      메모: {medication.notes}
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
@@ -219,6 +233,9 @@ export function MedicationManagement() {
               />
             </div>
             <Button type="submit" disabled={addMedicationMutation.isPending}>
+              {addMedicationMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
               저장
             </Button>
           </form>

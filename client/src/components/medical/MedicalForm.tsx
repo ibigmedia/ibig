@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { MedicalExport } from './MedicalExport';
-import { EmergencyContacts } from './EmergencyContacts';
 import { Save, Plus } from 'lucide-react';
 import {
   Select,
@@ -27,6 +26,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { EmergencyContacts } from './EmergencyContacts';
+
+interface Props {
+  isHealthRecordOnly?: boolean;
+}
 
 interface DiseaseHistoryData {
   diseaseName: string;
@@ -57,7 +61,7 @@ interface MedicalFormData {
   foodAllergies?: string;
 }
 
-export function MedicalForm() {
+export function MedicalForm({ isHealthRecordOnly = false }: Props) {
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -163,15 +167,15 @@ export function MedicalForm() {
     },
     onSuccess: () => {
       toast({
-        title: '저장 완료',
-        description: '의료 정보가 저장되었습니다.',
+        title: t('success'),
+        description: t('medical.saveSuccess'),
       });
       queryClient.invalidateQueries({ queryKey: ['/api/medical-records'] });
     },
     onError: (error: Error) => {
       toast({
         variant: 'destructive',
-        title: '저장 실패',
+        title: t('error'),
         description: error.message,
       });
     },
@@ -200,8 +204,8 @@ export function MedicalForm() {
     },
     onSuccess: () => {
       toast({
-        title: '저장 완료',
-        description: '혈압 기록이 저장되었습니다.',
+        title: t('success'),
+        description: t('medical.bloodPressureSaveSuccess'),
       });
       resetBP();
       queryClient.invalidateQueries({ queryKey: ['/api/blood-pressure'] });
@@ -209,7 +213,7 @@ export function MedicalForm() {
     onError: (error: Error) => {
       toast({
         variant: 'destructive',
-        title: '저장 실패',
+        title: t('error'),
         description: error.message,
       });
     },
@@ -238,8 +242,8 @@ export function MedicalForm() {
     },
     onSuccess: () => {
       toast({
-        title: '저장 완료',
-        description: '혈당 기록이 저장되었습니다.',
+        title: t('success'),
+        description: t('medical.bloodSugarSaveSuccess'),
       });
       resetBS();
       queryClient.invalidateQueries({ queryKey: ['/api/blood-sugar'] });
@@ -247,7 +251,7 @@ export function MedicalForm() {
     onError: (error: Error) => {
       toast({
         variant: 'destructive',
-        title: '저장 실패',
+        title: t('error'),
         description: error.message,
       });
     },
@@ -273,8 +277,8 @@ export function MedicalForm() {
     },
     onSuccess: () => {
       toast({
-        title: '저장 완료',
-        description: '질병 이력이 저장되었습니다.',
+        title: t('success'),
+        description: t('medical.diseaseHistorySaveSuccess'),
       });
       resetDH();
       queryClient.invalidateQueries({ queryKey: ['/api/disease-histories'] });
@@ -282,7 +286,7 @@ export function MedicalForm() {
     onError: (error: Error) => {
       toast({
         variant: 'destructive',
-        title: '저장 실패',
+        title: t('error'),
         description: error.message,
       });
     },
@@ -311,28 +315,44 @@ export function MedicalForm() {
       <div className="flex justify-between items-center">
         <Button onClick={onSubmit} className="flex items-center gap-2">
           <Save className="h-4 w-4" />
-          저장
+          {t('save')}
         </Button>
-        <div className="w-48">
-          <MedicalExport />
-        </div>
+        {!isHealthRecordOnly && (
+          <div className="w-48">
+            <MedicalExport />
+          </div>
+        )}
       </div>
+
+      {!isHealthRecordOnly && (
+        <Card>
+          <CardHeader>
+            <h3 className="text-lg font-bold">{t('medical.personalInfo')}</h3>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>{t('medical.name')}</Label>
+                <Input {...register('name')} />
+              </div>
+              <div>
+                <Label>{t('medical.birthdate')}</Label>
+                <Input type="date" {...register('birthDate')} />
+              </div>
+            </div>
+            <div>
+              <Label>{t('medical.notes')}</Label>
+              <Textarea {...register('notes')} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
-          <h3 className="text-lg font-bold">{t('medical.basicInfo')}</h3>
+          <h3 className="text-lg font-bold">{t('medical.healthInfo')}</h3>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>{t('medical.name')}</Label>
-              <Input {...register('name')} />
-            </div>
-            <div>
-              <Label>{t('medical.birthdate')}</Label>
-              <Input type="date" {...register('birthDate')} />
-            </div>
-          </div>
           <div className="flex items-center space-x-2">
             <Checkbox
               id="diabetesCheck"
@@ -342,24 +362,12 @@ export function MedicalForm() {
             <Label htmlFor="diabetesCheck">{t('medical.diabetic')}</Label>
           </div>
           <div>
-            <Label>{t('medical.notes')}</Label>
-            <Textarea {...register('notes')} />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <h3 className="text-lg font-bold">{t('medical.allergies')}</h3>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
             <Label>{t('medical.drugAllergy')}</Label>
-            <Textarea {...register('drugAllergies')} placeholder="약물 알러지가 있다면 입력해주세요." />
+            <Textarea {...register('drugAllergies')} placeholder={t('medical.drugAllergyPlaceholder')} />
           </div>
           <div>
             <Label>{t('medical.foodAllergy')}</Label>
-            <Textarea {...register('foodAllergies')} placeholder="음식 알러지가 있다면 입력해주세요." />
+            <Textarea {...register('foodAllergies')} placeholder={t('medical.foodAllergyPlaceholder')} />
           </div>
         </CardContent>
       </Card>
