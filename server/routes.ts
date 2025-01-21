@@ -426,14 +426,29 @@ export function registerRoutes(app: Express): Server {
   });
 
   app.get("/api/admin/appointments", async (req, res) => {
-    if (!req.user || req.user.role !== 'admin') {
+    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
       return res.status(403).send("Unauthorized");
     }
 
     try {
-      const allAppointments = await db.query.appointments.findMany();
+      const allAppointments = await db
+        .select({
+          id: appointments.id,
+          userId: appointments.userId,
+          date: appointments.date,
+          department: appointments.department,
+          status: appointments.status,
+          notes: appointments.notes,
+          user: {
+            username: users.username,
+          },
+        })
+        .from(appointments)
+        .leftJoin(users, eq(appointments.userId, users.id));
+
       res.json(allAppointments);
     } catch (error) {
+      console.error('Error fetching appointments:', error);
       res.status(500).send("Error fetching appointments");
     }
   });
