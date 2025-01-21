@@ -105,40 +105,6 @@ export function MedicalRecordsManagement() {
     },
   });
 
-  const addBloodPressureMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await fetch('/api/blood-pressure', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: '성공',
-        description: '혈압 기록이 추가되었습니다.',
-      });
-      setShowAddDialog(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/blood-pressure'] });
-    },
-    onError: (error: Error) => {
-      toast({
-        variant: 'destructive',
-        title: '오류',
-        description: error.message,
-      });
-    },
-  });
-
   const handleSave = () => {
     if (selectedRecord) {
       updateMutation.mutate(selectedRecord);
@@ -150,15 +116,13 @@ export function MedicalRecordsManagement() {
 
     switch (dialogType) {
       case 'bloodPressure':
-        addBloodPressureMutation.mutate({
-          ...newRecord,
-        });
+        //addBloodPressureMutation.mutate({ ...newRecord });
         break;
       case 'bloodSugar':
-        //addBloodSugarMutation.mutate({ ...newRecord, });
+        //addBloodSugarMutation.mutate({ ...newRecord });
         break;
       case 'disease':
-        //addDiseaseHistoryMutation.mutate({ ...newRecord, });
+        //addDiseaseHistoryMutation.mutate({ ...newRecord });
         break;
       case 'medication':
         if (!newRecord.name || !newRecord.dosage || !newRecord.startDate || !newRecord.frequency) {
@@ -189,49 +153,11 @@ export function MedicalRecordsManagement() {
             </TabsList>
 
             <TabsContent value="records">
-              <Tabs defaultValue="personal">
+              <Tabs defaultValue="bp">
                 <TabsList>
-                  <TabsTrigger value="personal">기본 정보</TabsTrigger>
                   <TabsTrigger value="bp">혈압</TabsTrigger>
                   <TabsTrigger value="sugar">혈당</TabsTrigger>
                 </TabsList>
-
-                <TabsContent value="personal">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>이름</TableHead>
-                        <TableHead>생년월일</TableHead>
-                        <TableHead>당뇨여부</TableHead>
-                        <TableHead>특이사항</TableHead>
-                        <TableHead className="w-[100px]">관리</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {records.map((record) => (
-                        <TableRow key={record.id}>
-                          <TableCell>{record.name}</TableCell>
-                          <TableCell>{record.birthDate}</TableCell>
-                          <TableCell>{record.isDiabetic ? '예' : '아니오'}</TableCell>
-                          <TableCell>{record.notes}</TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedRecord(record);
-                                setShowDetails(true);
-                              }}
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              상세보기
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TabsContent>
 
                 <TabsContent value="bp">
                   <div className="flex justify-end mb-4">
@@ -530,6 +456,21 @@ export function MedicalRecordsManagement() {
                     onChange={(e) => setNewRecord({ ...newRecord, treatment: e.target.value })}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label>진단일</Label>
+                  <Input
+                    type="date"
+                    value={newRecord.diagnosisDate || ''}
+                    onChange={(e) => setNewRecord({ ...newRecord, diagnosisDate: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>비고</Label>
+                  <Textarea
+                    value={newRecord.notes || ''}
+                    onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
+                  />
+                </div>
               </>
             )}
             {dialogType === 'medication' && (
@@ -574,13 +515,6 @@ export function MedicalRecordsManagement() {
                 </div>
               </>
             )}
-            <div className="space-y-2">
-              <Label>메모</Label>
-              <Textarea
-                value={newRecord.notes || ''}
-                onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
-              />
-            </div>
             <Button onClick={handleAdd} className="w-full">
               <Save className="h-4 w-4 mr-2" />
               저장하기
