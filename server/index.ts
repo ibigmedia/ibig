@@ -6,7 +6,7 @@ import os from "os";
 
 // Initialize monitoring and logging after express
 import { monitoringMiddleware, metricsEndpoint } from "./monitoring";
-import { loggerMiddleware } from "./logger";
+import { logger } from "./logger";
 
 // Auto-restart using cluster
 if (cluster.isPrimary && process.env.NODE_ENV === "production") {
@@ -28,8 +28,7 @@ if (cluster.isPrimary && process.env.NODE_ENV === "production") {
   app.use(express.urlencoded({ extended: false }));
 
   // Add monitoring middleware first
-  app.use(monitoringMiddleware);
-  app.use(loggerMiddleware);
+  app.use("/", monitoringMiddleware);
 
   // Expose metrics endpoint
   app.get("/metrics", metricsEndpoint);
@@ -83,26 +82,19 @@ if (cluster.isPrimary && process.env.NODE_ENV === "production") {
         serveStatic(app);
       }
 
-      // Always try port 5000 first
       const PORT = 5000;
 
-      try {
-        await new Promise<void>((resolve, reject) => {
-          server.listen(PORT, "0.0.0.0", () => {
-            log(`Server worker ${process.pid} listening on port ${PORT}`);
-            resolve();
-          }).on('error', (err: any) => {
-            if (err.code === 'EADDRINUSE') {
-              reject(new Error(`Port ${PORT} is already in use`));
-            } else {
-              reject(err);
-            }
-          });
-        });
-      } catch (err) {
-        log(`Failed to start server: ${err}`);
-        process.exit(1);
-      }
+      server.listen(PORT, "0.0.0.0", () => {
+        log(`Server worker ${process.pid} listening on port ${PORT}`);
+      }).on('error', (err: any) => {
+        if (err.code === 'EADDRINUSE') {
+          log(`Port ${PORT} is already in use`);
+          process.exit(1);
+        } else {
+          log(`Error starting server: ${err.message}`);
+          process.exit(1);
+        }
+      });
 
     } catch (err) {
       log(`Critical error during server startup: ${err}`);

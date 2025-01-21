@@ -27,7 +27,7 @@ const activeConnections = new promClient.Gauge({
 register.registerMetric(activeConnections);
 
 // Monitoring middleware
-export const monitoringMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export function monitoringMiddleware(req: Request, res: Response, next: NextFunction) {
   const start = Date.now();
 
   // Increment active connections
@@ -43,7 +43,7 @@ export const monitoringMiddleware = (req: Request, res: Response, next: NextFunc
       .labels(req.method, req.path, String(res.statusCode))
       .observe(duration);
 
-    // Log request details using pino logger
+    // Log request details
     logger.info({
       method: req.method,
       path: req.path,
@@ -53,10 +53,10 @@ export const monitoringMiddleware = (req: Request, res: Response, next: NextFunc
   });
 
   next();
-};
+}
 
 // Metrics endpoint
-export const metricsEndpoint = async (_req: Request, res: Response) => {
+export async function metricsEndpoint(_req: Request, res: Response) {
   try {
     const metrics = await register.metrics();
     res.set("Content-Type", register.contentType);
@@ -65,4 +65,4 @@ export const metricsEndpoint = async (_req: Request, res: Response) => {
     logger.error(err);
     res.status(500).end(err instanceof Error ? err.message : String(err));
   }
-};
+}
