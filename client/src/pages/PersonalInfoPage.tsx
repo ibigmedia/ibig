@@ -1,8 +1,14 @@
 import React from 'react';
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
 import { PersonalInfoForm } from '@/components/personal/PersonalInfoForm';
 
 export function PersonalInfoPage() {
+  const { data: personalInfo } = useQuery({
+    queryKey: ['/api/medical-records'],
+    select: (records: any[]) => records[0],
+  });
+
   return (
     <div className="min-h-screen bg-background p-2 sm:p-4 md:p-6">
       <div className="mx-auto max-w-3xl">
@@ -16,7 +22,7 @@ export function PersonalInfoPage() {
             </p>
           </CardHeader>
           <CardContent className="p-3 sm:p-6">
-            <PersonalInfoForm />
+            <PersonalInfoForm initialData={personalInfo} />
           </CardContent>
         </Card>
       </div>
