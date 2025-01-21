@@ -22,7 +22,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 interface MedicalFormData {
@@ -50,6 +49,8 @@ interface BloodPressureData {
 export function MedicalForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [showDiseaseDialog, setShowDiseaseDialog] = React.useState(false);
+  const [showBloodPressureDialog, setShowBloodPressureDialog] = React.useState(false);
   const [editingDiseaseHistory, setEditingDiseaseHistory] = React.useState<DiseaseHistoryData | null>(null);
   const [editingBloodPressure, setEditingBloodPressure] = React.useState<BloodPressureData | null>(null);
 
@@ -58,11 +59,11 @@ export function MedicalForm() {
     select: (records: any[]) => records[0],
   });
 
-  const { data: bloodPressureRecords = [] } = useQuery({
+  const { data: bloodPressureRecords = [] } = useQuery<BloodPressureData[]>({
     queryKey: ['/api/blood-pressure'],
   });
 
-  const { data: diseaseHistories = [] } = useQuery({
+  const { data: diseaseHistories = [] } = useQuery<DiseaseHistoryData[]>({
     queryKey: ['/api/disease-histories'],
   });
 
@@ -118,6 +119,7 @@ export function MedicalForm() {
       setValueDH('diagnosisDate', editingDiseaseHistory.diagnosisDate.split('T')[0]);
       setValueDH('treatment', editingDiseaseHistory.treatment);
       setValueDH('notes', editingDiseaseHistory.notes || '');
+      setShowDiseaseDialog(true);
     }
   }, [editingDiseaseHistory, setValueDH]);
 
@@ -127,6 +129,7 @@ export function MedicalForm() {
       setValueBP('diastolic', editingBloodPressure.diastolic);
       setValueBP('pulse', editingBloodPressure.pulse);
       setValueBP('notes', editingBloodPressure.notes || '');
+      setShowBloodPressureDialog(true);
     }
   }, [editingBloodPressure, setValueBP]);
 
@@ -192,6 +195,7 @@ export function MedicalForm() {
       });
       resetDH();
       setEditingDiseaseHistory(null);
+      setShowDiseaseDialog(false);
       queryClient.invalidateQueries({ queryKey: ['/api/disease-histories'] });
     },
     onError: (error: Error) => {
@@ -205,6 +209,10 @@ export function MedicalForm() {
 
   const deleteDiseaseHistory = useMutation({
     mutationFn: async (id: number) => {
+      if (!window.confirm('정말로 이 병력을 삭제하시겠습니까?')) {
+        return;
+      }
+
       const response = await fetch(`/api/disease-histories/${id}`, {
         method: 'DELETE',
         credentials: 'include',
@@ -261,6 +269,7 @@ export function MedicalForm() {
       });
       resetBP();
       setEditingBloodPressure(null);
+      setShowBloodPressureDialog(false);
       queryClient.invalidateQueries({ queryKey: ['/api/blood-pressure'] });
     },
     onError: (error: Error) => {
@@ -274,6 +283,10 @@ export function MedicalForm() {
 
   const deleteBloodPressure = useMutation({
     mutationFn: async (id: number) => {
+      if (!window.confirm('정말로 이 혈압 기록을 삭제하시겠습니까?')) {
+        return;
+      }
+
       const response = await fetch(`/api/blood-pressure/${id}`, {
         method: 'DELETE',
         credentials: 'include',
@@ -360,44 +373,14 @@ export function MedicalForm() {
           <h3 className="text-xl font-semibold">과거 병력</h3>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                새로운 기록 추가
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>
-                  {editingDiseaseHistory ? '과거 병력 수정' : '새로운 과거 병력 추가'}
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={onSubmitDH} className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    placeholder="질병명"
-                    {...registerDH('diseaseName', { required: true })}
-                  />
-                  <Input
-                    type="date"
-                    {...registerDH('diagnosisDate', { required: true })}
-                  />
-                  <Input
-                    placeholder="치료내용"
-                    {...registerDH('treatment', { required: true })}
-                  />
-                  <Input
-                    placeholder="비고"
-                    {...registerDH('notes')}
-                  />
-                </div>
-                <Button type="submit">
-                  {editingDiseaseHistory ? '수정' : '추가'}
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => {
+            resetDH();
+            setEditingDiseaseHistory(null);
+            setShowDiseaseDialog(true);
+          }}>
+            <Plus className="h-4 w-4 mr-2" />
+            새로운 기록 추가
+          </Button>
 
           <Table>
             <TableHeader>
@@ -410,7 +393,7 @@ export function MedicalForm() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {diseaseHistories.map((history: any) => (
+              {diseaseHistories.map((history) => (
                 <TableRow key={history.id}>
                   <TableCell>{history.diseaseName}</TableCell>
                   <TableCell>{new Date(history.diagnosisDate).toLocaleDateString()}</TableCell>
@@ -428,7 +411,7 @@ export function MedicalForm() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => deleteDiseaseHistory.mutate(history.id)}
+                        onClick={() => history.id && deleteDiseaseHistory.mutate(history.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -446,50 +429,14 @@ export function MedicalForm() {
           <h3 className="text-xl font-semibold">혈압 관리</h3>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                새로운 기록 추가
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>
-                  {editingBloodPressure ? '혈압 기록 수정' : '새로운 혈압 기록 추가'}
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={onSubmitBP} className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 gap-2">
-                  <Input
-                    type="number"
-                    placeholder="수축기"
-                    className="w-20"
-                    {...registerBP('systolic', { required: true })}
-                  />
-                  <Input
-                    type="number"
-                    placeholder="이완기"
-                    className="w-20"
-                    {...registerBP('diastolic', { required: true })}
-                  />
-                  <Input
-                    type="number"
-                    placeholder="맥박"
-                    className="w-20"
-                    {...registerBP('pulse', { required: true })}
-                  />
-                  <Input
-                    placeholder="메모"
-                    {...registerBP('notes')}
-                  />
-                </div>
-                <Button type="submit">
-                  {editingBloodPressure ? '수정' : '추가'}
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => {
+            resetBP();
+            setEditingBloodPressure(null);
+            setShowBloodPressureDialog(true);
+          }}>
+            <Plus className="h-4 w-4 mr-2" />
+            새로운 기록 추가
+          </Button>
 
           <Table>
             <TableHeader>
@@ -503,7 +450,7 @@ export function MedicalForm() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {bloodPressureRecords.map((record: any) => (
+              {bloodPressureRecords.map((record) => (
                 <TableRow key={record.id}>
                   <TableCell>
                     {new Date(record.measuredAt).toLocaleDateString()}
@@ -524,7 +471,7 @@ export function MedicalForm() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => deleteBloodPressure.mutate(record.id)}
+                        onClick={() => record.id && deleteBloodPressure.mutate(record.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -536,6 +483,78 @@ export function MedicalForm() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={showDiseaseDialog} onOpenChange={setShowDiseaseDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingDiseaseHistory ? '과거 병력 수정' : '새로운 과거 병력 추가'}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={onSubmitDH} className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                placeholder="질병명"
+                {...registerDH('diseaseName', { required: true })}
+              />
+              <Input
+                type="date"
+                {...registerDH('diagnosisDate', { required: true })}
+              />
+              <Input
+                placeholder="치료내용"
+                {...registerDH('treatment', { required: true })}
+              />
+              <Input
+                placeholder="비고"
+                {...registerDH('notes')}
+              />
+            </div>
+            <Button type="submit">
+              {editingDiseaseHistory ? '수정' : '추가'}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showBloodPressureDialog} onOpenChange={setShowBloodPressureDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingBloodPressure ? '혈압 기록 수정' : '새로운 혈압 기록 추가'}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={onSubmitBP} className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 gap-2">
+              <Input
+                type="number"
+                placeholder="수축기"
+                className="w-20"
+                {...registerBP('systolic', { required: true })}
+              />
+              <Input
+                type="number"
+                placeholder="이완기"
+                className="w-20"
+                {...registerBP('diastolic', { required: true })}
+              />
+              <Input
+                type="number"
+                placeholder="맥박"
+                className="w-20"
+                {...registerBP('pulse', { required: true })}
+              />
+              <Input
+                placeholder="메모"
+                {...registerBP('notes')}
+              />
+            </div>
+            <Button type="submit">
+              {editingBloodPressure ? '수정' : '추가'}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
