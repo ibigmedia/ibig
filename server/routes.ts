@@ -479,17 +479,27 @@ export function registerRoutes(app: Express): Server {
     }
 
     try {
+      console.log('Appointment creation request:', {
+        userId: req.user.id,
+        ...req.body
+      });
+
       const [appointment] = await db.insert(appointments)
         .values({
-          ...req.body,
           userId: req.user.id,
+          date: new Date(req.body.date),
+          department: req.body.department,
+          status: req.body.status || 'pending',
+          createdAt: new Date(),
+          updatedAt: new Date()
         })
         .returning();
 
+      console.log('Created appointment:', appointment);
       res.json(appointment);
     } catch (error) {
       console.error('Error creating appointment:', error);
-      res.status(500).send("Error creating appointment");
+      res.status(500).send(error instanceof Error ? error.message : "Error creating appointment");
     }
   });
 
@@ -894,8 +904,7 @@ export function registerRoutes(app: Express): Server {
 
       const [existingContact] = await db
         .select()
-        .from(emergencyContacts)
-        .where(
+        .from(emergencyContacts)        .where(
           and(
             eq(emergencyContacts.id, contactId),
             eq(emergencyContacts.userId, req.user.id)
