@@ -5,6 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Settings, Mail } from 'lucide-react';
 import { Dashboard } from '@/components/admin/Dashboard';
 import { UserManagement } from '@/components/admin/UserManagement';
+import { MedicalRecordsManagement } from '@/components/admin/MedicalRecordsManagement';
+import { AppointmentManagement } from '@/components/admin/AppointmentManagement';
+import { EmergencyContactsManagement } from '@/components/admin/EmergencyContactsManagement';
+import { SubAdminManagement } from '@/components/admin/SubAdminManagement';
 import { SmtpSettingsDialog } from '@/components/admin/SmtpSettingsDialog';
 import { SubAdminInviteDialog } from '@/components/admin/SubAdminInviteDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -49,6 +53,10 @@ export function AdminDashboardPage() {
         <TabsList className="w-full justify-start">
           <TabsTrigger value="overview">대시보드</TabsTrigger>
           <TabsTrigger value="users">사용자 관리</TabsTrigger>
+          <TabsTrigger value="medical-records">의료 기록관리</TabsTrigger>
+          <TabsTrigger value="appointments">예약 관리</TabsTrigger>
+          <TabsTrigger value="emergency">비상연락처 관리</TabsTrigger>
+          <TabsTrigger value="subadmin">서브관리자 관리</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -58,13 +66,29 @@ export function AdminDashboardPage() {
         <TabsContent value="users">
           <UserManagement />
         </TabsContent>
+
+        <TabsContent value="medical-records">
+          <MedicalRecordsManagement />
+        </TabsContent>
+
+        <TabsContent value="appointments">
+          <AppointmentManagement />
+        </TabsContent>
+
+        <TabsContent value="emergency">
+          <EmergencyContactsManagement />
+        </TabsContent>
+
+        <TabsContent value="subadmin">
+          <SubAdminManagement />
+        </TabsContent>
       </Tabs>
 
       <SmtpSettingsDialog
         open={showSmtpSettings}
         onOpenChange={setShowSmtpSettings}
       />
-      
+
       <SubAdminInviteDialog
         open={showInviteDialog}
         onOpenChange={setShowInviteDialog}
