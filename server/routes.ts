@@ -86,7 +86,7 @@ async function setupMailer() {
   }
 }
 
-async function sendNotificationEmail(subject: string, text: string) {
+async function sendNotificationEmail(subject: string, content: { text: string, html?: string }) {
   if (!mailer) {
     console.log('Mailer not configured, skipping email notification');
     return;
@@ -105,13 +105,105 @@ async function sendNotificationEmail(subject: string, text: string) {
 
     await mailer.sendMail({
       from: settings.fromEmail,
-      to: settings.fromEmail, // 관리자 이메일로 발송
+      to: settings.fromEmail,
       subject,
-      text,
+      text: content.text,
+      html: content.html || content.text,
     });
   } catch (error) {
     console.error('Error sending notification email:', error);
   }
+}
+
+// 회원가입 알림 이메일 템플릿
+function generateRegistrationEmailHtml(username: string, registeredAt: string) {
+  return `
+    <div style="font-family: Arial, sans-serif;">
+      <h2 style="color: #2563eb;">새 회원 가입 알림</h2>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <tr>
+          <th style="text-align: left; padding: 10px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">항목</th>
+          <th style="text-align: left; padding: 10px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">내용</th>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">사용자명</td>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">${username}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">가입일시</td>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">${registeredAt}</td>
+        </tr>
+      </table>
+    </div>
+  `;
+}
+
+// 의료 기록 업데이트 알림 템플릿
+function generateMedicalRecordEmailHtml(username: string, action: string, data: any, timestamp: string) {
+  const dataRows = Object.entries(data)
+    .map(([key, value]) => `
+      <tr>
+        <td style="padding: 10px; border: 1px solid #e5e7eb;">${key}</td>
+        <td style="padding: 10px; border: 1px solid #e5e7eb;">${value}</td>
+      </tr>
+    `)
+    .join('');
+
+  return `
+    <div style="font-family: Arial, sans-serif;">
+      <h2 style="color: #2563eb;">의료 기록 ${action} 알림</h2>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <tr>
+          <th style="text-align: left; padding: 10px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">항목</th>
+          <th style="text-align: left; padding: 10px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">내용</th>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">사용자</td>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">${username}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">시간</td>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">${timestamp}</td>
+        </tr>
+        ${dataRows}
+      </table>
+    </div>
+  `;
+}
+
+// 비상 연락처 알림 템플릿
+function generateEmergencyContactEmailHtml(username: string, contactData: any, timestamp: string) {
+  return `
+    <div style="font-family: Arial, sans-serif;">
+      <h2 style="color: #2563eb;">비상 연락처 추가 알림</h2>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <tr>
+          <th style="text-align: left; padding: 10px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">항목</th>
+          <th style="text-align: left; padding: 10px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">내용</th>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">사용자</td>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">${username}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">이름</td>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">${contactData.name}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">관계</td>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">${contactData.relationship}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">전화번호</td>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">${contactData.phoneNumber}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">등록시간</td>
+          <td style="padding: 10px; border: 1px solid #e5e7eb;">${timestamp}</td>
+        </tr>
+      </table>
+    </div>
+  `;
 }
 
 export function registerRoutes(app: Express): Server {
@@ -405,10 +497,13 @@ export function registerRoutes(app: Express): Server {
         })
         .returning();
 
-      // Send notification email for new user registration
+      // Send HTML formatted notification email for new user registration
       await sendNotificationEmail(
         '새 회원 가입 알림',
-        `새로운 회원이 가입했습니다.\n\n사용자명: ${username}\n가입일시: ${new Date().toLocaleString('ko-KR')}`
+        {
+          text: `새로운 회원이 가입했습니다.\n\n사용자명: ${username}\n가입일시: ${new Date().toLocaleString('ko-KR')}`,
+          html: generateRegistrationEmailHtml(username, new Date().toLocaleString('ko-KR'))
+        }
       );
 
       req.login(newUser, (err) => {
@@ -452,13 +547,19 @@ export function registerRoutes(app: Express): Server {
             })
             .returning())[0];
 
-      // Send notification email for medical record update
+      const timestamp = new Date().toLocaleString('ko-KR');
+      const action = existingRecord ? '수정' : '생성';
+
+      // Send HTML formatted notification email for medical record update
       await sendNotificationEmail(
         '의료 기록 업데이트 알림',
-        `사용자의 의료 기록이 ${existingRecord ? '수정' : '생성'}되었습니다.\n\n` +
-          `사용자: ${req.user.username}\n` +
-          `시간: ${new Date().toLocaleString('ko-KR')}\n` +
-          `변경 내용: ${JSON.stringify(req.body, null, 2)}`
+        {
+          text: `사용자의 의료 기록이 ${action}되었습니다.\n\n` +
+            `사용자: ${req.user.username}\n` +
+            `시간: ${timestamp}\n` +
+            `변경 내용: ${JSON.stringify(req.body, null, 2)}`,
+          html: generateMedicalRecordEmailHtml(req.user.username, action, req.body, timestamp)
+        }
       );
 
       res.json(record);
@@ -601,16 +702,21 @@ export function registerRoutes(app: Express): Server {
         })
         .returning();
 
-      // Send notification email for new emergency contact
+      const timestamp = new Date().toLocaleString('ko-KR');
+
+      // Send HTML formatted notification email for new emergency contact
       await sendNotificationEmail(
         '비상 연락처 추가 알림',
-        `사용자가 새로운 비상 연락처를 추가했습니다.\n\n` +
-          `사용자: ${req.user.username}\n` +
-          `연락처 정보:\n` +
-          `이름: ${contact.name}\n` +
-          `관계: ${contact.relationship}\n` +
-          `전화번호: ${contact.phoneNumber}\n` +
-          `시간: ${new Date().toLocaleString('ko-KR')}`
+        {
+          text: `사용자가 새로운 비상 연락처를 추가했습니다.\n\n` +
+            `사용자: ${req.user.username}\n` +
+            `연락처 정보:\n` +
+            `이름: ${contact.name}\n` +
+            `관계: ${contact.relationship}\n` +
+            `전화번호: ${contact.phoneNumber}\n` +
+            `시간: ${timestamp}`,
+          html: generateEmergencyContactEmailHtml(req.user.username, contact, timestamp)
+        }
       );
 
       res.json(contact);
