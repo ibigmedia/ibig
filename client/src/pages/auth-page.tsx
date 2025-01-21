@@ -19,7 +19,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
@@ -74,11 +73,13 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="container max-w-[400px] py-16">
-      <Card>
-        <CardHeader>
-          <CardTitle>{isRegistering ? "회원가입" : "로그인"}</CardTitle>
-          <CardDescription>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-[400px]">
+        <CardHeader className="space-y-2">
+          <CardTitle className="text-2xl font-semibold text-center">
+            {isRegistering ? "회원가입" : "로그인"}
+          </CardTitle>
+          <CardDescription className="text-center">
             {isRegistering
               ? "새로운 계정을 만들어주세요"
               : "아이디와 비밀번호를 입력하세요"}
@@ -94,7 +95,11 @@ export default function AuthPage() {
                   <FormItem>
                     <FormLabel>아이디</FormLabel>
                     <FormControl>
-                      <Input placeholder="아이디를 입력하세요" {...field} />
+                      <Input 
+                        placeholder="아이디를 입력하세요" 
+                        className="h-10"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -108,27 +113,34 @@ export default function AuthPage() {
                   <FormItem>
                     <FormLabel>비밀번호</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="비밀번호를 입력하세요" {...field} />
+                      <Input 
+                        type="password" 
+                        placeholder="비밀번호를 입력하세요" 
+                        className="h-10"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <Button type="submit" className="w-full">
-                {isRegistering ? "회원가입" : "로그인"}
-              </Button>
+              <div className="space-y-2">
+                <Button type="submit" className="w-full h-10">
+                  {isRegistering ? "회원가입" : "로그인"}
+                </Button>
 
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full"
-                onClick={() => setIsRegistering(!isRegistering)}
-              >
-                {isRegistering
-                  ? "이미 계정이 있으신가요? 로그인하기"
-                  : "계정이 없으신가요? 회원가입하기"}
-              </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full h-10 text-sm"
+                  onClick={() => setIsRegistering(!isRegistering)}
+                >
+                  {isRegistering
+                    ? "이미 계정이 있으신가요? 로그인하기"
+                    : "계정이 없으신가요? 회원가입하기"}
+                </Button>
+              </div>
             </form>
           </Form>
         </CardContent>
