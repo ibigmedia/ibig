@@ -21,6 +21,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { insertUserSchema } from "@db/schema";
 import * as z from "zod";
 
@@ -28,6 +29,7 @@ export default function AuthPage() {
   const { t } = useLanguage();
   const { login, register } = useUser();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [isRegistering, setIsRegistering] = useState(false);
 
   const form = useForm({
@@ -59,6 +61,8 @@ export default function AuthPage() {
           ? t('auth.registrationSuccess')
           : t('auth.loginSuccess'),
       });
+
+      setLocation("/");
     } catch (error) {
       toast({
         variant: "destructive",

@@ -8,6 +8,7 @@ import { HomePage } from "@/pages/HomePage";
 import { AdminPage } from "@/pages/AdminPage";
 import AuthPage from "@/pages/auth-page";
 import { useUser } from "@/hooks/use-user";
+import { Route, Switch } from "wouter";
 
 function Router() {
   const { user, isLoading } = useUser();
@@ -41,7 +42,7 @@ function App() {
       <LanguageProvider>
         <div className="min-h-screen bg-background">
           <Header />
-          <main>
+          <main className="container mx-auto px-4 py-8">
             <Router />
           </main>
         </div>
