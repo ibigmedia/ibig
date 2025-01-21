@@ -15,7 +15,7 @@ export function PersonalInfoPage() {
     <div className="container mx-auto px-2 sm:px-4 py-4 max-w-3xl min-h-[calc(100vh-4rem)]">
       <Card className="w-full shadow-sm">
         <CardHeader className="px-3 py-4 sm:px-6">
-          <h2 className="text-lg sm:text-2xl font-bold">개인정보 관리</h2>
+          <h2 className="text-lg sm:text-2xl font-bold">Grace River Health</h2>
         </CardHeader>
         <CardContent className="p-0">
           <Tabs defaultValue="profile" className="w-full">
