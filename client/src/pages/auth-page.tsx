@@ -38,8 +38,6 @@ export default function AuthPage() {
     defaultValues: {
       username: "",
       password: "",
-      email: "",
-      role: "user",
     },
   });
 
@@ -98,9 +96,6 @@ export default function AuthPage() {
                     <FormControl>
                       <Input placeholder="아이디를 입력하세요" {...field} />
                     </FormControl>
-                    <FormDescription>
-                      {isRegistering ? "사용하실 아이디를 입력해주세요" : "등록된 아이디를 입력하세요"}
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -113,7 +108,7 @@ export default function AuthPage() {
                   <FormItem>
                     <FormLabel>비밀번호</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input type="password" placeholder="비밀번호를 입력하세요" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
