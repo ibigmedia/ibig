@@ -47,7 +47,7 @@ export function AppointmentScheduler() {
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <h3 className="text-lg font-bold">{t('appointments.title')}</h3>
+            <h3 className="text-lg font-bold">진료 일정</h3>
           </CardHeader>
           <CardContent>
             <Calendar
@@ -61,36 +61,36 @@ export function AppointmentScheduler() {
 
         <Card>
           <CardHeader>
-            <h3 className="text-lg font-bold">Available Times</h3>
+            <h3 className="text-lg font-bold">진료 시간 선택</h3>
           </CardHeader>
           <CardContent className="space-y-4">
             <Select>
               <SelectTrigger>
-                <SelectValue placeholder="Select time" />
+                <SelectValue placeholder="시간 선택" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="09:00">09:00</SelectItem>
-                <SelectItem value="10:00">10:00</SelectItem>
-                <SelectItem value="11:00">11:00</SelectItem>
-                <SelectItem value="14:00">14:00</SelectItem>
-                <SelectItem value="15:00">15:00</SelectItem>
-                <SelectItem value="16:00">16:00</SelectItem>
+                <SelectItem value="09:00">오전 9:00</SelectItem>
+                <SelectItem value="10:00">오전 10:00</SelectItem>
+                <SelectItem value="11:00">오전 11:00</SelectItem>
+                <SelectItem value="14:00">오후 2:00</SelectItem>
+                <SelectItem value="15:00">오후 3:00</SelectItem>
+                <SelectItem value="16:00">오후 4:00</SelectItem>
               </SelectContent>
             </Select>
 
             <Select>
               <SelectTrigger>
-                <SelectValue placeholder="Select department" />
+                <SelectValue placeholder="진료과 선택" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="internal">Internal Medicine</SelectItem>
-                <SelectItem value="cardiology">Cardiology</SelectItem>
-                <SelectItem value="neurology">Neurology</SelectItem>
-                <SelectItem value="pediatrics">Pediatrics</SelectItem>
+                <SelectItem value="internal">내과</SelectItem>
+                <SelectItem value="cardiology">심장내과</SelectItem>
+                <SelectItem value="neurology">신경과</SelectItem>
+                <SelectItem value="pediatrics">소아과</SelectItem>
               </SelectContent>
             </Select>
 
-            <Button className="w-full">Book Appointment</Button>
+            <Button className="w-full">진료 예약하기</Button>
           </CardContent>
         </Card>
       </div>
