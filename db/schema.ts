@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { relations } from 'drizzle-orm';
 import { z } from 'zod';
@@ -150,8 +150,48 @@ export const selectSmtpSettingsSchema = createSelectSchema(smtpSettings);
 export type InsertSmtpSettings = typeof smtpSettings.$inferInsert;
 export type SelectSmtpSettings = typeof smtpSettings.$inferSelect;
 
-// Define relationships
-export const usersRelations = relations(users, ({ many }) => ({
+// Define communication preference type
+export const CommunicationType = z.enum(['email', 'sms', 'phone', 'kakao']);
+export type CommunicationType = z.infer<typeof CommunicationType>;
+
+export const patientProfiles = pgTable("patient_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  preferredName: text("preferred_name"),
+  preferredLanguage: text("preferred_language").default('ko').notNull(),
+  primaryCommunicationMethod: text("primary_communication_method").$type<CommunicationType>().notNull(),
+  secondaryCommunicationMethod: text("secondary_communication_method").$type<CommunicationType>(),
+  contactDetails: jsonb("contact_details").notNull(),
+  communicationPreferences: jsonb("communication_preferences").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Create schemas for patient profiles
+export const insertPatientProfileSchema = createInsertSchema(patientProfiles, {
+  contactDetails: z.object({
+    email: z.string().email().optional(),
+    phone: z.string().optional(),
+    kakaoId: z.string().optional(),
+  }),
+  communicationPreferences: z.object({
+    appointmentReminders: z.boolean().default(true),
+    medicationReminders: z.boolean().default(true),
+    newsletterSubscription: z.boolean().default(false),
+    preferredContactTime: z.enum(['morning', 'afternoon', 'evening']).optional(),
+  }),
+});
+
+export const selectPatientProfileSchema = createSelectSchema(patientProfiles);
+export type InsertPatientProfile = z.infer<typeof insertPatientProfileSchema>;
+export type SelectPatientProfile = typeof patientProfiles.$inferSelect;
+
+// Add the relationship to users relations
+export const usersRelations = relations(users, ({ one, many }) => ({
+  patientProfile: one(patientProfiles, {
+    fields: [users.id],
+    references: [patientProfiles.userId],
+  }),
   medicalRecords: many(medicalRecords),
   appointments: many(appointments),
   medications: many(medications),

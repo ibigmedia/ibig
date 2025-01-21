@@ -7,6 +7,9 @@ import { eq, and, sql, desc } from "drizzle-orm";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import nodemailer from "nodemailer";
+import type { Request, Response, NextFunction } from "express";
+import { getPatientProfile, updatePatientProfile } from "./routes/patient-profile";
+
 
 const scryptAsync = promisify(scrypt);
 
@@ -253,6 +256,10 @@ export function registerRoutes(app: Express): Server {
   setupAuth(app);
 
   createAdminUser().catch(console.error);
+
+  // Patient profile routes
+  app.get("/api/patient-profile", getPatientProfile);
+  app.put("/api/patient-profile", updatePatientProfile);
 
   app.get("/api/admin/users", async (req, res) => {
     if (!req.user || req.user.role !== 'admin') {
