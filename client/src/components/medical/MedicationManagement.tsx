@@ -23,6 +23,8 @@ interface Medication {
   endDate: string | null;
   frequency: string;
   notes: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export function MedicationManagement() {
@@ -50,10 +52,7 @@ export function MedicationManagement() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...data,
-          endDate: data.endDate || null,
-        }),
+        body: JSON.stringify(data),
         credentials: 'include',
       });
 
@@ -216,6 +215,7 @@ export function MedicationManagement() {
                 onChange={(e) =>
                   setNewRecord({ ...newRecord, notes: e.target.value })
                 }
+                placeholder="복용 시 주의사항이나 기타 메모"
               />
             </div>
             <Button type="submit" disabled={addMedicationMutation.isPending}>

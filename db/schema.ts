@@ -117,6 +117,13 @@ export const selectMedicalRecordSchema = createSelectSchema(medicalRecords);
 export type InsertMedicalRecord = typeof medicalRecords.$inferInsert;
 export type SelectMedicalRecord = typeof medicalRecords.$inferSelect;
 
+// Create schemas for medications
+export const insertMedicationSchema = createInsertSchema(medications);
+export const selectMedicationSchema = createSelectSchema(medications);
+export type InsertMedication = typeof medications.$inferInsert;
+export type SelectMedication = typeof medications.$inferSelect;
+
+
 // Define relationships
 export const usersRelations = relations(users, ({ many }) => ({
   medicalRecords: many(medicalRecords),
