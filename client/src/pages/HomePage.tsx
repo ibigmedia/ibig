@@ -11,12 +11,20 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export function HomePage() {
   const { t } = useLanguage();
-  const [showWelcome, setShowWelcome] = React.useState(true);
+  const [showWelcome, setShowWelcome] = React.useState(() => {
+    const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
+    return !hasSeenWelcome;
+  });
+
+  const handleStart = () => {
+    localStorage.setItem('hasSeenWelcome', 'true');
+    setShowWelcome(false);
+  };
 
   if (showWelcome) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <WelcomePage onStart={() => setShowWelcome(false)} />
+        <WelcomePage onStart={handleStart} />
       </div>
     );
   }
