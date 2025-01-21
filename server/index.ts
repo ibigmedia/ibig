@@ -24,13 +24,11 @@ if (cluster.isPrimary && process.env.NODE_ENV === "production") {
   });
 } else {
   const app = express();
-
-  // Basic middleware
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
 
   // Add monitoring middleware first
-  app.use("/", monitoringMiddleware);
+  app.use(monitoringMiddleware);
   app.use(loggerMiddleware);
 
   // Expose metrics endpoint
@@ -68,36 +66,67 @@ if (cluster.isPrimary && process.env.NODE_ENV === "production") {
   });
 
   (async () => {
-    const server = registerRoutes(app);
+    try {
+      const server = registerRoutes(app);
 
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
+      app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+        const status = err.status || err.statusCode || 500;
+        const message = err.message || "Internal Server Error";
 
-      res.status(status).json({ message });
-      throw err;
-    });
+        res.status(status).json({ message });
+        log(`Error: ${message}`);
+      });
 
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
-    } else {
-      serveStatic(app);
+      if (app.get("env") === "development") {
+        await setupVite(app, server);
+      } else {
+        serveStatic(app);
+      }
+
+      // Try to find an available port starting from 5000
+      const tryPort = async (port: number, maxAttempts: number = 5): Promise<number> => {
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          try {
+            await new Promise((resolve, reject) => {
+              server.listen(port, "0.0.0.0", () => {
+                resolve(port);
+              }).on('error', (err: any) => {
+                if (err.code === 'EADDRINUSE') {
+                  reject(err);
+                }
+              });
+            });
+            return port;
+          } catch (err) {
+            if (attempt === maxAttempts - 1) throw err;
+            port++;
+          }
+        }
+        throw new Error('No available ports found');
+      };
+
+      try {
+        const port = await tryPort(5000);
+        log(`Server worker ${process.pid} listening on port ${port}`);
+      } catch (err) {
+        log(`Failed to start server: ${err}`);
+        process.exit(1);
+      }
+
+    } catch (err) {
+      log(`Critical error during server startup: ${err}`);
+      process.exit(1);
     }
-
-    const PORT = 5000;
-    server.listen(PORT, "0.0.0.0", () => {
-      log(`Server worker ${process.pid} listening on port ${PORT}`);
-    });
-
-    // Handle uncaught exceptions and rejections
-    process.on("uncaughtException", (err) => {
-      log(`Uncaught Exception: ${err.message}`);
-      process.exit(1);
-    });
-
-    process.on("unhandledRejection", (reason, promise) => {
-      log(`Unhandled Rejection at: ${promise}, reason: ${reason}`);
-      process.exit(1);
-    });
   })();
+
+  // Handle uncaught exceptions and rejections
+  process.on("uncaughtException", (err) => {
+    log(`Uncaught Exception: ${err.message}`);
+    setTimeout(() => process.exit(1), 1000);
+  });
+
+  process.on("unhandledRejection", (reason, promise) => {
+    log(`Unhandled Rejection at: ${promise}, reason: ${reason}`);
+    setTimeout(() => process.exit(1), 1000);
+  });
 }
