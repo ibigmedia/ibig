@@ -9,14 +9,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Moon, Sun, Globe, Menu } from 'lucide-react';
+import { Moon, Sun, Globe } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 
 export function Header() {
   const { user, logout } = useUser();
   const { language, setLanguage, t } = useLanguage();
   const { theme, setTheme } = useTheme();
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
   const handleLogout = async () => {
     try {
@@ -26,53 +25,33 @@ export function Header() {
     }
   };
 
-  const renderUserLinks = () => (
-    <>
-      <Link href="/personal">
-        <Button variant="ghost">
-          개인정보
-        </Button>
-      </Link>
-      <Link href="/">
-        <Button variant="ghost">
-          대시보드
-        </Button>
-      </Link>
-    </>
-  );
-
   return (
-    <header className="border-b">
-      <div className="container mx-auto px-4 h-16">
-        <div className="flex items-center justify-between h-full">
+    <header className="border-b bg-background">
+      <div className="container mx-auto px-4">
+        <div className="flex h-16 items-center justify-between">
           <Link href="/">
-            <Button variant="ghost" className="text-lg md:text-2xl font-bold px-0">
-              {t('common.appName')}
+            <Button variant="ghost" className="text-lg font-bold">
+              은혜의 강 헬스북
             </Button>
           </Link>
 
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4">
-            {user && user.role === 'user' && renderUserLinks()}
-
-            {user && user.role === 'admin' && (
-              <Link href="/admin">
-                <Button variant="ghost">
-                  {t('nav.admin')}
-                </Button>
-              </Link>
+          <nav className="hidden md:flex items-center space-x-4">
+            {user && (
+              <>
+                <Link href="/">
+                  <Button variant="ghost">대시보드</Button>
+                </Link>
+                <Link href="/personal">
+                  <Button variant="ghost">개인정보</Button>
+                </Link>
+                <Link href="/medical-records">
+                  <Button variant="ghost">의료기록</Button>
+                </Link>
+              </>
             )}
+          </nav>
 
+          <div className="flex items-center space-x-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -81,10 +60,10 @@ export function Header() {
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={() => setLanguage('ko')}>
-                  {t('language.korean')}
+                  한국어
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setLanguage('en')}>
-                  {t('language.english')}
+                  English
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -103,70 +82,15 @@ export function Header() {
 
             {user ? (
               <Button variant="outline" onClick={handleLogout}>
-                {t('auth.logout')}
+                로그아웃
               </Button>
             ) : (
               <Link href="/auth">
-                <Button variant="outline">
-                  {t('auth.login')}
-                </Button>
+                <Button variant="outline">로그인</Button>
               </Link>
             )}
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden border-t py-4 space-y-2">
-            {user && user.role === 'user' && (
-              <div className="flex flex-col space-y-2">
-                {renderUserLinks()}
-              </div>
-            )}
-
-            {user && user.role === 'admin' && (
-              <Link href="/admin">
-                <Button variant="ghost" className="w-full justify-start">
-                  {t('nav.admin')}
-                </Button>
-              </Link>
-            )}
-
-            <div className="flex items-center justify-between px-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setLanguage(language === 'ko' ? 'en' : 'ko')}
-              >
-                <Globe className="h-5 w-5" />
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              >
-                {theme === 'dark' ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
-              </Button>
-
-              {user ? (
-                <Button variant="outline" onClick={handleLogout}>
-                  {t('auth.logout')}
-                </Button>
-              ) : (
-                <Link href="/auth">
-                  <Button variant="outline">
-                    {t('auth.login')}
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </header>
   );
