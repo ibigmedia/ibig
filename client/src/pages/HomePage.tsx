@@ -6,61 +6,103 @@ import { AppointmentScheduler } from '@/components/appointments/AppointmentSched
 import { MedicationManagement } from '@/components/medical/MedicationManagement';
 import { EmergencyContacts } from '@/components/medical/EmergencyContacts';
 import { PersonalInfoForm } from '@/components/personal/PersonalInfoForm';
+import { WelcomePage } from '@/components/common/WelcomePage';
+import { Card, CardContent } from '@/components/ui/card';
 
 export function HomePage() {
   const { t } = useLanguage();
+  const [showWelcome, setShowWelcome] = React.useState(true);
+
+  if (showWelcome) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <WelcomePage onStart={() => setShowWelcome(false)} />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <Tabs defaultValue="personal" className="space-y-6">
         <TabsList className="flex w-full justify-start border-b">
           <TabsTrigger value="personal" className="text-lg px-6 py-2">
-            개인정보
+            {t('nav.personal')}
           </TabsTrigger>
           <TabsTrigger value="health" className="text-lg px-6 py-2">
-            건강기록
+            {t('nav.health')}
           </TabsTrigger>
           <TabsTrigger value="medication" className="text-lg px-6 py-2">
-            투약관리
+            {t('nav.medication')}
           </TabsTrigger>
           <TabsTrigger value="appointment" className="text-lg px-6 py-2">
-            진료예약
+            {t('nav.appointment')}
           </TabsTrigger>
         </TabsList>
 
-        {/* 개인정보 탭 */}
         <TabsContent value="personal">
           <div className="grid gap-6">
             <section>
-              <h2 className="text-2xl font-semibold mb-4">기본 정보</h2>
+              <h2 className="text-2xl font-semibold mb-4">{t('personal.basicInfo')}</h2>
+              <Card className="mb-6">
+                <CardContent className="pt-6">
+                  <p className="text-muted-foreground">
+                    {t('personal.basicInfoDescription')}
+                  </p>
+                </CardContent>
+              </Card>
               <PersonalInfoForm />
             </section>
             <section>
-              <h2 className="text-2xl font-semibold mb-4">비상 연락망</h2>
+              <h2 className="text-2xl font-semibold mb-4">{t('personal.emergency')}</h2>
+              <Card className="mb-6">
+                <CardContent className="pt-6">
+                  <p className="text-muted-foreground">
+                    {t('personal.emergencyDescription')}
+                  </p>
+                </CardContent>
+              </Card>
               <EmergencyContacts />
             </section>
           </div>
         </TabsContent>
 
-        {/* 건강기록 탭 */}
         <TabsContent value="health">
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold">건강 기록</h2>
+            <h2 className="text-2xl font-semibold">{t('health.records')}</h2>
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <p className="text-muted-foreground">
+                  {t('health.recordsDescription')}
+                </p>
+              </CardContent>
+            </Card>
             <MedicalForm />
           </div>
         </TabsContent>
 
-        {/* 투약관리 탭 */}
         <TabsContent value="medication">
           <div className="space-y-6">
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <p className="text-muted-foreground">
+                  {t('medication.description')}
+                </p>
+              </CardContent>
+            </Card>
             <MedicationManagement />
           </div>
         </TabsContent>
 
-        {/* 진료예약 탭 */}
         <TabsContent value="appointment">
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold">진료 예약</h2>
+            <h2 className="text-2xl font-semibold">{t('appointment.title')}</h2>
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <p className="text-muted-foreground">
+                  {t('appointment.description')}
+                </p>
+              </CardContent>
+            </Card>
             <AppointmentScheduler />
           </div>
         </TabsContent>

@@ -30,11 +30,19 @@ export function Header() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/">
           <Button variant="ghost" className="text-2xl font-bold px-0">
-            Grace River Health
+            {t('common.appName')}
           </Button>
         </Link>
 
         <div className="flex items-center space-x-4">
+          {user && (
+            <Link href="/">
+              <Button variant="ghost">
+                {t('nav.dashboard')}
+              </Button>
+            </Link>
+          )}
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -43,10 +51,10 @@ export function Header() {
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => setLanguage('ko')}>
-                한국어
+                {t('language.korean')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setLanguage('en')}>
-                English
+                {t('language.english')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -65,12 +73,12 @@ export function Header() {
 
           {user ? (
             <Button variant="outline" onClick={handleLogout}>
-              {language === 'ko' ? '로그아웃' : 'Logout'}
+              {t('auth.logout')}
             </Button>
           ) : (
             <Link href="/auth">
               <Button variant="outline">
-                {language === 'ko' ? '로그인' : 'Login'}
+                {t('auth.login')}
               </Button>
             </Link>
           )}

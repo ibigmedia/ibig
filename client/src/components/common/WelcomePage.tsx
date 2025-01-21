@@ -2,8 +2,13 @@ import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 
-export function WelcomePage() {
+interface WelcomePageProps {
+  onStart: () => void;
+}
+
+export function WelcomePage({ onStart }: WelcomePageProps) {
   const { t } = useLanguage();
 
   return (
@@ -46,14 +51,16 @@ export function WelcomePage() {
               <h3 className="font-semibold">{t('welcome.section4Title')}</h3>
               <p className="text-sm text-muted-foreground">{t('welcome.section4Description')}</p>
             </div>
-            <div className="space-y-2">
-              <h3 className="font-semibold">{t('welcome.section5Title')}</h3>
-              <p className="text-sm text-muted-foreground">{t('welcome.section5Description')}</p>
-            </div>
           </div>
         </div>
 
         <Separator />
+
+        <div className="flex justify-center">
+          <Button onClick={onStart} className="px-8">
+            {t('welcome.startButton')}
+          </Button>
+        </div>
 
         <div className="bg-primary/5 p-4 rounded-lg">
           <p className="text-sm text-center italic">
