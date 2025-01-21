@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, AlertCircle, Heart } from 'lucide-react';
+import { WelcomePage } from '@/components/common/WelcomePage';
 
 export function HomePage() {
   const { t } = useLanguage();
@@ -20,6 +21,18 @@ export function HomePage() {
   });
 
   const [activeTab, setActiveTab] = React.useState('health');
+  const [showWelcome, setShowWelcome] = React.useState(() => {
+    return !localStorage.getItem('welcomeShown');
+  });
+
+  const handleStartApp = () => {
+    localStorage.setItem('welcomeShown', 'true');
+    setShowWelcome(false);
+  };
+
+  if (showWelcome) {
+    return <WelcomePage onStart={handleStartApp} />;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
