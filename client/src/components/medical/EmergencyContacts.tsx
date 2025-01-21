@@ -8,7 +8,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -30,8 +29,10 @@ const contactSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   relationship: z.string().min(1, 'Relationship is required'),
   phoneNumber: z.string().min(1, 'Phone number is required'),
-  email: z.string().email().optional().nullable(),
-  address: z.string().optional().nullable(),
+  email: z.string().email().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
 });
 
 type ContactFormValues = z.infer<typeof contactSchema>;
@@ -51,12 +52,14 @@ function EmergencyContactDialog({
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
-    defaultValues: initialData || {
-      name: '',
-      relationship: '',
-      phoneNumber: '',
-      email: '',
-      address: '',
+    defaultValues: {
+      name: initialData?.name ?? '',
+      relationship: initialData?.relationship ?? '',
+      phoneNumber: initialData?.phoneNumber ?? '',
+      email: initialData?.email ?? '',
+      city: initialData?.city ?? '',
+      state: initialData?.state ?? '',
+      zipCode: initialData?.zipCode ?? '',
     },
   });
 
@@ -151,25 +154,53 @@ function EmergencyContactDialog({
                 <FormItem>
                   <FormLabel>{t('emergency.email')}</FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" />
+                    <Input {...field} type="email" value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('emergency.address')}</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('emergency.city')}</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="state"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('emergency.state')}</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="zipCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('emergency.zipCode')}</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <Button type="submit" className="w-full">
               {initialData ? t('emergency.editContact') : t('emergency.addContact')}
             </Button>
@@ -259,10 +290,10 @@ export function EmergencyContacts() {
                       {contact.email}
                     </span>
                   )}
-                  {contact.address && (
+                  {(contact.city || contact.state || contact.zipCode) && (
                     <span className="flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
-                      {contact.address}
+                      {[contact.city, contact.state, contact.zipCode].filter(Boolean).join(', ')}
                     </span>
                   )}
                 </div>
