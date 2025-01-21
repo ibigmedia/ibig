@@ -8,6 +8,7 @@ import { HomePage } from "@/pages/HomePage";
 import AuthPage from "@/pages/auth-page";
 import { useUser } from "@/hooks/use-user";
 import { Loader2 } from "lucide-react";
+import { Header } from "@/components/common/Header";
 
 function Router() {
   const { user, isLoading } = useUser();
@@ -39,6 +40,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <div className="min-h-screen bg-background">
+          <Header />
           <main>
             <Router />
           </main>
