@@ -6,7 +6,7 @@ import NotFound from "@/pages/not-found";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { HomePage } from "@/pages/HomePage";
 import { UserDashboardPage } from "@/pages/UserDashboardPage";
-import { PersonalInfoPage } from "@/pages/PersonalInfoPage";
+import { MedicalRecordsPage } from "@/pages/MedicalRecordsPage";
 import AuthPage from "@/pages/auth-page";
 import { useUser } from "@/hooks/use-user";
 import { Loader2 } from "lucide-react";
@@ -59,7 +59,7 @@ function Router() {
     <Switch>
       <Route path="/" component={HomePage} />
       <Route path="/dashboard" component={UserDashboardPage} />
-      <Route path="/personal-info" component={PersonalInfoPage} />
+      <Route path="/medical-records" component={MedicalRecordsPage} />
       <Route component={NotFound} />
     </Switch>
   );
