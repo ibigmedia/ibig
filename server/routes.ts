@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { db } from "@db";
-import { users, appointments, medications, medicalRecords, emergencyContacts, invitations, bloodPressureRecords } from "@db/schema";
+import { users, appointments, medications, medicalRecords, emergencyContacts, invitations, bloodPressureRecords, bloodSugarRecords, diseaseHistories } from "@db/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -686,6 +686,84 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error('Error saving blood pressure record:', error);
       res.status(500).send("Error saving blood pressure record");
+    }
+  });
+
+  // Blood Sugar API endpoints
+  app.get("/api/blood-sugar", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const records = await db.query.bloodSugarRecords.findMany({
+        where: eq(bloodSugarRecords.userId, req.user.id),
+        orderBy: [desc(bloodSugarRecords.measuredAt)],
+      });
+      res.json(records);
+    } catch (error) {
+      console.error('Error fetching blood sugar records:', error);
+      res.status(500).send("Error fetching blood sugar records");
+    }
+  });
+
+  app.post("/api/blood-sugar", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const [record] = await db
+        .insert(bloodSugarRecords)
+        .values({
+          ...req.body,
+          userId: req.user.id,
+        })
+        .returning();
+
+      res.json(record);
+    } catch (error) {
+      console.error('Error saving blood sugar record:', error);
+      res.status(500).send("Error saving blood sugar record");
+    }
+  });
+
+  // Disease History API endpoints
+  app.get("/api/disease-histories", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const records = await db.query.diseaseHistories.findMany({
+        where: eq(diseaseHistories.userId, req.user.id),
+        orderBy: [desc(diseaseHistories.createdAt)],
+      });
+      res.json(records);
+    } catch (error) {
+      console.error('Error fetching disease histories:', error);
+      res.status(500).send("Error fetching disease histories");
+    }
+  });
+
+  app.post("/api/disease-histories", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const [record] = await db
+        .insert(diseaseHistories)
+        .values({
+          ...req.body,
+          userId: req.user.id,
+        })
+        .returning();
+
+      res.json(record);
+    } catch (error) {
+      console.error('Error saving disease history:', error);
+      res.status(500).send("Error saving disease history");
     }
   });
 

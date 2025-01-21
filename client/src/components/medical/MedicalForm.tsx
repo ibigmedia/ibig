@@ -13,6 +13,13 @@ import { MedicalExport } from './MedicalExport';
 import { EmergencyContacts } from './EmergencyContacts';
 import { Save, Plus } from 'lucide-react';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -21,13 +28,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface MedicalFormData {
-  name: string;
-  birthDate: string;
-  isDiabetic: boolean;
+interface DiseaseHistoryData {
+  diseaseName: string;
+  diagnosisDate: string;
+  treatment: string;
   notes?: string;
-  drugAllergies?: string;
-  foodAllergies?: string;
 }
 
 interface BloodPressureData {
@@ -35,6 +40,21 @@ interface BloodPressureData {
   diastolic: number;
   pulse: number;
   notes?: string;
+}
+
+interface BloodSugarData {
+  bloodSugar: number;
+  measurementType: string;
+  notes?: string;
+}
+
+interface MedicalFormData {
+  name: string;
+  birthDate: string;
+  isDiabetic: boolean;
+  notes?: string;
+  drugAllergies?: string;
+  foodAllergies?: string;
 }
 
 export function MedicalForm() {
@@ -51,6 +71,14 @@ export function MedicalForm() {
     queryKey: ['/api/blood-pressure'],
   });
 
+  const { data: bloodSugarRecords = [] } = useQuery({
+    queryKey: ['/api/blood-sugar'],
+  });
+
+  const { data: diseaseHistories = [] } = useQuery({
+    queryKey: ['/api/disease-histories'],
+  });
+
   const { register, handleSubmit, setValue, watch } = useForm<MedicalFormData>({
     defaultValues: {
       name: '',
@@ -62,6 +90,7 @@ export function MedicalForm() {
     },
   });
 
+  // Blood Pressure Form
   const {
     register: registerBP,
     handleSubmit: handleSubmitBP,
@@ -75,7 +104,33 @@ export function MedicalForm() {
     },
   });
 
-  // Update form when data is loaded
+  // Blood Sugar Form
+  const {
+    register: registerBS,
+    handleSubmit: handleSubmitBS,
+    reset: resetBS,
+  } = useForm<BloodSugarData>({
+    defaultValues: {
+      bloodSugar: 100,
+      measurementType: 'before_meal',
+      notes: '',
+    },
+  });
+
+  // Disease History Form
+  const {
+    register: registerDH,
+    handleSubmit: handleSubmitDH,
+    reset: resetDH,
+  } = useForm<DiseaseHistoryData>({
+    defaultValues: {
+      diseaseName: '',
+      diagnosisDate: '',
+      treatment: '',
+      notes: '',
+    },
+  });
+
   React.useEffect(() => {
     if (medicalRecord) {
       setValue('name', medicalRecord.name);
@@ -87,6 +142,7 @@ export function MedicalForm() {
     }
   }, [medicalRecord, setValue]);
 
+  // Medical Records Mutation
   const mutation = useMutation({
     mutationFn: async (data: MedicalFormData) => {
       const response = await fetch('/api/medical-records', {
@@ -120,6 +176,7 @@ export function MedicalForm() {
     },
   });
 
+  // Blood Pressure Mutation
   const bloodPressureMutation = useMutation({
     mutationFn: async (data: BloodPressureData) => {
       const response = await fetch('/api/blood-pressure', {
@@ -157,12 +214,93 @@ export function MedicalForm() {
     },
   });
 
+  // Blood Sugar Mutation
+  const bloodSugarMutation = useMutation({
+    mutationFn: async (data: BloodSugarData) => {
+      const response = await fetch('/api/blood-sugar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          measuredAt: new Date().toISOString(),
+        }),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: '저장 완료',
+        description: '혈당 기록이 저장되었습니다.',
+      });
+      resetBS();
+      queryClient.invalidateQueries({ queryKey: ['/api/blood-sugar'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: '저장 실패',
+        description: error.message,
+      });
+    },
+  });
+
+  // Disease History Mutation
+  const diseaseHistoryMutation = useMutation({
+    mutationFn: async (data: DiseaseHistoryData) => {
+      const response = await fetch('/api/disease-histories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: '저장 완료',
+        description: '질병 이력이 저장되었습니다.',
+      });
+      resetDH();
+      queryClient.invalidateQueries({ queryKey: ['/api/disease-histories'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: '저장 실패',
+        description: error.message,
+      });
+    },
+  });
+
   const onSubmit = handleSubmit((data) => {
     mutation.mutate(data);
   });
 
   const onSubmitBP = handleSubmitBP((data) => {
     bloodPressureMutation.mutate(data);
+  });
+
+  const onSubmitBS = handleSubmitBS((data) => {
+    bloodSugarMutation.mutate(data);
+  });
+
+  const onSubmitDH = handleSubmitDH((data) => {
+    diseaseHistoryMutation.mutate(data);
   });
 
   const isDiabetic = watch('isDiabetic');
@@ -222,6 +360,57 @@ export function MedicalForm() {
             <Label>{t('medical.foodAllergy')}</Label>
             <Textarea {...register('foodAllergies')} placeholder="음식 알러지가 있다면 입력해주세요." />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <h3 className="text-lg font-bold">과거 병력</h3>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={onSubmitDH} className="grid grid-cols-2 gap-4">
+            <Input
+              placeholder="질병명"
+              {...registerDH('diseaseName', { required: true })}
+            />
+            <Input
+              type="date"
+              {...registerDH('diagnosisDate', { required: true })}
+            />
+            <Input
+              placeholder="치료내용"
+              {...registerDH('treatment', { required: true })}
+            />
+            <Input
+              placeholder="비고"
+              {...registerDH('notes')}
+            />
+            <Button type="submit" className="col-span-2">
+              <Plus className="h-4 w-4 mr-2" />
+              추가
+            </Button>
+          </form>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>질병명</TableHead>
+                <TableHead>진단일</TableHead>
+                <TableHead>치료내용</TableHead>
+                <TableHead>비고</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {diseaseHistories.map((history: any) => (
+                <TableRow key={history.id}>
+                  <TableCell>{history.diseaseName}</TableCell>
+                  <TableCell>{new Date(history.diagnosisDate).toLocaleDateString()}</TableCell>
+                  <TableCell>{history.treatment}</TableCell>
+                  <TableCell>{history.notes}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
@@ -286,6 +475,70 @@ export function MedicalForm() {
           </Table>
         </CardContent>
       </Card>
+
+      {isDiabetic && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <h3 className="text-lg font-bold">혈당 관리</h3>
+            <form onSubmit={onSubmitBS} className="flex items-center gap-2">
+              <div className="grid grid-cols-3 gap-2">
+                <Input
+                  type="number"
+                  placeholder="혈당"
+                  className="w-24"
+                  {...registerBS('bloodSugar', { required: true })}
+                />
+                <Select
+                  onValueChange={(value) => setValue('measurementType', value)}
+                  defaultValue="before_meal"
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="측정시기" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="before_meal">식전</SelectItem>
+                    <SelectItem value="after_meal">식후</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="메모"
+                  {...registerBS('notes')}
+                />
+              </div>
+              <Button type="submit" size="sm">
+                <Plus className="h-4 w-4" />
+                기록추가
+              </Button>
+            </form>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>날짜</TableHead>
+                  <TableHead>혈당</TableHead>
+                  <TableHead>측정시기</TableHead>
+                  <TableHead>메모</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bloodSugarRecords.map((record: any) => (
+                  <TableRow key={record.id}>
+                    <TableCell>
+                      {new Date(record.measuredAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>{record.bloodSugar}</TableCell>
+                    <TableCell>
+                      {record.measurementType === 'before_meal' ? '식전' : '식후'}
+                    </TableCell>
+                    <TableCell>{record.notes}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       <EmergencyContacts />
     </div>

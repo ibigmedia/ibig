@@ -28,12 +28,32 @@ export const medicalRecords = pgTable("medical_records", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const diseaseHistories = pgTable("disease_histories", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  diseaseName: text("disease_name").notNull(),
+  diagnosisDate: timestamp("diagnosis_date").notNull(),
+  treatment: text("treatment"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const bloodPressureRecords = pgTable("blood_pressure_records", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   systolic: integer("systolic").notNull(), // 수축기 혈압
   diastolic: integer("diastolic").notNull(), // 이완기 혈압
   pulse: integer("pulse").notNull(), // 맥박
+  measuredAt: timestamp("measured_at").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const bloodSugarRecords = pgTable("blood_sugar_records", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  bloodSugar: integer("blood_sugar").notNull(), // 혈당 수치
+  measurementType: text("measurement_type").notNull(), // 식전/식후
   measuredAt: timestamp("measured_at").notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -87,6 +107,8 @@ export const emergencyContacts = pgTable("emergency_contacts", {
 export const usersRelations = relations(users, ({ many }) => ({
   medicalRecords: many(medicalRecords),
   bloodPressureRecords: many(bloodPressureRecords),
+  bloodSugarRecords: many(bloodSugarRecords),
+  diseaseHistories: many(diseaseHistories),
   appointments: many(appointments),
   medications: many(medications),
   emergencyContacts: many(emergencyContacts),
@@ -130,3 +152,14 @@ export const insertMedicalRecordSchema = createInsertSchema(medicalRecords);
 export const selectMedicalRecordSchema = createSelectSchema(medicalRecords);
 export type InsertMedicalRecord = typeof medicalRecords.$inferInsert;
 export type SelectMedicalRecord = typeof medicalRecords.$inferSelect;
+
+// Schema types
+export const insertDiseaseHistorySchema = createInsertSchema(diseaseHistories);
+export const selectDiseaseHistorySchema = createSelectSchema(diseaseHistories);
+export type InsertDiseaseHistory = typeof diseaseHistories.$inferInsert;
+export type SelectDiseaseHistory = typeof diseaseHistories.$inferSelect;
+
+export const insertBloodSugarSchema = createInsertSchema(bloodSugarRecords);
+export const selectBloodSugarSchema = createSelectSchema(bloodSugarRecords);
+export type InsertBloodSugar = typeof bloodSugarRecords.$inferInsert;
+export type SelectBloodSugar = typeof bloodSugarRecords.$inferSelect;
