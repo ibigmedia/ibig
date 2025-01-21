@@ -8,7 +8,6 @@ import { HomePage } from "@/pages/HomePage";
 import { AdminPage } from "@/pages/AdminPage";
 import AuthPage from "@/pages/auth-page";
 import { useUser } from "@/hooks/use-user";
-import { Route, Switch } from "wouter";
 
 function Router() {
   const { user, isLoading } = useUser();
