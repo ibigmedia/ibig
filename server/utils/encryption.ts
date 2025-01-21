@@ -1,12 +1,15 @@
 import CryptoJS from 'crypto-js';
 
-// Generate a random key for development if ENCRYPTION_KEY is not set
-const DEV_KEY = CryptoJS.lib.WordArray.random(32).toString();
+// Generate a stable development key
+const DEV_KEY = 'development-encryption-key-do-not-use-in-production';
 
 // Use environment variable for the secret key, with development fallback
-const ENCRYPTION_KEY = process.env.NODE_ENV === 'production' 
-  ? process.env.ENCRYPTION_KEY 
-  : (process.env.ENCRYPTION_KEY || DEV_KEY);
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || DEV_KEY;
+
+// Warn if using development key in production
+if (process.env.NODE_ENV === 'production' && !process.env.ENCRYPTION_KEY) {
+  console.warn('WARNING: Using development encryption key in production. Please set ENCRYPTION_KEY environment variable.');
+}
 
 export const encryption = {
   encrypt: (data: any): string => {
