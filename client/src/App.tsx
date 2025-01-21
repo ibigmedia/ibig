@@ -1,5 +1,4 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
@@ -25,23 +24,13 @@ function Router() {
     return <AuthPage />;
   }
 
-  // Redirect admin users directly to admin dashboard after login
-  if (user.role === 'admin' && location.pathname === '/') {
+  // Admin users see admin dashboard
+  if (user.role === 'admin') {
     return <AdminPage />;
   }
 
-  // Redirect non-admin users to home page if they try to access admin page
-  if (user.role !== 'admin' && location.pathname === '/admin') {
-    return <HomePage />;
-  }
-
-  return (
-    <Switch>
-      <Route path="/" component={HomePage} />
-      <Route path="/admin" component={AdminPage} />
-      <Route component={NotFound} />
-    </Switch>
-  );
+  // Regular users see home page
+  return <HomePage />;
 }
 
 function App() {
