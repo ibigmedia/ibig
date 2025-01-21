@@ -78,10 +78,10 @@ export function PersonalInfoForm() {
   });
 
   return (
-    <form onSubmit={onSubmit} className="w-full">
-      <Card>
-        <CardContent className="space-y-6 p-4 sm:p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+    <form onSubmit={onSubmit}>
+      <Card className="shadow-sm">
+        <CardContent className="space-y-4 p-3 sm:p-6">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label className="text-sm font-medium">이름</Label>
               <Input 
@@ -102,16 +102,18 @@ export function PersonalInfoForm() {
             <Label className="text-sm font-medium">메모</Label>
             <Textarea 
               {...register('notes')}
-              className="min-h-[100px] w-full"
+              className="min-h-[80px] w-full resize-none"
             />
           </div>
-          <Button 
-            type="submit"
-            className="w-full sm:w-auto"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            저장
-          </Button>
+          <div className="pt-2">
+            <Button 
+              type="submit"
+              className="w-full sm:w-auto"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              저장
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </form>
