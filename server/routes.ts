@@ -365,7 +365,12 @@ export function registerRoutes(app: Express): Server {
 
     try {
       const records = await db
-        .select(selectMedicalRecordsWithUser)
+        .select({
+          ...medicalRecords,
+          user: {
+            username: users.username,
+          },
+        })
         .from(medicalRecords)
         .leftJoin(users, eq(medicalRecords.userId, users.id));
       res.json(records);
