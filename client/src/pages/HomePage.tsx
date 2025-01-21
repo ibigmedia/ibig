@@ -3,19 +3,15 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MedicalForm } from '@/components/medical/MedicalForm';
 import { AppointmentScheduler } from '@/components/appointments/AppointmentScheduler';
-import { MedicationTracker } from '@/components/medications/MedicationTracker';
+import { MedicationManagement } from '@/components/medical/MedicationManagement';
 import { WelcomePage } from '@/components/common/WelcomePage';
 import { EmergencyContacts } from '@/components/medical/EmergencyContacts';
-import { useLocation, useSearch } from 'wouter';
+import { useLocation } from 'wouter';
 
 export function HomePage() {
   const { t } = useLanguage();
   const [location] = useLocation();
-  const [search] = useSearch();
   const [showWelcome, setShowWelcome] = React.useState(true);
-
-  // Parse the tab from URL
-  const tab = new URLSearchParams(search).get('tab') || 'personal';
 
   // When user clicks to start, move to main content
   const handleStartClick = () => {
@@ -31,7 +27,7 @@ export function HomePage() {
             onClick={handleStartClick}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
           >
-            시작하기
+            {t('common.start')}
           </button>
         </div>
       </div>
@@ -40,17 +36,17 @@ export function HomePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Tabs defaultValue={tab} className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="personal">개인정보 관리</TabsTrigger>
-          <TabsTrigger value="medical">의료기록 관리</TabsTrigger>
+      <Tabs defaultValue="personal" className="space-y-6">
+        <TabsList className="w-full justify-start border-b pb-px">
+          <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
+          <TabsTrigger value="medical">{t('tabs.medical')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="personal">
           <Tabs defaultValue="info" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="info">기본정보</TabsTrigger>
-              <TabsTrigger value="emergency">비상연락처</TabsTrigger>
+            <TabsList className="w-full justify-start border-b pb-px">
+              <TabsTrigger value="info">{t('tabs.basicInfo')}</TabsTrigger>
+              <TabsTrigger value="emergency">{t('tabs.emergency')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="info">
@@ -65,10 +61,10 @@ export function HomePage() {
 
         <TabsContent value="medical">
           <Tabs defaultValue="history" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="history">진료기록</TabsTrigger>
-              <TabsTrigger value="appointments">예약관리</TabsTrigger>
-              <TabsTrigger value="medications">약물관리</TabsTrigger>
+            <TabsList className="w-full justify-start border-b pb-px">
+              <TabsTrigger value="history">{t('tabs.history')}</TabsTrigger>
+              <TabsTrigger value="appointments">{t('tabs.appointments')}</TabsTrigger>
+              <TabsTrigger value="medications">{t('tabs.medications')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="history">
@@ -80,7 +76,7 @@ export function HomePage() {
             </TabsContent>
 
             <TabsContent value="medications">
-              <MedicationTracker />
+              <MedicationManagement />
             </TabsContent>
           </Tabs>
         </TabsContent>
