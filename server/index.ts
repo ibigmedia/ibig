@@ -83,31 +83,22 @@ if (cluster.isPrimary && process.env.NODE_ENV === "production") {
         serveStatic(app);
       }
 
-      // Try to find an available port starting from 5000
-      const tryPort = async (port: number, maxAttempts: number = 5): Promise<number> => {
-        for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          try {
-            await new Promise((resolve, reject) => {
-              server.listen(port, "0.0.0.0", () => {
-                resolve(port);
-              }).on('error', (err: any) => {
-                if (err.code === 'EADDRINUSE') {
-                  reject(err);
-                }
-              });
-            });
-            return port;
-          } catch (err) {
-            if (attempt === maxAttempts - 1) throw err;
-            port++;
-          }
-        }
-        throw new Error('No available ports found');
-      };
+      // Always try port 5000 first
+      const PORT = 5000;
 
       try {
-        const port = await tryPort(5000);
-        log(`Server worker ${process.pid} listening on port ${port}`);
+        await new Promise<void>((resolve, reject) => {
+          server.listen(PORT, "0.0.0.0", () => {
+            log(`Server worker ${process.pid} listening on port ${PORT}`);
+            resolve();
+          }).on('error', (err: any) => {
+            if (err.code === 'EADDRINUSE') {
+              reject(new Error(`Port ${PORT} is already in use`));
+            } else {
+              reject(err);
+            }
+          });
+        });
       } catch (err) {
         log(`Failed to start server: ${err}`);
         process.exit(1);

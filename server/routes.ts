@@ -365,12 +365,7 @@ export function registerRoutes(app: Express): Server {
 
     try {
       const records = await db
-        .select({
-          ...medicalRecords,
-          user: {
-            name: users.username,
-          },
-        })
+        .select(selectMedicalRecordsWithUser)
         .from(medicalRecords)
         .leftJoin(users, eq(medicalRecords.userId, users.id));
       res.json(records);
@@ -386,12 +381,7 @@ export function registerRoutes(app: Express): Server {
 
     try {
       const records = await db
-        .select({
-          ...bloodPressureRecords,
-          user: {
-            name: users.username,
-          },
-        })
+        .select(selectBloodPressureWithUser)
         .from(bloodPressureRecords)
         .leftJoin(users, eq(bloodPressureRecords.userId, users.id))
         .orderBy(desc(bloodPressureRecords.measuredAt));
@@ -408,12 +398,7 @@ export function registerRoutes(app: Express): Server {
 
     try {
       const records = await db
-        .select({
-          ...bloodSugarRecords,
-          user: {
-            name: users.username,
-          },
-        })
+        .select(selectBloodSugarWithUser)
         .from(bloodSugarRecords)
         .leftJoin(users, eq(bloodSugarRecords.userId, users.id))
         .orderBy(desc(bloodSugarRecords.measuredAt));
@@ -430,12 +415,7 @@ export function registerRoutes(app: Express): Server {
 
     try {
       const records = await db
-        .select({
-          ...diseaseHistories,
-          user: {
-            name: users.username,
-          },
-        })
+        .select(selectDiseaseHistoryWithUser)
         .from(diseaseHistories)
         .leftJoin(users, eq(diseaseHistories.userId, users.id))
         .orderBy(desc(diseaseHistories.createdAt));
@@ -757,7 +737,7 @@ export function registerRoutes(app: Express): Server {
 
     try {
       // Attempt to decrypt and validate the data
-      const decryptedData = encryption.decrypt(encryptedData, exportKey);
+      const decryptedData = encryption.decrypt(encryptedData);
 
       // Verify the data structure
       if (!decryptedData.exportId || !decryptedData.patientInfo) {
@@ -908,7 +888,7 @@ export function registerRoutes(app: Express): Server {
     }
 
     const userAppointments = await db.query.appointments.findMany({
-      where: eq(appointments.userId, req.userid),
+      where: eq(appointments.userId, req.user.id),
     });
     res.json(userAppointments);
   });
@@ -1484,3 +1464,24 @@ export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
   return httpServer;
 }
+
+// Fix the SQL selection types for admin routes
+export const selectMedicalRecordsWithUser = {
+  ...medicalRecords,
+  user: { username: users.username },
+};
+
+export const selectBloodPressureWithUser = {
+  ...bloodPressureRecords,
+  user: { username: users.username },
+};
+
+export const selectBloodSugarWithUser = {
+  ...bloodSugarRecords,
+  user: { username: users.username },
+};
+
+export const selectDiseaseHistoryWithUser = {
+  ...diseaseHistories,
+  user: { username: users.username },
+};

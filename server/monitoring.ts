@@ -40,7 +40,7 @@ export const monitoringMiddleware = (req: Request, res: Response, next: NextFunc
     // Record request duration
     const duration = (Date.now() - start) / 1000;
     httpRequestDurationMicroseconds
-      .labels(req.method, req.path, res.statusCode.toString())
+      .labels(req.method, req.path, String(res.statusCode))
       .observe(duration);
 
     // Log request details using pino logger
@@ -58,10 +58,11 @@ export const monitoringMiddleware = (req: Request, res: Response, next: NextFunc
 // Metrics endpoint
 export const metricsEndpoint = async (_req: Request, res: Response) => {
   try {
+    const metrics = await register.metrics();
     res.set("Content-Type", register.contentType);
-    res.end(await register.metrics());
+    res.end(metrics);
   } catch (err) {
     logger.error(err);
-    res.status(500).end(err);
+    res.status(500).end(err instanceof Error ? err.message : String(err));
   }
 };
