@@ -1,73 +1,54 @@
 import React from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from '@/components/ui/form';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import type { SelectEmergencyContact } from '@db/schema';
-import { Phone, Mail, Star } from 'lucide-react';
+import { Plus, Pencil, Trash2, Phone, Mail } from 'lucide-react';
 
-const contactSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  relationship: z.string().min(1, 'Relationship is required'),
-  phoneNumber: z.string().min(1, 'Phone number is required'),
-  email: z.string().email().optional(),
-});
+interface EmergencyContact {
+  id: number;
+  name: string;
+  relationship: string;
+  phoneNumber: string;
+  email: string | null;
+  isMainContact: boolean;
+}
 
-type ContactFormValues = z.infer<typeof contactSchema>;
-
-function EmergencyContactDialog({ 
-  isOpen, 
-  onOpenChange,
-  initialData,
-}: { 
-  isOpen: boolean; 
-  onOpenChange: (open: boolean) => void;
-  initialData?: SelectEmergencyContact;
-}) {
-  const { t } = useLanguage();
+export function EmergencyContacts() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  const form = useForm<ContactFormValues>({
-    resolver: zodResolver(contactSchema),
-    defaultValues: {
-      name: initialData?.name ?? '',
-      relationship: initialData?.relationship ?? '',
-      phoneNumber: initialData?.phoneNumber ?? '',
-      email: initialData?.email ?? '',
-    },
+  const [showAddDialog, setShowAddDialog] = React.useState(false);
+  const [editingContact, setEditingContact] = React.useState<EmergencyContact | null>(null);
+  const [newContact, setNewContact] = React.useState({
+    name: '',
+    relationship: '',
+    phoneNumber: '',
+    email: '',
   });
 
-  const mutation = useMutation({
-    mutationFn: async (values: ContactFormValues) => {
-      const response = await fetch(
-        initialData ? `/api/emergency-contacts/${initialData.id}` : '/api/emergency-contacts',
-        {
-          method: initialData ? 'PUT' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(values),
-        }
-      );
+  const { data: contacts = [] } = useQuery<EmergencyContact[]>({
+    queryKey: ['/api/emergency-contacts'],
+  });
+
+  const addContactMutation = useMutation({
+    mutationFn: async (data: typeof newContact) => {
+      const response = await fetch('/api/emergency-contacts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         throw new Error(await response.text());
@@ -76,108 +57,92 @@ function EmergencyContactDialog({
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['emergency-contacts'] });
       toast({
-        title: t('auth.success'),
-        description: t('emergency.success'),
+        title: '성공',
+        description: '비상연락처가 추가되었습니다.',
       });
-      onOpenChange(false);
+      setShowAddDialog(false);
+      setNewContact({
+        name: '',
+        relationship: '',
+        phoneNumber: '',
+        email: '',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/emergency-contacts'] });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         variant: 'destructive',
-        title: t('auth.error'),
-        description: t('emergency.error'),
+        title: '오류',
+        description: error.message,
       });
     },
   });
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {initialData ? t('emergency.editContact') : t('emergency.addContact')}
-          </DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('medical.name')}</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="relationship"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('emergency.relationship')}</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phoneNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('emergency.phoneNumber')}</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="tel" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('emergency.email')}</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="email" value={field.value || ''} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" className="w-full">
-              {initialData ? t('emergency.editContact') : t('emergency.addContact')}
-            </Button>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
-  );
-}
+  const updateContactMutation = useMutation({
+    mutationFn: async (contact: EmergencyContact) => {
+      const response = await fetch(`/api/emergency-contacts/${contact.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(contact),
+        credentials: 'include',
+      });
 
-export function EmergencyContacts() {
-  const { t } = useLanguage();
-  const { toast } = useToast();
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [selectedContact, setSelectedContact] = React.useState<SelectEmergencyContact | undefined>();
-  const queryClient = useQueryClient();
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
 
-  const { data: contacts = [] } = useQuery<SelectEmergencyContact[]>({
-    queryKey: ['emergency-contacts'],
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: '성공',
+        description: '비상연락처가 수정되었습니다.',
+      });
+      setEditingContact(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/emergency-contacts'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: '오류',
+        description: error.message,
+      });
+    },
   });
 
-  const setMainContact = useMutation({
-    mutationFn: async (contactId: number) => {
-      const response = await fetch(`/api/emergency-contacts/${contactId}/main`, {
+  const deleteContactMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/emergency-contacts/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+    },
+    onSuccess: () => {
+      toast({
+        title: '성공',
+        description: '비상연락처가 삭제되었습니다.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/emergency-contacts'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: '오류',
+        description: error.message,
+      });
+    },
+  });
+
+  const setMainContactMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/emergency-contacts/${id}/main`, {
         method: 'PUT',
         credentials: 'include',
       });
@@ -189,49 +154,58 @@ export function EmergencyContacts() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['emergency-contacts'] });
       toast({
-        title: t('auth.success'),
-        description: t('emergency.success'),
+        title: '성공',
+        description: '주 연락처가 변경되었습니다.',
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/emergency-contacts'] });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         variant: 'destructive',
-        title: t('auth.error'),
-        description: t('emergency.error'),
+        title: '오류',
+        description: error.message,
       });
     },
   });
 
+  const handleDelete = (id: number) => {
+    if (window.confirm('정말로 이 연락처를 삭제하시겠습니까?')) {
+      deleteContactMutation.mutate(id);
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <h3 className="text-lg font-bold">{t('emergency.contacts')}</h3>
+        <h2 className="text-lg font-bold">비상연락처</h2>
         <Button
-          onClick={() => {
-            setSelectedContact(undefined);
-            setIsDialogOpen(true);
-          }}
+          onClick={() => setShowAddDialog(true)}
+          disabled={contacts.length >= 3}
         >
-          {t('emergency.addContact')}
+          <Plus className="h-4 w-4 mr-2" />
+          연락처 추가
         </Button>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="grid gap-4">
           {contacts.map((contact) => (
             <div
               key={contact.id}
-              className="flex items-center justify-between p-4 border rounded-lg"
+              className="p-4 border rounded-lg flex items-start justify-between"
             >
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <h4 className="font-medium">{contact.name}</h4>
+                  <h3 className="font-medium">{contact.name}</h3>
+                  <span className="text-sm text-muted-foreground">
+                    ({contact.relationship})
+                  </span>
                   {contact.isMainContact && (
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <span className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs">
+                      주 연락처
+                    </span>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground">{contact.relationship}</p>
                 <div className="flex items-center gap-4 text-sm">
                   <span className="flex items-center gap-1">
                     <Phone className="h-4 w-4" />
@@ -245,34 +219,172 @@ export function EmergencyContacts() {
                   )}
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedContact(contact);
-                    setIsDialogOpen(true);
-                  }}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditingContact(contact)}
                 >
-                  {t('emergency.editContact')}
+                  <Pencil className="h-4 w-4 mr-2" />
+                  수정
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDelete(contact.id)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  삭제
                 </Button>
                 {!contact.isMainContact && (
                   <Button
-                    variant="secondary"
-                    onClick={() => setMainContact.mutate(contact.id)}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setMainContactMutation.mutate(contact.id)}
                   >
-                    {t('emergency.setAsMain')}
+                    주 연락처로 설정
                   </Button>
                 )}
               </div>
             </div>
           ))}
         </div>
+
+        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>비상연락처 추가</DialogTitle>
+            </DialogHeader>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                addContactMutation.mutate(newContact);
+              }}
+              className="space-y-4"
+            >
+              <div className="space-y-2">
+                <Label>이름</Label>
+                <Input
+                  value={newContact.name}
+                  onChange={(e) =>
+                    setNewContact({ ...newContact, name: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>관계</Label>
+                <Input
+                  value={newContact.relationship}
+                  onChange={(e) =>
+                    setNewContact({ ...newContact, relationship: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>전화번호</Label>
+                <Input
+                  value={newContact.phoneNumber}
+                  onChange={(e) =>
+                    setNewContact({ ...newContact, phoneNumber: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>이메일 (선택)</Label>
+                <Input
+                  type="email"
+                  value={newContact.email}
+                  onChange={(e) =>
+                    setNewContact({ ...newContact, email: e.target.value })
+                  }
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                저장
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={!!editingContact}
+          onOpenChange={(open) => !open && setEditingContact(null)}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>비상연락처 수정</DialogTitle>
+            </DialogHeader>
+            {editingContact && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  updateContactMutation.mutate(editingContact);
+                }}
+                className="space-y-4"
+              >
+                <div className="space-y-2">
+                  <Label>이름</Label>
+                  <Input
+                    value={editingContact.name}
+                    onChange={(e) =>
+                      setEditingContact({
+                        ...editingContact,
+                        name: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>관계</Label>
+                  <Input
+                    value={editingContact.relationship}
+                    onChange={(e) =>
+                      setEditingContact({
+                        ...editingContact,
+                        relationship: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>전화번호</Label>
+                  <Input
+                    value={editingContact.phoneNumber}
+                    onChange={(e) =>
+                      setEditingContact({
+                        ...editingContact,
+                        phoneNumber: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>이메일 (선택)</Label>
+                  <Input
+                    type="email"
+                    value={editingContact.email || ''}
+                    onChange={(e) =>
+                      setEditingContact({
+                        ...editingContact,
+                        email: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <Button type="submit" className="w-full">
+                  저장
+                </Button>
+              </form>
+            )}
+          </DialogContent>
+        </Dialog>
       </CardContent>
-      <EmergencyContactDialog
-        isOpen={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        initialData={selectedContact}
-      />
     </Card>
   );
 }
