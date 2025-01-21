@@ -43,8 +43,8 @@ function Router() {
   // Show regular user pages for non-admin users
   return (
     <Switch>
-      <Route path="/" component={UserDashboardPage} />
-      <Route path="/health" component={HomePage} />
+      <Route path="/" component={HomePage} />
+      <Route path="/dashboard" component={UserDashboardPage} />
       <Route component={NotFound} />
     </Switch>
   );
