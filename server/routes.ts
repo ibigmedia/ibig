@@ -59,7 +59,9 @@ export async function createAdminUser() {
 }
 
 export function registerRoutes(app: Express): Server {
+  // Setup authentication first before other routes
   setupAuth(app);
+
   createAdminUser().catch(console.error);
 
   // Admin routes
