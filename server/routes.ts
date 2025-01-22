@@ -660,6 +660,43 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.delete("/api/appointments/:id", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const appointmentId = parseInt(req.params.id);
+      const [existingAppointment] = await db
+        .select()
+        .from(appointments)
+        .where(
+          and(
+            eq(appointments.id, appointmentId),
+            eq(appointments.userId, req.user.id)
+          )
+        )
+        .limit(1);
+
+      if (!existingAppointment) {
+        return res.status(404).send("Appointment not found");
+      }
+
+      if (existingAppointment.status !== 'cancelled') {
+        return res.status(400).send("Only cancelled appointments can be deleted");
+      }
+
+      await db
+        .delete(appointments)
+        .where(eq(appointments.id, appointmentId));
+
+      res.json({ message: "Appointment deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      res.status(500).send("Error deleting appointment");
+    }
+  });
+
   app.post("/api/user/change-password", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("인증되지 않은 사용자입니다");
@@ -996,7 +1033,7 @@ export function registerRoutes(app: Express): Server {
         .where(eq(medications.id, medicationId));
 
       res.json({ message: "Medication deleted successfully" });
-    } catch (error) {
+    }catch (error) {
       console.error('Error deleting medication:', error);
       res.status(500).send("약물 정보 삭제 중 오류가 발생했습니다");
     }
