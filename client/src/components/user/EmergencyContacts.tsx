@@ -149,6 +149,35 @@ export function EmergencyContacts() {
     },
   });
 
+  const deleteContactMutation = useMutation({
+    mutationFn: async (contactId: number) => {
+      const response = await fetch(`/api/emergency-contacts/${contactId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: '성공',
+        description: '비상연락처가 삭제되었습니다.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/emergency-contacts'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: '오류',
+        description: error.message,
+      });
+    },
+  });
+
   const handleAddContact = (e: React.FormEvent) => {
     e.preventDefault();
     addContactMutation.mutate(newContact);
@@ -220,9 +249,10 @@ export function EmergencyContacts() {
                       size="icon"
                       onClick={() => {
                         if (window.confirm('이 연락처를 삭제하시겠습니까?')) {
-                          // 삭제 로직
+                          deleteContactMutation.mutate(contact.id);
                         }
                       }}
+                      disabled={deleteContactMutation.isPending}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
