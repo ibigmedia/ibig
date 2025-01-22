@@ -4,14 +4,22 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Edit, Star } from 'lucide-react';
+import { Plus, Edit, Star, Trash2 } from 'lucide-react';
 
 interface EmergencyContact {
   id: number;
@@ -154,8 +162,9 @@ export function EmergencyContacts() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
+    <Card className="w-full">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <h2 className="text-lg font-semibold">비상연락처 관리</h2>
         <Button
           onClick={() => setShowAddDialog(true)}
           disabled={contacts.length >= 3}
@@ -163,46 +172,67 @@ export function EmergencyContacts() {
           <Plus className="h-4 w-4 mr-2" />
           비상연락처 추가
         </Button>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        {contacts.map((contact) => (
-          <Card key={contact.id}>
-            <CardContent className="pt-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-semibold">{contact.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {contact.relationship}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setEditContact(contact)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={contact.isMainContact ? "default" : "ghost"}
-                    size="icon"
-                    onClick={() => setMainContactMutation.mutate(contact.id)}
-                  >
-                    <Star className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm">전화번호: {contact.phoneNumber}</p>
-                {contact.email && (
-                  <p className="text-sm">이메일: {contact.email}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>이름</TableHead>
+              <TableHead>관계</TableHead>
+              <TableHead>연락처</TableHead>
+              <TableHead>이메일</TableHead>
+              <TableHead>주 연락처</TableHead>
+              <TableHead className="text-right">관리</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {contacts.map((contact) => (
+              <TableRow key={contact.id}>
+                <TableCell className="font-medium">{contact.name}</TableCell>
+                <TableCell>{contact.relationship}</TableCell>
+                <TableCell>{contact.phoneNumber}</TableCell>
+                <TableCell>{contact.email || '-'}</TableCell>
+                <TableCell>
+                  {contact.isMainContact && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-primary-foreground">
+                      주 연락처
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setEditContact(contact)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={contact.isMainContact ? "default" : "ghost"}
+                      size="icon"
+                      onClick={() => setMainContactMutation.mutate(contact.id)}
+                    >
+                      <Star className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        if (window.confirm('이 연락처를 삭제하시겠습니까?')) {
+                          // 삭제 로직
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
 
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent>
@@ -317,6 +347,6 @@ export function EmergencyContacts() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </Card>
   );
 }
