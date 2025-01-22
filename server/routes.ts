@@ -4,9 +4,9 @@ import { setupAuth } from "./auth";
 import { db } from "@db";
 import { users, appointments, medications, medicalRecords, emergencyContacts, invitations, bloodPressureRecords, bloodSugarRecords, diseaseHistories, smtpSettings } from "@db/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
+import nodemailer from "nodemailer";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import nodemailer from "nodemailer";
 import type { Request, Response, NextFunction } from "express";
 import { getPatientProfile, updatePatientProfile } from "./routes/patient-profile";
 import { encryption } from './utils/encryption';
@@ -14,7 +14,6 @@ import { logger } from "./logger";
 import translationRouter from './routes/translation';
 
 const scryptAsync = promisify(scrypt);
-
 const crypto = {
   hash: async (password: string) => {
     const salt = randomBytes(16).toString("hex");
@@ -31,10 +30,10 @@ const crypto = {
     )) as Buffer;
     return timingSafeEqual(hashedPasswordBuf, suppliedPasswordBuf);
   },
-  randomBytes: randomBytes
+  randomBytes
 };
 
-export async function createAdminUser() {
+async function createAdminUser() {
   try {
     const [existingAdmin] = await db
       .select()
@@ -94,11 +93,9 @@ async function setupMailer() {
 
 async function sendNotificationEmail(subject: string, content: { text: string, html?: string }, toEmail?: string) {
   if (!mailer) {
-    console.log('Mailer not configured, attempting to setup mailer...');
     await setupMailer();
-
     if (!mailer) {
-      console.error('Failed to setup mailer after attempt');
+      console.error('Failed to setup mailer');
       return;
     }
   }
@@ -110,17 +107,11 @@ async function sendNotificationEmail(subject: string, content: { text: string, h
       .limit(1);
 
     if (!settings) {
-      console.error('No SMTP settings found in database');
+      console.error('No SMTP settings found');
       return;
     }
 
     const recipient = toEmail || settings.fromEmail;
-
-    console.log('Attempting to send email with settings:', {
-      from: settings.fromEmail,
-      to: recipient,
-      subject
-    });
 
     await mailer.sendMail({
       from: settings.fromEmail,
@@ -133,37 +124,10 @@ async function sendNotificationEmail(subject: string, content: { text: string, h
     console.log('Email sent successfully');
   } catch (error) {
     console.error('Error sending notification email:', error);
-    if (error instanceof Error) {
-      console.error('Error details:', error.message);
-      console.error('Error stack:', error.stack);
-    }
   }
 }
 
-// 회원가입 알림 이메일 템플릿
-function generateRegistrationEmailHtml(username: string, registeredAt: string) {
-  return `
-    <div style="font-family: Arial, sans-serif;">
-      <h2 style="color: #2563eb;">새 회원 가입 알림</h2>
-      <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-        <tr>
-          <th style="text-align: left; padding: 10px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">항목</th>
-          <th style="text-align: left; padding: 10px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">내용</th>
-        </tr>
-        <tr>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">사용자명</td>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">${username}</td>
-        </tr>
-        <tr>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">가입일시</td>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">${registeredAt}</td>
-        </tr>
-      </table>
-    </div>
-  `;
-}
-
-// 의료 기록 업데이트 알림 템플릿
+// Email templates
 function generateMedicalRecordEmailHtml(username: string, action: string, data: any, timestamp: string) {
   const dataRows = Object.entries(data)
     .map(([key, value]) => `
@@ -196,7 +160,6 @@ function generateMedicalRecordEmailHtml(username: string, action: string, data: 
   `;
 }
 
-// 비상 연락처 알림 템플릿
 function generateEmergencyContactEmailHtml(username: string, contactData: any, timestamp: string) {
   return `
     <div style="font-family: Arial, sans-serif;">
@@ -231,33 +194,22 @@ function generateEmergencyContactEmailHtml(username: string, contactData: any, t
   `;
 }
 
-// Add this function after other email templates
 function generateInvitationEmailHtml(invitationUrl: string) {
   return `
     <div style="font-family: Arial, sans-serif;">
-      <h2 style="color: #2563eb;">서브관리자 초대</h2>
-      <div style="margin: 20px 0; padding: 20px; background-color: #f3f4f6; border-radius: 8px;">
-        <p style="margin-bottom: 20px;">
-          의료 관리 시스템의 서브관리자로 초대되었습니다. 
-          아래 링크를 클릭하여 계정을 생성하고 서브관리자 권한을 받으세요.
-        </p>
-        <a 
-          href="${invitationUrl}" 
-          style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px;"
-        >
-          계정 생성하기
-        </a>
-        <p style="margin-top: 20px; font-size: 14px; color: #6b7280;">
-          이 링크는 7일간 유효합니다. 보안을 위해 다른 사람과 공유하지 마세요.
-        </p>
-      </div>
+      <h2 style="color: #2563eb;">의료 관리 시스템 서브관리자 초대</h2>
+      <p>안녕하세요,</p>
+      <p>의료 관리 시스템의 서브관리자로 초대되었습니다.</p>
+      <p>아래 링크를 클릭하여 계정을 생성하세요.</p>
+      <a href="${invitationUrl}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">계정 생성</a>
+      <p>이 링크는 7일간 유효합니다.</p>
+      <p>감사합니다.</p>
     </div>
   `;
 }
 
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
-
   createAdminUser().catch(console.error);
 
   // Patient profile routes
@@ -265,6 +217,82 @@ export function registerRoutes(app: Express): Server {
   app.put("/api/patient-profile", updatePatientProfile);
 
   app.use('/api', translationRouter);
+
+  // SMTP Settings Routes
+  app.get("/api/admin/smtp-settings", async (req, res) => {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).send("Unauthorized");
+    }
+
+    try {
+      const [settings] = await db
+        .select()
+        .from(smtpSettings)
+        .limit(1);
+
+      res.json(settings);
+    } catch (error) {
+      console.error('Error fetching SMTP settings:', error);
+      res.status(500).send("Error fetching SMTP settings");
+    }
+  });
+
+  app.post("/api/admin/smtp-settings", async (req, res) => {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).send("Unauthorized");
+    }
+
+    try {
+      const [existingSettings] = await db
+        .select()
+        .from(smtpSettings)
+        .limit(1);
+
+      const { host, port, username, password, fromEmail } = req.body;
+
+      if (existingSettings) {
+        const updateData = {
+          host,
+          port,
+          username,
+          fromEmail,
+          ...(password ? { password } : {}),
+          updatedAt: new Date(),
+        };
+
+        const [settings] = await db
+          .update(smtpSettings)
+          .set(updateData)
+          .where(eq(smtpSettings.id, existingSettings.id))
+          .returning();
+
+        res.json(settings);
+      } else {
+        if (!password) {
+          return res.status(400).send("Password is required for initial setup");
+        }
+
+        const [settings] = await db
+          .insert(smtpSettings)
+          .values({
+            host,
+            port,
+            username,
+            password,
+            fromEmail,
+          })
+          .returning();
+
+        res.json(settings);
+      }
+
+      // Recreate the mailer with new settings
+      await setupMailer();
+    } catch (error) {
+      console.error('Error updating SMTP settings:', error);
+      res.status(500).send("Error updating SMTP settings");
+    }
+  });
 
   app.get("/api/admin/users", async (req, res) => {
     if (!req.user || req.user.role !== 'admin') {
@@ -650,7 +678,7 @@ export function registerRoutes(app: Express): Server {
       const timestamp = new Date().toLocaleString('ko-KR');
       const action = existingRecord ? '수정' : '생성';
 
-      // Send HTML formatted notification email for medical record update
+      // Send notification email for medical record update
       await sendNotificationEmail(
         '의료 기록 업데이트 알림',
         {
@@ -866,7 +894,7 @@ export function registerRoutes(app: Express): Server {
 
       const timestamp = new Date().toLocaleString('ko-KR');
 
-      // Send HTML formatted notification email for new emergency contact
+      // Send notification email for new emergency contact
       await sendNotificationEmail(
         '비상 연락처 추가 알림',
         {
@@ -906,7 +934,6 @@ export function registerRoutes(app: Express): Server {
         )
         .limit(1);
 
-      
 
       if (!existingContact) {
         return res.status(404).send("Contact not found");
@@ -1454,18 +1481,13 @@ export function registerRoutes(app: Express): Server {
 
     try {
       const [settings] = await db
-        .select({
-          id: smtpSettings.id,
-          host: smtpSettings.host,
-          port: smtpSettings.port,
-          username: smtpSettings.username,
-          fromEmail: smtpSettings.fromEmail,
-        })
+        .select()
         .from(smtpSettings)
         .limit(1);
 
-      res.json(settings || null);
+      res.json(settings);
     } catch (error) {
+      console.error('Error fetching SMTP settings:', error);
       res.status(500).send("Error fetching SMTP settings");
     }
   });
@@ -1476,37 +1498,36 @@ export function registerRoutes(app: Express): Server {
     }
 
     try {
-      const { host, port, username, password, fromEmail } = req.body;
-
-      if (!host || !port || !username || !fromEmail) {
-        return res.status(400).send("Missing required fields");
-      }
-
       const [existingSettings] = await db
         .select()
         .from(smtpSettings)
         .limit(1);
 
-      let settings;
+      const { host, port, username, password, fromEmail } = req.body;
+
       if (existingSettings) {
-        [settings] = await db
+        const updateData = {
+          host,
+          port,
+          username,
+          fromEmail,
+          ...(password ? { password } : {}),
+          updatedAt: new Date(),
+        };
+
+        const [settings] = await db
           .update(smtpSettings)
-          .set({
-            host,
-            port,
-            username,
-            ...(password ? { password } : {}),
-            fromEmail,
-            updatedAt: new Date(),
-          })
+          .set(updateData)
           .where(eq(smtpSettings.id, existingSettings.id))
           .returning();
+
+        res.json(settings);
       } else {
         if (!password) {
           return res.status(400).send("Password is required for initial setup");
         }
 
-        [settings] = await db
+        const [settings] = await db
           .insert(smtpSettings)
           .values({
             host,
@@ -1516,20 +1537,15 @@ export function registerRoutes(app: Express): Server {
             fromEmail,
           })
           .returning();
+
+        res.json(settings);
       }
 
+      // Recreate the mailer with new settings
       await setupMailer();
-
-      res.json({
-        id: settings.id,
-        host: settings.host,
-        port: settings.port,
-        username: settings.username,
-        fromEmail: settings.fromEmail,
-      });
     } catch (error) {
-      console.error('Error saving SMTP settings:', error);
-      res.status(500).send("Error saving SMTP settings");
+      console.error('Error updating SMTP settings:', error);
+      res.status(500).send("Error updating SMTP settings");
     }
   });
 
@@ -1559,3 +1575,64 @@ export const selectDiseaseHistoryWithUser = {
   ...diseaseHistories,
   user: { username: users.username },
 };
+
+function generateInvitationEmailHtml(invitationUrl: string) {
+  return `
+    <div style="font-family: Arial, sans-serif;">
+      <h2 style="color: #2563eb;">의료 관리 시스템 서브관리자 초대</h2>
+      <p>안녕하세요,</p>
+      <p>의료 관리 시스템의 서브관리자로 초대되었습니다.</p>
+      <p>아래 링크를 클릭하여 계정을 생성하세요.</p>
+      <a href="${invitationUrl}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">계정 생성</a>
+      <p>이 링크는 7일간 유효합니다.</p>
+      <p>감사합니다.</p>
+    </div>
+  `;
+}
+const crypto = {
+  hash: async (password: string) => {
+    const salt = randomBytes(16).toString("hex");
+    const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+    return `${buf.toString("hex")}.${salt}`;
+  },
+  compare: async (suppliedPassword: string, storedPassword: string) => {
+    const [hashedPassword, salt] = storedPassword.split(".");
+    const hashedPasswordBuf = Buffer.from(hashedPassword, "hex");
+    const suppliedPasswordBuf = (await scryptAsync(
+      suppliedPassword,
+      salt,
+      64
+    )) as Buffer;
+    return timingSafeEqual(hashedPasswordBuf, suppliedPasswordBuf);
+  },
+};
+
+async function createAdminUser() {
+  try {
+    const [existingAdmin] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, 'admin'))
+      .limit(1);
+
+    if (existingAdmin) {
+      return existingAdmin;
+    }
+
+    const hashedPassword = await crypto.hash('admin123');
+    const [newAdmin] = await db.insert(users)
+      .values({
+        username: 'admin',
+        password: hashedPassword,
+        role: 'admin'
+      })
+      .returning();
+
+    console.log('Admin user created successfully');
+    return newAdmin;
+  } catch (error) {
+    console.error('Error creating admin user:', error);
+    throw error;
+  }
+}
+const scryptAsync = promisify(scrypt);
