@@ -678,10 +678,6 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).send("Appointment not found");
       }
 
-      if (existingAppointment.status !== 'cancelled') {
-        return res.status(400).send("Only cancelled appointments can be deleted");
-      }
-
       await db
         .delete(appointments)
         .where(eq(appointments.id, appointmentId));
