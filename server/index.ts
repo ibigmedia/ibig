@@ -3,6 +3,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { registerRoutes } from "./routes";
 import cluster from "cluster";
 import os from "os";
+import { db, checkDatabaseConnection } from "@db";
 
 // Initialize monitoring and logging after express
 import { monitoringMiddleware, metricsEndpoint } from "./monitoring";
@@ -66,6 +67,13 @@ if (cluster.isPrimary && process.env.NODE_ENV === "production") {
 
   (async () => {
     try {
+      // Check database connection before starting the server
+      const isConnected = await checkDatabaseConnection();
+      if (!isConnected) {
+        throw new Error("Failed to connect to database");
+      }
+      log("Database connection successful");
+
       const server = registerRoutes(app);
 
       app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
