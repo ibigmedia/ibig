@@ -73,11 +73,22 @@ const baseEmailStyles = `
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
 
     :root {
-      --primary-gradient: linear-gradient(135deg, #4f46e5, #3730a3);
-      --secondary-gradient: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-      --success-gradient: linear-gradient(135deg, #dcfce7, #bbf7d0);
-      --warning-gradient: linear-gradient(135deg, #fef9c3, #fde68a);
-      --danger-gradient: linear-gradient(135deg, #fee2e2, #fecaca);
+      --primary: #4f46e5;
+      --primary-light: #6366f1;
+      --secondary: #f3f4f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
     }
 
     * {
@@ -86,23 +97,35 @@ const baseEmailStyles = `
       box-sizing: border-box;
     }
 
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+      color: var(--gray-800);
+      background-color: var(--gray-50);
+    }
+
+    .email-wrapper {
+      width: 100%;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      padding: 40px 20px;
+    }
+
     .email-container {
-      font-family: 'Noto Sans KR', Arial, sans-serif;
       max-width: 600px;
       margin: 0 auto;
-      padding: 24px;
       background: #ffffff;
       border-radius: 16px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+      box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
     }
 
     .email-header {
-      text-align: center;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
       padding: 32px;
-      background: var(--primary-gradient);
-      color: white;
-      border-radius: 12px;
-      margin-bottom: 24px;
+      text-align: center;
       position: relative;
       overflow: hidden;
     }
@@ -114,24 +137,37 @@ const baseEmailStyles = `
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
-      z-index: 1;
+      background: radial-gradient(circle at top right, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 60%);
     }
 
     .email-header h2 {
-      margin: 0;
-      font-size: 28px;
+      color: #ffffff;
+      font-size: 24px;
       font-weight: 700;
-      letter-spacing: -0.5px;
+      margin: 0;
       position: relative;
-      z-index: 2;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      letter-spacing: -0.025em;
     }
 
     .email-content {
-      background: var(--secondary-gradient);
       padding: 32px;
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      background: #ffffff;
+    }
+
+    .highlight-box {
+      background: linear-gradient(to right, var(--gray-50), #ffffff);
+      border-left: 4px solid var(--primary);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      border-radius: 8px;
+    }
+
+    .highlight-box p {
+      color: var(--gray-800);
+      font-size: 16px;
+      font-weight: 500;
+      margin: 0;
     }
 
     .data-table {
@@ -139,29 +175,26 @@ const baseEmailStyles = `
       border-collapse: separate;
       border-spacing: 0;
       margin: 24px 0;
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      font-size: 14px;
     }
 
     .data-table th {
-      background: rgba(255, 255, 255, 0.95);
-      color: #1e293b;
-      padding: 16px 24px;
-      text-align: left;
+      background: var(--gray-50);
+      color: var(--gray-600);
       font-weight: 600;
-      letter-spacing: 0.5px;
-      border-bottom: 2px solid #e2e8f0;
       text-transform: uppercase;
       font-size: 12px;
+      letter-spacing: 0.05em;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 2px solid var(--gray-200);
     }
 
     .data-table td {
-      padding: 16px 24px;
-      color: #334155;
-      border-bottom: 1px solid rgba(226, 232, 240, 0.5);
-      transition: background-color 0.2s ease;
+      padding: 16px;
+      color: var(--gray-700);
+      border-bottom: 1px solid var(--gray-200);
+      vertical-align: middle;
     }
 
     .data-table tr:last-child td {
@@ -169,30 +202,7 @@ const baseEmailStyles = `
     }
 
     .data-table tr:hover td {
-      background-color: rgba(248, 250, 252, 0.8);
-    }
-
-    .timestamp {
-      color: #64748b;
-      font-size: 0.875em;
-      text-align: right;
-      margin-top: 24px;
-      font-style: italic;
-      padding: 12px;
-      background: rgba(255, 255, 255, 0.5);
-      border-radius: 8px;
-    }
-
-    .highlight {
-      color: #4f46e5;
-      font-weight: 600;
-      font-size: 1.125em;
-      line-height: 1.5;
-      margin-bottom: 24px;
-      padding: 16px 24px;
-      background: rgba(255, 255, 255, 0.8);
-      border-radius: 12px;
-      border-left: 4px solid #4f46e5;
+      background-color: var(--gray-50);
     }
 
     .status-badge {
@@ -202,86 +212,90 @@ const baseEmailStyles = `
       border-radius: 9999px;
       font-size: 12px;
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      letter-spacing: 0.025em;
     }
 
     .status-badge::before {
       content: '';
-      display: inline-block;
       width: 6px;
       height: 6px;
       border-radius: 50%;
       margin-right: 8px;
+      background: currentColor;
+      opacity: 0.8;
     }
 
     .status-active {
-      background: var(--success-gradient);
+      background: #dcfce7;
       color: #166534;
     }
 
-    .status-active::before {
-      background: #166534;
-    }
-
     .status-pending {
-      background: var(--warning-gradient);
+      background: #fef9c3;
       color: #854d0e;
     }
 
-    .status-pending::before {
-      background: #854d0e;
-    }
-
     .status-completed {
-      background: var(--secondary-gradient);
+      background: #e0f2fe;
       color: #075985;
     }
 
-    .status-completed::before {
-      background: #075985;
-    }
-
     .status-cancelled {
-      background: var(--danger-gradient);
+      background: #fee2e2;
       color: #991b1b;
     }
 
-    .status-cancelled::before {
-      background: #991b1b;
+    .footer {
+      padding: 24px 32px;
+      background: var(--gray-50);
+      border-top: 1px solid var(--gray-200);
     }
 
-    .strike-through {
-      text-decoration: line-through;
-      color: #94a3b8;
+    .timestamp {
+      color: var(--gray-500);
+      font-size: 13px;
+      text-align: center;
+      font-style: italic;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--gray-200);
+      margin: 24px 0;
     }
 
     @media (max-width: 640px) {
+      .email-wrapper {
+        padding: 20px 16px;
+      }
+
       .email-container {
-        padding: 16px;
+        border-radius: 12px;
       }
 
       .email-header {
-        padding: 24px;
+        padding: 24px 20px;
       }
 
       .email-header h2 {
-        font-size: 24px;
+        font-size: 20px;
       }
 
       .email-content {
-        padding: 20px;
+        padding: 24px 20px;
+      }
+
+      .highlight-box {
+        padding: 16px 20px;
       }
 
       .data-table th,
       .data-table td {
-        padding: 12px 16px;
+        padding: 12px;
       }
 
-      .highlight {
-        padding: 12px 16px;
-        font-size: 1em;
+      .footer {
+        padding: 20px;
       }
     }
   </style>
@@ -307,27 +321,32 @@ export const emailTemplates = {
           `변경 내용: ${JSON.stringify(data, null, 2)}`,
         html: `
           ${baseEmailStyles}
-          <div class="email-container">
-            <div class="email-header">
-              <h2>의료 기록 ${action} 알림</h2>
-            </div>
-            <div class="email-content">
-              <div class="highlight">
-                ${username} 님의 의료 기록이 업데이트되었습니다
+          <div class="email-wrapper">
+            <div class="email-container">
+              <div class="email-header">
+                <h2>의료 기록 ${action} 알림</h2>
               </div>
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>항목</th>
-                    <th>내용</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${dataRows}
-                </tbody>
-              </table>
-              <div class="timestamp">
-                업데이트 시간: ${timestamp}
+              <div class="email-content">
+                <div class="highlight-box">
+                  <p>${username} 님의 의료 기록이 업데이트되었습니다</p>
+                </div>
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>항목</th>
+                      <th>내용</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${dataRows}
+                  </tbody>
+                </table>
+                <div class="divider"></div>
+                <div class="footer">
+                  <div class="timestamp">
+                    업데이트 시간: ${timestamp}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -348,52 +367,57 @@ export const emailTemplates = {
         `시간: ${timestamp}`,
       html: `
         ${baseEmailStyles}
-        <div class="email-container">
-          <div class="email-header">
-            <h2>비상 연락처 추가 알림</h2>
-          </div>
-          <div class="email-content">
-            <div class="highlight">
-              ${username} 님이 새로운 비상 연락처를 추가했습니다
+        <div class="email-wrapper">
+          <div class="email-container">
+            <div class="email-header">
+              <h2>비상 연락처 추가 알림</h2>
             </div>
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>구분</th>
-                  <th>정보</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>이름</strong></td>
-                  <td>${contactData.name}</td>
-                </tr>
-                <tr>
-                  <td><strong>관계</strong></td>
-                  <td>${contactData.relationship}</td>
-                </tr>
-                <tr>
-                  <td><strong>전화번호</strong></td>
-                  <td>${contactData.phoneNumber}</td>
-                </tr>
-                ${contactData.email ? `
-                <tr>
-                  <td><strong>이메일</strong></td>
-                  <td>${contactData.email}</td>
-                </tr>
-                ` : ''}
-                ${contactData.isMainContact ? `
-                <tr>
-                  <td><strong>구분</strong></td>
-                  <td>
-                    <span class="status-badge status-active">주 연락처</span>
-                  </td>
-                </tr>
-                ` : ''}
-              </tbody>
-            </table>
-            <div class="timestamp">
-              등록 시간: ${timestamp}
+            <div class="email-content">
+              <div class="highlight-box">
+                <p>${username} 님이 새로운 비상 연락처를 추가했습니다</p>
+              </div>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>구분</th>
+                    <th>정보</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>이름</strong></td>
+                    <td>${contactData.name}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>관계</strong></td>
+                    <td>${contactData.relationship}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>전화번호</strong></td>
+                    <td>${contactData.phoneNumber}</td>
+                  </tr>
+                  ${contactData.email ? `
+                  <tr>
+                    <td><strong>이메일</strong></td>
+                    <td>${contactData.email}</td>
+                  </tr>
+                  ` : ''}
+                  ${contactData.isMainContact ? `
+                  <tr>
+                    <td><strong>구분</strong></td>
+                    <td>
+                      <span class="status-badge status-active">주 연락처</span>
+                    </td>
+                  </tr>
+                  ` : ''}
+                </tbody>
+              </table>
+              <div class="divider"></div>
+              <div class="footer">
+                <div class="timestamp">
+                  등록 시간: ${timestamp}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -409,40 +433,45 @@ export const emailTemplates = {
         `예약 일시: ${new Date(appointment.date).toLocaleString()}\n`,
       html: `
         ${baseEmailStyles}
-        <div class="email-container">
-          <div class="email-header">
-            <h2>진료 예약 확인</h2>
-          </div>
-          <div class="email-content">
-            <div class="highlight">
-              ${username} 님의 진료 예약이 완료되었습니다
+        <div class="email-wrapper">
+          <div class="email-container">
+            <div class="email-header">
+              <h2>진료 예약 확인</h2>
             </div>
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>구분</th>
-                  <th>정보</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>진료과</strong></td>
-                  <td>${appointment.department}</td>
-                </tr>
-                <tr>
-                  <td><strong>예약 일시</strong></td>
-                  <td>${new Date(appointment.date).toLocaleString()}</td>
-                </tr>
-                <tr>
-                  <td><strong>상태</strong></td>
-                  <td>
-                    <span class="status-badge status-pending">예약 완료</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="timestamp">
-              예약 시간: ${new Date().toLocaleString()}
+            <div class="email-content">
+              <div class="highlight-box">
+                <p>${username} 님의 진료 예약이 완료되었습니다</p>
+              </div>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>구분</th>
+                    <th>정보</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>진료과</strong></td>
+                    <td>${appointment.department}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>예약 일시</strong></td>
+                    <td>${new Date(appointment.date).toLocaleString()}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>상태</strong></td>
+                    <td>
+                      <span class="status-badge status-pending">예약 완료</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="divider"></div>
+              <div class="footer">
+                <div class="timestamp">
+                  예약 시간: ${new Date().toLocaleString()}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -459,48 +488,53 @@ export const emailTemplates = {
         `변경된 예약 일시: ${new Date(appointment.date).toLocaleString()}\n`,
       html: `
         ${baseEmailStyles}
-        <div class="email-container">
-          <div class="email-header">
-            <h2>진료 예약 변경 확인</h2>
-          </div>
-          <div class="email-content">
-            <div class="highlight">
-              ${username} 님의 진료 예약이 변경되었습니다
+        <div class="email-wrapper">
+          <div class="email-container">
+            <div class="email-header">
+              <h2>진료 예약 변경 확인</h2>
             </div>
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>구분</th>
-                  <th>정보</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>진료과</strong></td>
-                  <td>${appointment.department}</td>
-                </tr>
-                <tr>
-                  <td><strong>기존 예약 일시</strong></td>
-                  <td>
-                    <span class="strike-through">
-                      ${new Date(oldDate).toLocaleString()}
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>변경된 예약 일시</strong></td>
-                  <td>${new Date(appointment.date).toLocaleString()}</td>
-                </tr>
-                <tr>
-                  <td><strong>상태</strong></td>
-                  <td>
-                    <span class="status-badge status-pending">예약 변경</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="timestamp">
-              변경 시간: ${new Date().toLocaleString()}
+            <div class="email-content">
+              <div class="highlight-box">
+                <p>${username} 님의 진료 예약이 변경되었습니다</p>
+              </div>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>구분</th>
+                    <th>정보</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>진료과</strong></td>
+                    <td>${appointment.department}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>기존 예약 일시</strong></td>
+                    <td>
+                      <span style="text-decoration: line-through; color: var(--gray-400);">
+                        ${new Date(oldDate).toLocaleString()}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>변경된 예약 일시</strong></td>
+                    <td>${new Date(appointment.date).toLocaleString()}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>상태</strong></td>
+                    <td>
+                      <span class="status-badge status-pending">예약 변경</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="divider"></div>
+              <div class="footer">
+                <div class="timestamp">
+                  변경 시간: ${new Date().toLocaleString()}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -516,44 +550,49 @@ export const emailTemplates = {
         `취소된 예약 일시: ${new Date(appointment.date).toLocaleString()}\n`,
       html: `
         ${baseEmailStyles}
-        <div class="email-container">
-          <div class="email-header">
-            <h2>진료 예약 취소 확인</h2>
-          </div>
-          <div class="email-content">
-            <div class="highlight">
-              ${username} 님의 진료 예약이 취소되었습니다
+        <div class="email-wrapper">
+          <div class="email-container">
+            <div class="email-header">
+              <h2>진료 예약 취소 확인</h2>
             </div>
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>구분</th>
-                  <th>정보</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>진료과</strong></td>
-                  <td>${appointment.department}</td>
-                </tr>
-                <tr>
-                  <td><strong>취소된 예약 일시</strong></td>
-                  <td>
-                    <span class="strike-through">
-                      ${new Date(appointment.date).toLocaleString()}
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>상태</strong></td>
-                  <td>
-                    <span class="status-badge status-cancelled">예약 취소</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="timestamp">
-              취소 시간: ${new Date().toLocaleString()}
+            <div class="email-content">
+              <div class="highlight-box">
+                <p>${username} 님의 진료 예약이 취소되었습니다</p>
+              </div>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>구분</th>
+                    <th>정보</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>진료과</strong></td>
+                    <td>${appointment.department}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>취소된 예약 일시</strong></td>
+                    <td>
+                      <span style="text-decoration: line-through; color: var(--gray-400);">
+                        ${new Date(appointment.date).toLocaleString()}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>상태</strong></td>
+                    <td>
+                      <span class="status-badge status-cancelled">예약 취소</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="divider"></div>
+              <div class="footer">
+                <div class="timestamp">
+                  취소 시간: ${new Date().toLocaleString()}
+                </div>
+              </div>
             </div>
           </div>
         </div>
