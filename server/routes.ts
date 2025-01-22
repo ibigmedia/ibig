@@ -358,6 +358,32 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.get("/api/admin/recent-appointments", async (req, res) => {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).send("Unauthorized");
+    }
+
+    try {
+      const recentAppointments = await db
+        .select({
+          id: appointments.id,
+          patientName: users.username,
+          date: appointments.date,
+          department: appointments.department,
+          status: appointments.status,
+        })
+        .from(appointments)
+        .leftJoin(users, eq(appointments.userId, users.id))
+        .orderBy(desc(appointments.date))
+        .limit(5);
+
+      res.json(recentAppointments);
+    } catch (error) {
+      console.error('Error fetching recent appointments:', error);
+      res.status(500).send("Error fetching recent appointments");
+    }
+  });
+
   app.get("/api/admin/medical-records", async (req, res) => {
     if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
       return res.status(403).send("Unauthorized");
@@ -880,6 +906,7 @@ export function registerRoutes(app: Express): Server {
         )
         .limit(1);
 
+      
       if (!existingContact) {
         return res.status(404).send("Contact not found");
       }
