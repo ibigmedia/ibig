@@ -43,7 +43,7 @@ export function registerRoutes(app: Express): Server {
 
   app.use('/api', translationRouter);
 
-  // Admin routes (moved to separate file)
+  // Admin routes
   app.get("/api/admin/users", adminRoutes.getAllUsers);
   app.get("/api/admin/user-details/:userId", adminRoutes.getUserDetails);
   app.get("/api/admin/stats", adminRoutes.getStats);
@@ -1017,7 +1017,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const records = await db.query.allergyRecords.findMany({
                 where: eq(allergyRecords.userId, req.user.id),
-        orderBy: [desc(allergyRecords.recordedAt)],
+                orderBy: [desc(allergyRecords.recordedAt)],
       });
       res.json(records);
     } catch (error) {
@@ -1094,10 +1094,9 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  createAdminUser().catch(console.error);
-  setupMailer().catch(console.error);
-
+  // Create HTTP server
   const httpServer = createServer(app);
+
   return httpServer;
 }
 
