@@ -528,6 +528,7 @@ export function registerRoutes(app: Express): Server {
     res.json(userMedications);
   });
 
+  // Update appointment creation endpoint to include email notification
   app.post("/api/appointments", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -548,11 +549,114 @@ export function registerRoutes(app: Express): Server {
         })
         .returning();
 
+      // Send email notification
+      const emailData = emailTemplates.appointmentCreated(
+        req.user.username,
+        appointment
+      );
+      await sendEmail(emailData.subject, emailData.content);
+
       console.log('Created appointment:', appointment);
       res.json(appointment);
     } catch (error) {
       console.error('Error creating appointment:', error);
       res.status(500).send(error instanceof Error ? error.message : "Error creating appointment");
+    }
+  });
+
+  // Add appointment rescheduling endpoint
+  app.put("/api/appointments/:id/reschedule", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const appointmentId = parseInt(req.params.id);
+      const [existingAppointment] = await db
+        .select()
+        .from(appointments)
+        .where(
+          and(
+            eq(appointments.id, appointmentId),
+            eq(appointments.userId, req.user.id)
+          )
+        )
+        .limit(1);
+
+      if (!existingAppointment) {
+        return res.status(404).send("Appointment not found");
+      }
+
+      const oldDate = existingAppointment.date;
+
+      const [updatedAppointment] = await db
+        .update(appointments)
+        .set({
+          date: new Date(req.body.date),
+          department: req.body.department,
+          updatedAt: new Date()
+        })
+        .where(eq(appointments.id, appointmentId))
+        .returning();
+
+      // Send email notification
+      const emailData = emailTemplates.appointmentRescheduled(
+        req.user.username,
+        updatedAppointment,
+        oldDate.toISOString()
+      );
+      await sendEmail(emailData.subject, emailData.content);
+
+      res.json(updatedAppointment);
+    } catch (error) {
+      console.error('Error rescheduling appointment:', error);
+      res.status(500).send("Error rescheduling appointment");
+    }
+  });
+
+  // Add appointment cancellation endpoint
+  app.put("/api/appointments/:id/cancel", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const appointmentId = parseInt(req.params.id);
+      const [existingAppointment] = await db
+        .select()
+        .from(appointments)
+        .where(
+          and(
+            eq(appointments.id, appointmentId),
+            eq(appointments.userId, req.user.id)
+          )
+        )
+        .limit(1);
+
+      if (!existingAppointment) {
+        return res.status(404).send("Appointment not found");
+      }
+
+      const [updatedAppointment] = await db
+        .update(appointments)
+        .set({
+          status: 'cancelled',
+          updatedAt: new Date()
+        })
+        .where(eq(appointments.id, appointmentId))
+        .returning();
+
+      // Send email notification
+      const emailData = emailTemplates.appointmentCancelled(
+        req.user.username,
+        updatedAppointment
+      );
+      await sendEmail(emailData.subject, emailData.content);
+
+      res.json(updatedAppointment);
+    } catch (error) {
+      console.error('Error cancelling appointment:', error);
+      res.status(500).send("Error cancelling appointment");
     }
   });
 

@@ -126,24 +126,6 @@ const baseEmailStyles = `
       color: #2563eb;
       font-weight: 600;
     }
-    .action-button {
-      display: inline-block;
-      padding: 10px 20px;
-      background-color: #2563eb;
-      color: white;
-      text-decoration: none;
-      border-radius: 6px;
-      margin-top: 20px;
-    }
-    @media (max-width: 600px) {
-      .email-container {
-        padding: 10px;
-      }
-      .data-table th, .data-table td {
-        padding: 8px;
-        font-size: 0.9em;
-      }
-    }
   </style>
 `;
 
@@ -257,5 +239,114 @@ export const emailTemplates = {
         </div>
       `
     }
-  })
+  }),
+  appointmentCreated: (username: string, appointment: any) => ({
+    subject: '진료 예약 확인',
+    content: {
+      text: `${username}님의 진료 예약이 완료되었습니다.\n\n` +
+        `진료과: ${appointment.department}\n` +
+        `예약 일시: ${new Date(appointment.date).toLocaleString()}\n`,
+      html: `
+        ${baseEmailStyles}
+        <div class="email-container">
+          <div class="email-header">
+            <h2 style="margin: 0;">진료 예약 확인</h2>
+          </div>
+          <div class="email-content">
+            <p><span class="highlight">${username}</span>님의 진료 예약이 완료되었습니다.</p>
+            <table class="data-table">
+              <tbody>
+                <tr>
+                  <td>진료과</td>
+                  <td>${appointment.department}</td>
+                </tr>
+                <tr>
+                  <td>예약 일시</td>
+                  <td>${new Date(appointment.date).toLocaleString()}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="timestamp">
+              예약 시간: ${new Date().toLocaleString()}
+            </div>
+          </div>
+        </div>
+      `
+    }
+  }),
+
+  appointmentRescheduled: (username: string, appointment: any, oldDate: string) => ({
+    subject: '진료 예약 변경 확인',
+    content: {
+      text: `${username}님의 진료 예약이 변경되었습니다.\n\n` +
+        `진료과: ${appointment.department}\n` +
+        `기존 예약 일시: ${new Date(oldDate).toLocaleString()}\n` +
+        `변경된 예약 일시: ${new Date(appointment.date).toLocaleString()}\n`,
+      html: `
+        ${baseEmailStyles}
+        <div class="email-container">
+          <div class="email-header">
+            <h2 style="margin: 0;">진료 예약 변경 확인</h2>
+          </div>
+          <div class="email-content">
+            <p><span class="highlight">${username}</span>님의 진료 예약이 변경되었습니다.</p>
+            <table class="data-table">
+              <tbody>
+                <tr>
+                  <td>진료과</td>
+                  <td>${appointment.department}</td>
+                </tr>
+                <tr>
+                  <td>기존 예약 일시</td>
+                  <td>${new Date(oldDate).toLocaleString()}</td>
+                </tr>
+                <tr>
+                  <td>변경된 예약 일시</td>
+                  <td>${new Date(appointment.date).toLocaleString()}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="timestamp">
+              변경 시간: ${new Date().toLocaleString()}
+            </div>
+          </div>
+        </div>
+      `
+    }
+  }),
+
+  appointmentCancelled: (username: string, appointment: any) => ({
+    subject: '진료 예약 취소 확인',
+    content: {
+      text: `${username}님의 진료 예약이 취소되었습니다.\n\n` +
+        `진료과: ${appointment.department}\n` +
+        `취소된 예약 일시: ${new Date(appointment.date).toLocaleString()}\n`,
+      html: `
+        ${baseEmailStyles}
+        <div class="email-container">
+          <div class="email-header">
+            <h2 style="margin: 0;">진료 예약 취소 확인</h2>
+          </div>
+          <div class="email-content">
+            <p><span class="highlight">${username}</span>님의 진료 예약이 취소되었습니다.</p>
+            <table class="data-table">
+              <tbody>
+                <tr>
+                  <td>진료과</td>
+                  <td>${appointment.department}</td>
+                </tr>
+                <tr>
+                  <td>취소된 예약 일시</td>
+                  <td>${new Date(appointment.date).toLocaleString()}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="timestamp">
+              취소 시간: ${new Date().toLocaleString()}
+            </div>
+          </div>
+        </div>
+      `
+    }
+  }),
 };
