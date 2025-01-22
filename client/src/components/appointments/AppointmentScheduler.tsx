@@ -114,6 +114,12 @@ export function AppointmentScheduler() {
       const [hours, minutes] = time.split(':');
       appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
+      console.log('Rescheduling appointment:', {
+        appointmentId,
+        date: appointmentDate.toISOString(),
+        department
+      });
+
       const response = await fetch(`/api/appointments/${appointmentId}/reschedule`, {
         method: 'PUT',
         headers: {
@@ -127,7 +133,8 @@ export function AppointmentScheduler() {
       });
 
       if (!response.ok) {
-        throw new Error(await response.text());
+        const errorText = await response.text();
+        throw new Error(errorText || '일정 변경에 실패했습니다.');
       }
 
       return response.json();
@@ -188,10 +195,30 @@ export function AppointmentScheduler() {
     createAppointment.mutate();
   };
 
-  const handleReschedule = (e: React.FormEvent) => {
+  const handleReschedule = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedAppointment) {
-      rescheduleAppointment.mutate(selectedAppointment.id);
+    if (!selectedAppointment) {
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "선택된 예약이 없습니다.",
+      });
+      return;
+    }
+
+    if (!date || !time || !department) {
+      toast({
+        variant: "destructive",
+        title: "입력 오류",
+        description: "모든 필드를 입력해주세요.",
+      });
+      return;
+    }
+
+    try {
+      await rescheduleAppointment.mutateAsync(selectedAppointment.id);
+    } catch (error) {
+      console.error('Failed to reschedule appointment:', error);
     }
   };
 
@@ -347,8 +374,8 @@ export function AppointmentScheduler() {
               </SelectContent>
             </Select>
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full"
               disabled={createAppointment.isPending || !date || !time || !department}
             >
@@ -401,8 +428,11 @@ export function AppointmentScheduler() {
               </Select>
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={!date || !time || !department}>
-                일정 변경하기
+              <Button
+                type="submit"
+                disabled={rescheduleAppointment.isPending || !date || !time || !department}
+              >
+                {rescheduleAppointment.isPending ? "변경 중..." : "일정 변경하기"}
               </Button>
             </DialogFooter>
           </form>
