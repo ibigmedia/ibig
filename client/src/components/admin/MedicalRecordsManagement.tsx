@@ -27,7 +27,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus, Eye, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { SelectMedicalRecord } from "@db/schema";
+import type { SelectMedicalRecord, SelectBloodPressureRecord } from "@db/schema";
+
+interface BloodSugarRecord {
+  id: number;
+  userId: number;
+  bloodSugar: number;
+  measurementType: 'before_meal' | 'after_meal';
+  measuredAt: string;
+  notes?: string;
+}
+
+interface DiseaseHistory {
+  id: number;
+  userId: number;
+  diseaseName: string;
+  diagnosisDate: string;
+  treatment: string;
+  notes?: string;
+}
 
 interface Medication {
   id: number;
@@ -55,15 +73,15 @@ export function MedicalRecordsManagement() {
     queryKey: ['/api/admin/medical-records'],
   });
 
-  const { data: bloodPressureRecords = [] } = useQuery({
+  const { data: bloodPressureRecords = [] } = useQuery<SelectBloodPressureRecord[]>({
     queryKey: ['/api/admin/blood-pressure'],
   });
 
-  const { data: bloodSugarRecords = [] } = useQuery({
+  const { data: bloodSugarRecords = [] } = useQuery<BloodSugarRecord[]>({
     queryKey: ['/api/admin/blood-sugar'],
   });
 
-  const { data: diseaseHistories = [] } = useQuery({
+  const { data: diseaseHistories = [] } = useQuery<DiseaseHistory[]>({
     queryKey: ['/api/admin/disease-histories'],
   });
 
@@ -183,7 +201,7 @@ export function MedicalRecordsManagement() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {bloodPressureRecords.map((record: any) => (
+                      {bloodPressureRecords.map((record) => (
                         <TableRow key={record.id}>
                           <TableCell>{record.user?.name || ''}</TableCell>
                           <TableCell>{new Date(record.measuredAt).toLocaleString()}</TableCell>
@@ -219,7 +237,7 @@ export function MedicalRecordsManagement() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {bloodSugarRecords.map((record: any) => (
+                      {bloodSugarRecords.map((record) => (
                         <TableRow key={record.id}>
                           <TableCell>{record.user?.name || ''}</TableCell>
                           <TableCell>{new Date(record.measuredAt).toLocaleString()}</TableCell>
@@ -259,7 +277,7 @@ export function MedicalRecordsManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {diseaseHistories.map((history: any) => (
+                  {diseaseHistories.map((history) => (
                     <TableRow key={history.id}>
                       <TableCell>{history.user?.name || ''}</TableCell>
                       <TableCell>{history.diseaseName}</TableCell>
@@ -296,7 +314,7 @@ export function MedicalRecordsManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {medications.map((medication: any) => (
+                  {medications.map((medication) => (
                     <TableRow key={medication.id}>
                       <TableCell>{medication.name}</TableCell>
                       <TableCell>{medication.dosage}</TableCell>

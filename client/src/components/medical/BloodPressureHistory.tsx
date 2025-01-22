@@ -20,6 +20,7 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle,
+  DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog";
 import { 
@@ -39,7 +40,7 @@ interface BloodPressureRecord {
   systolic: number;
   diastolic: number;
   pulse: number;
-  measuredAt: string;
+  measuredAt?: string;
   notes?: string;
 }
 
@@ -93,41 +94,6 @@ export function BloodPressureHistory() {
     },
   });
 
-  const updateRecord = useMutation({
-    mutationFn: async (record: BloodPressureRecord) => {
-      const response = await fetch(`/api/blood-pressure/${record.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(record),
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "수정 완료",
-        description: "혈압 기록이 성공적으로 수정되었습니다.",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/blood-pressure'] });
-      resetForm();
-      setIsAddDialogOpen(false);
-    },
-    onError: (error: Error) => {
-      toast({
-        variant: "destructive",
-        title: "오류",
-        description: error.message,
-      });
-    },
-  });
-
   const deleteRecord = useMutation({
     mutationFn: async (id: number) => {
       const response = await fetch(`/api/blood-pressure/${id}`, {
@@ -138,6 +104,8 @@ export function BloodPressureHistory() {
       if (!response.ok) {
         throw new Error(await response.text());
       }
+
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -164,17 +132,18 @@ export function BloodPressureHistory() {
     setSelectedRecord(null);
   };
 
-  const handleEdit = (record: BloodPressureRecord) => {
-    setSelectedRecord(record);
-    setSystolic(record.systolic.toString());
-    setDiastolic(record.diastolic.toString());
-    setPulse(record.pulse.toString());
-    setNotes(record.notes || "");
-    setIsAddDialogOpen(true);
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!systolic || !diastolic || !pulse) {
+      toast({
+        variant: "destructive",
+        title: "입력 오류",
+        description: "모든 필수 항목을 입력해주세요.",
+      });
+      return;
+    }
+
     const data = {
       systolic: parseInt(systolic),
       diastolic: parseInt(diastolic),
@@ -182,140 +151,148 @@ export function BloodPressureHistory() {
       notes,
     };
 
-    if (selectedRecord) {
-      updateRecord.mutate({ ...data, id: selectedRecord.id, measuredAt: selectedRecord.measuredAt });
-    } else {
-      addRecord.mutate(data);
-    }
+    addRecord.mutate(data);
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <h3 className="text-lg font-bold">혈압 기록</h3>
+    <Card className="w-full">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-semibold tracking-tight">
+            혈압 기록
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            정기적으로 혈압을 측정하고 기록하세요
+          </p>
+        </div>
         <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          혈압 기록 추가
+          <Plus className="mr-2 h-4 w-4" />
+          새 기록 추가
         </Button>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>수축기 혈압</TableHead>
-              <TableHead>이완기 혈압</TableHead>
-              <TableHead>맥박</TableHead>
-              <TableHead>측정일</TableHead>
+              <TableHead className="w-[100px]">수축기</TableHead>
+              <TableHead className="w-[100px]">이완기</TableHead>
+              <TableHead className="w-[100px]">맥박</TableHead>
+              <TableHead>측정일시</TableHead>
               <TableHead>메모</TableHead>
-              <TableHead>작업</TableHead>
+              <TableHead className="w-[100px]">작업</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bloodPressureRecords?.map((record) => (
+            {bloodPressureRecords.map((record) => (
               <TableRow key={record.id}>
                 <TableCell>{record.systolic}</TableCell>
                 <TableCell>{record.diastolic}</TableCell>
                 <TableCell>{record.pulse}</TableCell>
-                <TableCell>{format(new Date(record.measuredAt), 'yyyy-MM-dd HH:mm')}</TableCell>
-                <TableCell>{record.notes}</TableCell>
-                <TableCell className="space-x-2">
-                  <Button variant="outline" size="sm" onClick={() => handleEdit(record)}>
-                    <Edit className="w-4 h-4" />
-                  </Button>
+                <TableCell>
+                  {record.measuredAt ? format(new Date(record.measuredAt), 'yyyy-MM-dd HH:mm') : '-'}
+                </TableCell>
+                <TableCell>{record.notes || '-'}</TableCell>
+                <TableCell>
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => {
                       setSelectedRecord(record);
                       setIsDeleteDialogOpen(true);
                     }}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
+      </CardContent>
 
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {selectedRecord ? "혈압 기록 수정" : "새 혈압 기록"}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="systolic">수축기 혈압 (mmHg)</Label>
-                <Input
-                  id="systolic"
-                  type="number"
-                  value={systolic}
-                  onChange={(e) => setSystolic(e.target.value)}
-                  required
-                />
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>새 혈압 기록</DialogTitle>
+            <DialogDescription>
+              혈압 측정값과 관련 정보를 입력하세요
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 items-center gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="systolic">수축기 혈압 (mmHg)</Label>
+                  <Input
+                    id="systolic"
+                    type="number"
+                    value={systolic}
+                    onChange={(e) => setSystolic(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="diastolic">이완기 혈압 (mmHg)</Label>
+                  <Input
+                    id="diastolic"
+                    type="number"
+                    value={diastolic}
+                    onChange={(e) => setDiastolic(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="diastolic">이완기 혈압 (mmHg)</Label>
-                <Input
-                  id="diastolic"
-                  type="number"
-                  value={diastolic}
-                  onChange={(e) => setDiastolic(e.target.value)}
-                  required
-                />
+              <div className="grid grid-cols-2 items-center gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="pulse">맥박 (bpm)</Label>
+                  <Input
+                    id="pulse"
+                    type="number"
+                    value={pulse}
+                    onChange={(e) => setPulse(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="pulse">맥박 (bpm)</Label>
-                <Input
-                  id="pulse"
-                  type="number"
-                  value={pulse}
-                  onChange={(e) => setPulse(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="notes">메모</Label>
                 <Textarea
                   id="notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
+                  placeholder="특이사항이나 증상을 기록하세요"
                 />
               </div>
-              <DialogFooter>
-                <Button type="submit">
-                  {selectedRecord ? "수정" : "추가"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+            </div>
+            <DialogFooter>
+              <Button type="submit">저장</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>혈압 기록 삭제</AlertDialogTitle>
-              <AlertDialogDescription>
-                이 기록을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>취소</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => {
-                  if (selectedRecord?.id) {
-                    deleteRecord.mutate(selectedRecord.id);
-                  }
-                }}
-              >
-                삭제
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </CardContent>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>기록 삭제</AlertDialogTitle>
+            <AlertDialogDescription>
+              이 혈압 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (selectedRecord?.id) {
+                  deleteRecord.mutate(selectedRecord.id);
+                }
+              }}
+            >
+              삭제
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

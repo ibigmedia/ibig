@@ -1021,7 +1021,7 @@ export const selectDiseaseHistoryWithUser = {
 //       <p>안녕하세요,</p>
 //       <p>의료 관리 시스템의 서브관리자로 초대되었습니다.</p>
 //       <p>아래 링크를 클릭하여 계정을 생성하세요.</p>
-//       <a href="${invitationUrl}" style="background-color#2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">계정 생성</a>
+//       <a href="${invitationUrl}" style="background-color#2563eb; color white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">계정 생성</a>
 //       <p>이 링크는 7일간 유효합니다.</p>
 //       <p>감사합니다.</p>
 //     </div>
