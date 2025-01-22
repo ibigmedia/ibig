@@ -11,6 +11,13 @@ import {
 } from "@/components/ui/dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+interface SmtpSettings {
+  host: string;
+  port: number;
+  username: string;
+  fromEmail: string;
+}
+
 interface SmtpSettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -25,7 +32,7 @@ export function SmtpSettingsDialog({ open, onOpenChange }: SmtpSettingsDialogPro
   const [password, setPassword] = useState("");
   const [fromEmail, setFromEmail] = useState("");
 
-  const { data: settings } = useQuery({
+  const { data: settings } = useQuery<SmtpSettings>({
     queryKey: ['/api/admin/smtp-settings'],
     onSuccess: (data) => {
       if (data) {

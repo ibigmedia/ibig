@@ -1,17 +1,18 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
+import * as adminRoutes from "./routes/admin";
+import { getPatientProfile, updatePatientProfile } from "./routes/patient-profile";
+import translationRouter from './routes/translation';
+import { sendEmail, emailTemplates } from './services/email';
 import { db } from "@db";
-import { users, appointments, medications, medicalRecords, emergencyContacts, invitations, bloodPressureRecords, bloodSugarRecords, diseaseHistories, smtpSettings } from "@db/schema";
+import { medicalRecords, emergencyContacts, users, appointments, medications, bloodPressureRecords, bloodSugarRecords, diseaseHistories, smtpSettings, invitations } from "@db/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
 import nodemailer from "nodemailer";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import type { Request, Response, NextFunction } from "express";
-import { getPatientProfile, updatePatientProfile } from "./routes/patient-profile";
-import { encryption } from './utils/encryption';
-import { logger } from "./logger";
-import translationRouter from './routes/translation';
+
 
 const scryptAsync = promisify(scrypt);
 const crypto = {
@@ -127,90 +128,12 @@ async function sendNotificationEmail(subject: string, content: { text: string, h
   }
 }
 
-// Email templates
-function generateMedicalRecordEmailHtml(username: string, action: string, data: any, timestamp: string) {
-  const dataRows = Object.entries(data)
-    .map(([key, value]) => `
-      <tr>
-        <td style="padding: 10px; border: 1px solid #e5e7eb;">${key}</td>
-        <td style="padding: 10px; border: 1px solid #e5e7eb;">${value}</td>
-      </tr>
-    `)
-    .join('');
 
-  return `
-    <div style="font-family: Arial, sans-serif;">
-      <h2 style="color: #2563eb;">의료 기록 ${action} 알림</h2>
-      <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-        <tr>
-          <th style="text-align: left; padding: 10px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">항목</th>
-          <th style="text-align: left; padding: 10px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">내용</th>
-        </tr>
-        <tr>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">사용자</td>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">${username}</td>
-        </tr>
-        <tr>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">시간</td>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">${timestamp}</td>
-        </tr>
-        ${dataRows}
-      </table>
-    </div>
-  `;
-}
-
-function generateEmergencyContactEmailHtml(username: string, contactData: any, timestamp: string) {
-  return `
-    <div style="font-family: Arial, sans-serif;">
-      <h2 style="color: #2563eb;">비상 연락처 추가 알림</h2>
-      <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-        <tr>
-          <th style="text-align: left; padding: 10px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">항목</th>
-          <th style="text-align: left; padding: 10px; background-color: #f3f4f6; border: 1px solid #e5e7eb;">내용</th>
-        </tr>
-        <tr>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">사용자</td>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">${username}</td>
-        </tr>
-        <tr>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">이름</td>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">${contactData.name}</td>
-        </tr>
-        <tr>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">관계</td>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">${contactData.relationship}</td>
-        </tr>
-        <tr>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">전화번호</td>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">${contactData.phoneNumber}</td>
-        </tr>
-        <tr>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">등록시간</td>
-          <td style="padding: 10px; border: 1px solid #e5e7eb;">${timestamp}</td>
-        </tr>
-      </table>
-    </div>
-  `;
-}
-
-function generateInvitationEmailHtml(invitationUrl: string) {
-  return `
-    <div style="font-family: Arial, sans-serif;">
-      <h2 style="color: #2563eb;">의료 관리 시스템 서브관리자 초대</h2>
-      <p>안녕하세요,</p>
-      <p>의료 관리 시스템의 서브관리자로 초대되었습니다.</p>
-      <p>아래 링크를 클릭하여 계정을 생성하세요.</p>
-      <a href="${invitationUrl}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">계정 생성</a>
-      <p>이 링크는 7일간 유효합니다.</p>
-      <p>감사합니다.</p>
-    </div>
-  `;
-}
+// Email templates (moved to separate file)
+//These functions are now in email.ts
 
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
-  createAdminUser().catch(console.error);
 
   // Patient profile routes
   app.get("/api/patient-profile", getPatientProfile);
@@ -219,435 +142,30 @@ export function registerRoutes(app: Express): Server {
   app.use('/api', translationRouter);
 
   // SMTP Settings Routes
-  app.get("/api/admin/smtp-settings", async (req, res) => {
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).send("Unauthorized");
-    }
+  app.get("/api/admin/smtp-settings", adminRoutes.getSmtpSettings);
+  app.post("/api/admin/smtp-settings", adminRoutes.updateSmtpSettings);
 
-    try {
-      const [settings] = await db
-        .select()
-        .from(smtpSettings)
-        .limit(1);
 
-      res.json(settings);
-    } catch (error) {
-      console.error('Error fetching SMTP settings:', error);
-      res.status(500).send("Error fetching SMTP settings");
-    }
-  });
+  // Admin routes (moved to separate file)
+  app.get("/api/admin/users", adminRoutes.getAllUsers);
+  app.get("/api/admin/user-details/:userId", adminRoutes.getUserDetails);
+  app.get("/api/admin/stats", adminRoutes.getStats);
+  app.get("/api/admin/recent-appointments", adminRoutes.getRecentAppointments);
+  app.get("/api/admin/medical-records", adminRoutes.getAllMedicalRecords);
+  app.get("/api/admin/blood-pressure", adminRoutes.getAllBloodPressureRecords);
+  app.get("/api/admin/blood-sugar", adminRoutes.getAllBloodSugarRecords);
+  app.get("/api/admin/disease-histories", adminRoutes.getAllDiseaseHistories);
+  app.get("/api/admin/appointments", adminRoutes.getAllAppointments);
+  app.put("/api/admin/appointments/:id/status", adminRoutes.updateAppointmentStatus);
+  app.get("/api/admin/subadmins", adminRoutes.getSubAdmins);
+  app.post("/api/admin/invite", adminRoutes.createInvitation);
+  app.post("/api/invitations/:token/accept", adminRoutes.acceptInvitation);
+  app.get("/api/admin/emergency-contacts", adminRoutes.getAllEmergencyContacts);
+  app.delete("/api/admin/emergency-contacts/:id", adminRoutes.deleteEmergencyContact);
+  app.put("/api/admin/emergency-contacts/:id", adminRoutes.updateEmergencyContact);
 
-  app.post("/api/admin/smtp-settings", async (req, res) => {
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).send("Unauthorized");
-    }
 
-    try {
-      const [existingSettings] = await db
-        .select()
-        .from(smtpSettings)
-        .limit(1);
-
-      const { host, port, username, password, fromEmail } = req.body;
-
-      if (existingSettings) {
-        const updateData = {
-          host,
-          port,
-          username,
-          fromEmail,
-          ...(password ? { password } : {}),
-          updatedAt: new Date(),
-        };
-
-        const [settings] = await db
-          .update(smtpSettings)
-          .set(updateData)
-          .where(eq(smtpSettings.id, existingSettings.id))
-          .returning();
-
-        res.json(settings);
-      } else {
-        if (!password) {
-          return res.status(400).send("Password is required for initial setup");
-        }
-
-        const [settings] = await db
-          .insert(smtpSettings)
-          .values({
-            host,
-            port,
-            username,
-            password,
-            fromEmail,
-          })
-          .returning();
-
-        res.json(settings);
-      }
-
-      // Recreate the mailer with new settings
-      await setupMailer();
-    } catch (error) {
-      console.error('Error updating SMTP settings:', error);
-      res.status(500).send("Error updating SMTP settings");
-    }
-  });
-
-  app.get("/api/admin/users", async (req, res) => {
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).send("Unauthorized");
-    }
-
-    const allUsers = await db.query.users.findMany();
-    res.json(allUsers);
-  });
-
-  app.get("/api/admin/user-details/:userId", async (req, res) => {
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).send("Unauthorized");
-    }
-
-    const userId = parseInt(req.params.userId);
-
-    try {
-      const [
-        userMedicalRecords,
-        userAppointments,
-        userMedications,
-        userEmergencyContacts
-      ] = await Promise.all([
-        db.query.medicalRecords.findMany({
-          where: eq(medicalRecords.userId, userId)
-        }),
-        db.query.appointments.findMany({
-          where: eq(appointments.userId, userId)
-        }),
-        db.query.medications.findMany({
-          where: eq(medications.userId, userId)
-        }),
-        db.query.emergencyContacts.findMany({
-          where: eq(emergencyContacts.userId, userId)
-        })
-      ]);
-
-      res.json({
-        medicalRecords: userMedicalRecords,
-        appointments: userAppointments,
-        medications: userMedications,
-        emergencyContacts: userEmergencyContacts
-      });
-    } catch (error) {
-      res.status(500).send("Error fetching user details");
-    }
-  });
-
-  app.get("/api/admin/stats", async (req, res) => {
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).send("Unauthorized");
-    }
-
-    try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const [
-        userCount,
-        todayAppointments,
-        activeMedications
-      ] = await Promise.all([
-        db.select({ count: sql`count(*)` })
-          .from(users)
-          .where(eq(users.role, 'user'))
-          .then(result => Number(result[0].count)),
-        db.select({ count: sql`count(*)` })
-          .from(appointments)
-          .where(sql`DATE(${appointments.date}) = ${today.toISOString().split('T')[0]}`)
-          .then(result => Number(result[0].count)),
-        db.select({ count: sql`count(*)` })
-          .from(medications)
-          .where(
-            and(
-              sql`${medications.endDate} IS NULL OR ${medications.endDate} >= CURRENT_DATE`,
-              sql`${medications.startDate} <= CURRENT_DATE`
-            )
-          )
-          .then(result => Number(result[0].count))
-      ]);
-
-      res.json({
-        totalPatients: userCount,
-        todayAppointments,
-        activePresciptions: activeMedications
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-      res.status(500).send("Error fetching statistics");
-    }
-  });
-
-  app.get("/api/admin/recent-appointments", async (req, res) => {
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).send("Unauthorized");
-    }
-
-    try {
-      const recentAppointments = await db
-        .select({
-          id: appointments.id,
-          patientName: users.username,
-          date: appointments.date,
-          department: appointments.department,
-          status: appointments.status,
-        })
-        .from(appointments)
-        .leftJoin(users, eq(appointments.userId, users.id))
-        .orderBy(desc(appointments.date))
-        .limit(5);
-
-      res.json(recentAppointments);
-    } catch (error) {
-      console.error('Error fetching recent appointments:', error);
-      res.status(500).send("Error fetching recent appointments");
-    }
-  });
-
-  app.get("/api/admin/medical-records", async (req, res) => {
-    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
-      return res.status(403).send("Unauthorized");
-    }
-
-    try {
-      const records = await db
-        .select({
-          ...medicalRecords,
-          user: {
-            username: users.username,
-          },
-        })
-        .from(medicalRecords)
-        .leftJoin(users, eq(medicalRecords.userId, users.id));
-      res.json(records);
-    } catch (error) {
-      res.status(500).send("Error fetching medical records");
-    }
-  });
-
-  app.get("/api/admin/blood-pressure", async (req, res) => {
-    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
-      return res.status(403).send("Unauthorized");
-    }
-
-    try {
-      const records = await db
-        .select(selectBloodPressureWithUser)
-        .from(bloodPressureRecords)
-        .leftJoin(users, eq(bloodPressureRecords.userId, users.id))
-        .orderBy(desc(bloodPressureRecords.measuredAt));
-      res.json(records);
-    } catch (error) {
-      res.status(500).send("Error fetching blood pressure records");
-    }
-  });
-
-  app.get("/api/admin/blood-sugar", async (req, res) => {
-    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
-      return res.status(403).send("Unauthorized");
-    }
-
-    try {
-      const records = await db
-        .select(selectBloodSugarWithUser)
-        .from(bloodSugarRecords)
-        .leftJoin(users, eq(bloodSugarRecords.userId, users.id))
-        .orderBy(desc(bloodSugarRecords.measuredAt));
-      res.json(records);
-    } catch (error) {
-      res.status(500).send("Error fetching blood sugar records");
-    }
-  });
-
-  app.get("/api/admin/disease-histories", async (req, res) => {
-    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
-      return res.status(403).send("Unauthorized");
-    }
-
-    try {
-      const records = await db
-        .select(selectDiseaseHistoryWithUser)
-        .from(diseaseHistories)
-        .leftJoin(users, eq(diseaseHistories.userId, users.id))
-        .orderBy(desc(diseaseHistories.createdAt));
-      res.json(records);
-    } catch (error) {
-      res.status(500).send("Error fetching disease histories");
-    }
-  });
-
-  app.get("/api/admin/appointments", async (req, res) => {
-    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
-      return res.status(403).send("Unauthorized");
-    }
-
-    try {
-      const allAppointments = await db
-        .select({
-          id: appointments.id,
-          userId: appointments.userId,
-          date: appointments.date,
-          department: appointments.department,
-          status: appointments.status,
-          user: {
-            username: users.username,
-          },
-        })
-        .from(appointments)
-        .leftJoin(users, eq(appointments.userId, users.id));
-
-      res.json(allAppointments);
-    } catch (error) {
-      console.error('Error fetching appointments:', error);
-      res.status(500).send("Error fetching appointments");
-    }
-  });
-
-  app.put("/api/admin/appointments/:id/status", async (req, res) => {
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).send("Unauthorized");
-    }
-
-    const appointmentId = parseInt(req.params.id);
-    const { status } = req.body;
-
-    try {
-      const [appointment] = await db
-        .update(appointments)
-        .set({ status })
-        .where(eq(appointments.id, appointmentId))
-        .returning();
-      res.json(appointment);
-    } catch (error) {
-      res.status(500).send("Error updating appointment status");
-    }
-  });
-
-  app.post("/api/appointments", async (req, res) => {
-    if (!req.user) {
-      return res.status(401).send("Not authenticated");
-    }
-
-    try {
-      console.log('Appointment creation request:', {
-        userId: req.user.id,
-        ...req.body
-      });
-
-      const [appointment] = await db.insert(appointments)
-        .values({
-          userId: req.user.id,
-          date: new Date(req.body.date),
-          department: req.body.department,
-          status: 'pending'
-        })
-        .returning();
-
-      console.log('Created appointment:', appointment);
-      res.json(appointment);
-    } catch (error) {
-      console.error('Error creating appointment:', error);
-      res.status(500).send(error instanceof Error ? error.message : "Error creating appointment");
-    }
-  });
-
-  app.post("/api/user/change-password", async (req, res) => {
-    if (!req.user) {
-      return res.status(401).send("인증되지 않은 사용자입니다");
-    }
-
-    const { currentPassword, newPassword } = req.body;
-
-    try {
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, req.user.id))
-        .limit(1);
-
-      const isMatch = await crypto.compare(currentPassword, user.password);
-      if (!isMatch) {
-        return res.status(400).send("현재 비밀번호가 일치하지 않습니다");
-      }
-
-      const hashedPassword = await crypto.hash(newPassword);
-
-      await db
-        .update(users)
-        .set({ password: hashedPassword })
-        .where(eq(users.id, req.user.id));
-
-      res.json({ message: "비밀번호가 성공적으로 변경되었습니다" });
-    } catch (error) {
-      res.status(500).send("비밀번호 변경 중 오류가 발생했습니다");
-    }
-  });
-
-  app.get("/api/medical-records", async (req, res) => {
-    if (!req.user) {
-      return res.status(401).send("Not authenticated");
-    }
-
-    const records = await db.query.medicalRecords.findMany({
-      where: eq(medicalRecords.userId, req.user.id),
-    });
-    res.json(records);
-  });
-
-  app.post("/api/register", async (req, res, next) => {
-    try {
-      const result = insertUserSchema.safeParse(req.body);
-      if (!result.success) {
-        return res
-          .status(400)
-          .send("Invalid input: " + result.error.issues.map(i => i.message).join(", "));
-      }
-
-      const { username, password } = result.data;
-
-      const [existingUser] = await db
-        .select()
-        .from(users)
-        .where(eq(users.username, username))
-        .limit(1);
-
-      if (existingUser) {
-        return res.status(400).send("Username already exists");
-      }
-
-      const hashedPassword = await crypto.hash(password);
-
-      const [newUser] = await db
-        .insert(users)
-        .values({
-          ...result.data,
-          password: hashedPassword,
-          role: result.data.role || 'user',
-        })
-        .returning();
-
-      req.login(newUser, (err) => {
-        if (err) {
-          return next(err);
-        }
-        return res.json({
-          message: "Registration successful",
-          user: { id: newUser.id, username: newUser.username, role: newUser.role },
-        });
-      });
-    } catch (error) {
-      next(error);
-    }
-  });
-
+  // Update medical records route with email notification
   app.post("/api/medical-records", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -678,23 +196,62 @@ export function registerRoutes(app: Express): Server {
       const timestamp = new Date().toLocaleString('ko-KR');
       const action = existingRecord ? '수정' : '생성';
 
-      // Send notification email for medical record update
-      await sendNotificationEmail(
-        '의료 기록 업데이트 알림',
-        {
-          text: `사용자의 의료 기록이 ${action}되었습니다.\n\n` +
-            `사용자: ${req.user.username}\n` +
-            `시간: ${timestamp}\n` +
-            `변경 내용: ${JSON.stringify(req.body, null, 2)}`,
-          html: generateMedicalRecordEmailHtml(req.user.username, action, req.body, timestamp)
-        }
+      // Send email notification
+      const emailData = emailTemplates.medicalRecord(
+        req.user.username,
+        action,
+        req.body,
+        timestamp
       );
+      await sendEmail(emailData.subject, emailData.content);
 
       res.json(record);
     } catch (error) {
       console.error('Error saving medical record:', error);
       res.status(500).send("Error saving medical record");
     }
+  });
+
+  // Update emergency contacts route with email notification
+  app.post("/api/emergency-contacts", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const [contact] = await db.insert(emergencyContacts)
+        .values({
+          ...req.body,
+          userId: req.user.id,
+        })
+        .returning();
+
+      const timestamp = new Date().toLocaleString('ko-KR');
+
+      // Send email notification
+      const emailData = emailTemplates.emergencyContact(
+        req.user.username,
+        contact,
+        timestamp
+      );
+      await sendEmail(emailData.subject, emailData.content);
+
+      res.json(contact);
+    } catch (error) {
+      console.error('Error creating emergency contact:', error);
+      res.status(500).send("Error creating emergency contact");
+    }
+  });
+
+  app.get("/api/medical-records", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    const records = await db.query.medicalRecords.findMany({
+      where: eq(medicalRecords.userId, req.user.id),
+    });
+    res.json(records);
   });
 
   app.put("/api/medical-records/:id", async (req, res) => {
@@ -769,6 +326,7 @@ export function registerRoutes(app: Express): Server {
       res.status(500).send("Error deleting medical record");
     }
   });
+
 
 
   app.get("/api/medical-records/export", async (req, res) => {
@@ -879,41 +437,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/emergency-contacts", async (req, res) => {
-    if (!req.user) {
-      return res.status(401).send("Not authenticated");
-    }
-
-    try {
-      const [contact] = await db.insert(emergencyContacts)
-        .values({
-          ...req.body,
-          userId: req.user.id,
-        })
-        .returning();
-
-      const timestamp = new Date().toLocaleString('ko-KR');
-
-      // Send notification email for new emergency contact
-      await sendNotificationEmail(
-        '비상 연락처 추가 알림',
-        {
-          text: `사용자가 새로운 비상 연락처를 추가했습니다.\n\n` +
-            `사용자: ${req.user.username}\n` +
-            `연락처 정보:\n` +
-            `이름: ${contact.name}\n` +
-            `관계: ${contact.relationship}\n` +
-            `전화번호: ${contact.phoneNumber}\n` +
-            `시간: ${timestamp}`,
-          html: generateEmergencyContactEmailHtml(req.user.username, contact, timestamp)
-        }
-      );
-
-      res.json(contact);
-    } catch (error) {
-      res.status(500).send("Error creating emergency contact");
-    }
-  });
 
   app.put("/api/emergency-contacts/:id", async (req, res) => {
     if (!req.user) {
@@ -1005,207 +528,109 @@ export function registerRoutes(app: Express): Server {
     res.json(userMedications);
   });
 
-  app.get("/api/admin/subadmins", async (req, res) => {
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).send("Unauthorized");
+  app.post("/api/appointments", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
     }
 
     try {
-      const subadmins = await db.query.users.findMany({
-        where: eq(users.role, 'subadmin'),
+      console.log('Appointment creation request:', {
+        userId: req.user.id,
+        ...req.body
       });
-      res.json(subadmins);
+
+      const [appointment] = await db.insert(appointments)
+        .values({
+          userId: req.user.id,
+          date: new Date(req.body.date),
+          department: req.body.department,
+          status: 'pending'
+        })
+        .returning();
+
+      console.log('Created appointment:', appointment);
+      res.json(appointment);
     } catch (error) {
-      res.status(500).send("Error fetching sub-admins");
+      console.error('Error creating appointment:', error);
+      res.status(500).send(error instanceof Error ? error.message : "Error creating appointment");
     }
   });
 
-  app.post("/api/admin/invite", async (req, res) => {
-    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
-      return res.status(403).send("Unauthorized");
+  app.post("/api/user/change-password", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("인증되지 않은 사용자입니다");
     }
 
-    const { email, role } = req.body;
-    if (!email || !role || !['user', 'subadmin'].includes(role)) {
-      return res.status(400).send("Invalid input");
-    }
-
-    if (req.user.role === 'subadmin' && role === 'subadmin') {
-      return res.status(403).send("Sub-admins cannot invite other sub-admins");
-    }
+    const { currentPassword, newPassword } = req.body;
 
     try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, req.user.id))
+        .limit(1);
+
+      const isMatch = await crypto.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).send("현재 비밀번호가 일치하지 않습니다");
+      }
+
+      const hashedPassword = await crypto.hash(newPassword);
+
+      await db
+        .update(users)
+        .set({ password: hashedPassword })
+        .where(eq(users.id, req.user.id));
+
+      res.json({ message: "비밀번호가 성공적으로 변경되었습니다" });
+    } catch (error) {
+      res.status(500).send("비밀번호 변경 중 오류가 발생했습니다");
+    }
+  });
+
+  app.post("/api/register", async (req, res, next) => {
+    try {
+      const result = insertUserSchema.safeParse(req.body);
+      if (!result.success) {
+        return res
+          .status(400)
+          .send("Invalid input: " + result.error.issues.map(i => i.message).join(", "));
+      }
+
+      const { username, password } = result.data;
+
       const [existingUser] = await db
         .select()
         .from(users)
-        .where(eq(users.email, email))
+        .where(eq(users.username, username))
         .limit(1);
 
       if (existingUser) {
-        return res.status(400).send("User with this email already exists");
-      }
-
-      const token = randomBytes(32).toString('hex');
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7);
-
-      const [invitation] = await db
-        .insert(invitations)
-        .values({
-          email,
-          role,
-          token,
-          expiresAt,
-          createdById: req.user.id,
-        })
-        .returning();
-
-      const invitationUrl = `${req.protocol}://${req.get('host')}/register?token=${token}`;
-
-      // Send invitation email
-      await sendNotificationEmail(
-        '서브관리자 초대',
-        {
-          text: `의료 관리 시스템의 서브관리자로 초대되었습니다.\n\n초대 링크: ${invitationUrl}\n\n이 링크는 7일간 유효합니다.`,
-          html: generateInvitationEmailHtml(invitationUrl)
-        },
-        email
-      );
-
-      res.json({
-        message: "Invitation sent successfully",
-        invitationUrl,
-        expiresAt
-      });
-    } catch (error) {
-      console.error('Error creating invitation:', error);
-      res.status(500).send("Error creating invitation");
-    }
-  });
-
-  app.post("/api/invitations/:token/accept", async (req, res) => {
-    const { token } = req.params;
-    const { username, password } = req.body;
-
-    try {
-      const [invitation] = await db
-        .select()
-        .from(invitations)
-        .where(
-          and(
-            eq(invitations.token, token),
-            sql`${invitations.expiresAt} > NOW()`
-          )
-        )
-        .limit(1);
-
-      if (!invitation) {
-        return res.status(400).send("Invalid or expired invitation");
+        return res.status(400).send("Username already exists");
       }
 
       const hashedPassword = await crypto.hash(password);
-      const [user] = await db
+
+      const [newUser] = await db
         .insert(users)
         .values({
-          username,
+          ...result.data,
           password: hashedPassword,
-          email: invitation.email,
-          role: invitation.role,
+          role: result.data.role || 'user',
         })
         .returning();
 
-      await db
-        .delete(invitations)
-        .where(eq(invitations.id, invitation.id));
-
-      req.login(user, (err) => {
+      req.login(newUser, (err) => {
         if (err) {
-          return res.status(500).send("Error logging in");
+          return next(err);
         }
-        res.json({ message: "Account created successfully" });
+        return res.json({
+          message: "Registration successful",
+          user: { id: newUser.id, username: newUser.username, role: newUser.role },
+        });
       });
     } catch (error) {
-      res.status(500).send("Error accepting invitation");
-    }
-  });
-
-  app.get("/api/admin/emergency-contacts", async (req, res) => {
-    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
-      return res.status(403).send("Unauthorized");
-    }
-
-    try {
-      const contacts = await db
-        .select({
-          id: emergencyContacts.id,
-          userId: emergencyContacts.userId,
-          name: emergencyContacts.name,
-          relationship: emergencyContacts.relationship,
-          phoneNumber: emergencyContacts.phoneNumber,
-          email: emergencyContacts.email,
-          isMainContact: emergencyContacts.isMainContact,
-          createdAt: emergencyContacts.createdAt,
-          updatedAt: emergencyContacts.updatedAt,
-          user: {
-            username: users.username,
-            email: users.email,
-          },
-        })
-        .from(emergencyContacts)
-        .leftJoin(users, eq(emergencyContacts.userId, users.id));
-
-      res.json(contacts);
-    } catch (error) {
-      console.error('Error fetching emergency contacts:', error);
-      res.status(500).send("Error fetching emergency contacts");
-    }
-  });
-
-  app.delete("/api/admin/emergency-contacts/:id", async (req, res) => {
-    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
-      return res.status(403).send("Unauthorized");
-    }
-
-    try {
-      const [deletedContact] = await db
-        .delete(emergencyContacts)
-        .where(eq(emergencyContacts.id, parseInt(req.params.id)))
-        .returning();
-
-      res.json(deletedContact);
-    } catch (error) {
-      res.status(500).send("Error deleting emergency contact");
-    }
-  });
-
-  app.put("/api/admin/emergency-contacts/:id", async (req, res) => {
-    if (!req.user || !['admin', 'subadmin'].includes(req.user.role)) {
-      return res.status(403).send("Unauthorized");
-    }
-
-    try {
-      if (req.body.userId) {
-        const existingContact = await db.query.emergencyContacts.findFirst({
-          where: and(
-            eq(emergencyContacts.userId, req.body.userId),
-            sql`${emergencyContacts.id} != ${parseInt(req.params.id)}`
-          ),
-        });
-
-        if (existingContact) {
-          return res.status(400).send("User already has an emergency contact");
-        }
-      }
-
-      const [updatedContact] = await db
-        .update(emergencyContacts)
-        .set(req.body)
-        .where(eq(emergencyContacts.id, parseInt(req.params.id)))
-        .returning();
-
-      res.json(updatedContact);
-    } catch (error) {
-      res.status(500).send("Error updating emergency contact");
+      next(error);
     }
   });
 
@@ -1474,81 +899,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/admin/smtp-settings", async (req, res) => {
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).send("Unauthorized");
-    }
-
-    try {
-      const [settings] = await db
-        .select()
-        .from(smtpSettings)
-        .limit(1);
-
-      res.json(settings);
-    } catch (error) {
-      console.error('Error fetching SMTP settings:', error);
-      res.status(500).send("Error fetching SMTP settings");
-    }
-  });
-
-  app.post("/api/admin/smtp-settings", async (req, res) => {
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).send("Unauthorized");
-    }
-
-    try {
-      const [existingSettings] = await db
-        .select()
-        .from(smtpSettings)
-        .limit(1);
-
-      const { host, port, username, password, fromEmail } = req.body;
-
-      if (existingSettings) {
-        const updateData = {
-          host,
-          port,
-          username,
-          fromEmail,
-          ...(password ? { password } : {}),
-          updatedAt: new Date(),
-        };
-
-        const [settings] = await db
-          .update(smtpSettings)
-          .set(updateData)
-          .where(eq(smtpSettings.id, existingSettings.id))
-          .returning();
-
-        res.json(settings);
-      } else {
-        if (!password) {
-          return res.status(400).send("Password is required for initial setup");
-        }
-
-        const [settings] = await db
-          .insert(smtpSettings)
-          .values({
-            host,
-            port,
-            username,
-            password,
-            fromEmail,
-          })
-          .returning();
-
-        res.json(settings);
-      }
-
-      // Recreate the mailer with new settings
-      await setupMailer();
-    } catch (error) {
-      console.error('Error updating SMTP settings:', error);
-      res.status(500).send("Error updating SMTP settings");
-    }
-  });
-
+  createAdminUser().catch(console.error);
   setupMailer().catch(console.error);
 
   const httpServer = createServer(app);
@@ -1576,63 +927,17 @@ export const selectDiseaseHistoryWithUser = {
   user: { username: users.username },
 };
 
-function generateInvitationEmailHtml(invitationUrl: string) {
-  return `
-    <div style="font-family: Arial, sans-serif;">
-      <h2 style="color: #2563eb;">의료 관리 시스템 서브관리자 초대</h2>
-      <p>안녕하세요,</p>
-      <p>의료 관리 시스템의 서브관리자로 초대되었습니다.</p>
-      <p>아래 링크를 클릭하여 계정을 생성하세요.</p>
-      <a href="${invitationUrl}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">계정 생성</a>
-      <p>이 링크는 7일간 유효합니다.</p>
-      <p>감사합니다.</p>
-    </div>
-  `;
-}
-const crypto = {
-  hash: async (password: string) => {
-    const salt = randomBytes(16).toString("hex");
-    const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-    return `${buf.toString("hex")}.${salt}`;
-  },
-  compare: async (suppliedPassword: string, storedPassword: string) => {
-    const [hashedPassword, salt] = storedPassword.split(".");
-    const hashedPasswordBuf = Buffer.from(hashedPassword, "hex");
-    const suppliedPasswordBuf = (await scryptAsync(
-      suppliedPassword,
-      salt,
-      64
-    )) as Buffer;
-    return timingSafeEqual(hashedPasswordBuf, suppliedPasswordBuf);
-  },
-};
-
-async function createAdminUser() {
-  try {
-    const [existingAdmin] = await db
-      .select()
-      .from(users)
-      .where(eq(users.username, 'admin'))
-      .limit(1);
-
-    if (existingAdmin) {
-      return existingAdmin;
-    }
-
-    const hashedPassword = await crypto.hash('admin123');
-    const [newAdmin] = await db.insert(users)
-      .values({
-        username: 'admin',
-        password: hashedPassword,
-        role: 'admin'
-      })
-      .returning();
-
-    console.log('Admin user created successfully');
-    return newAdmin;
-  } catch (error) {
-    console.error('Error creating admin user:', error);
-    throw error;
-  }
-}
-const scryptAsync = promisify(scrypt);
+//This function is now in email.ts
+// function generateInvitationEmailHtml(invitationUrl: string) {
+//   return `
+//     <div style="font-family: Arial, sans-serif;">
+//       <h2 style="color: #2563eb;">의료 관리 시스템 서브관리자 초대</h2>
+//       <p>안녕하세요,</p>
+//       <p>의료 관리 시스템의 서브관리자로 초대되었습니다.</p>
+//       <p>아래 링크를 클릭하여 계정을 생성하세요.</p>
+//       <a href="${invitationUrl}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">계정 생성</a>
+//       <p>이 링크는 7일간 유효합니다.</p>
+//       <p>감사합니다.</p>
+//     </div>
+//   `;
+// }
