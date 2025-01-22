@@ -637,23 +637,19 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).send("Appointment not found");
       }
 
-      const [updatedAppointment] = await db
-        .update(appointments)
-        .set({
-          status: 'cancelled',
-          updatedAt: new Date()
-        })
-        .where(eq(appointments.id, appointmentId))
-        .returning();
+      // 예약을 취소하고 바로 삭제합니다
+      await db
+        .delete(appointments)
+        .where(eq(appointments.id, appointmentId));
 
       // Send email notification
       const emailData = emailTemplates.appointmentCancelled(
         req.user.username,
-        updatedAppointment
+        existingAppointment
       );
       await sendEmail(emailData.subject, emailData.content);
 
-      res.json(updatedAppointment);
+      res.json({ message: "Appointment cancelled and deleted successfully" });
     } catch (error) {
       console.error('Error cancelling appointment:', error);
       res.status(500).send("Error cancelling appointment");

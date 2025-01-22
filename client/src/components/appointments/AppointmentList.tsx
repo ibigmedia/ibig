@@ -61,6 +61,35 @@ export function AppointmentList() {
     },
   });
 
+  const cancelAppointmentMutation = useMutation({
+    mutationFn: async (appointmentId: number) => {
+      const response = await fetch(`/api/appointments/${appointmentId}/cancel`, {
+        method: 'PUT',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "예약이 취소되었습니다",
+        description: "예약이 성공적으로 취소되었습니다.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: error.message,
+      });
+    },
+  });
+
   const handleDelete = (appointment: Appointment) => {
     if (appointment.status !== 'cancelled') {
       toast({
