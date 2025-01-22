@@ -13,6 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, AlertCircle, Heart } from 'lucide-react';
 import { WelcomePage } from '@/components/common/WelcomePage';
+import { AllergyHistory } from '@/components/medical/AllergyHistory';
+import { BloodPressureHistory } from '@/components/medical/BloodPressureHistory';
 
 export function HomePage() {
   const { t } = useLanguage();
@@ -57,34 +59,7 @@ export function HomePage() {
               <TabsContent value="health" className="mt-0">
                 <div className="space-y-6">
                   {/* 알레르기 반응 */}
-                  <Card>
-                    <CardContent className="space-y-4 pt-6">
-                      <div className="flex items-center space-x-2">
-                        <AlertCircle className="h-5 w-5 text-yellow-500" />
-                        <h3 className="text-lg font-semibold">알레르기 반응</h3>
-                      </div>
-                      <div className="grid gap-4">
-                        <div>
-                          <Label>약물 알레르기</Label>
-                          <div className="grid grid-cols-2 gap-2">
-                            <Input placeholder="약물명" />
-                            <Input placeholder="반응 증상" />
-                          </div>
-                        </div>
-                        <div>
-                          <Label>음식 알레르기</Label>
-                          <div className="grid grid-cols-2 gap-2">
-                            <Input placeholder="음식명" />
-                            <Input placeholder="반응 증상" />
-                          </div>
-                        </div>
-                        <div>
-                          <Label>기타 알레르기</Label>
-                          <Textarea placeholder="기타 알레르기 반응이나 특이사항을 입력하세요" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <AllergyHistory />
 
                   {/* 과거 병력 */}
                   <Card>
@@ -98,36 +73,7 @@ export function HomePage() {
                   </Card>
 
                   {/* 혈압 관리 */}
-                  <Card>
-                    <CardContent className="space-y-4 pt-6">
-                      <div className="flex items-center space-x-2">
-                        <Heart className="h-5 w-5 text-red-500" />
-                        <h3 className="text-lg font-semibold">혈압 관리</h3>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>수축기 혈압 (최고)</Label>
-                          <Input type="number" placeholder="mmHg" />
-                        </div>
-                        <div>
-                          <Label>이완기 혈압 (최저)</Label>
-                          <Input type="number" placeholder="mmHg" />
-                        </div>
-                      </div>
-                      <div>
-                        <Label>측정 일시</Label>
-                        <Input type="datetime-local" />
-                      </div>
-                      <div>
-                        <Label>특이사항</Label>
-                        <Textarea placeholder="특이사항이나 증상을 입력하세요" />
-                      </div>
-                      <Button className="w-full">
-                        <Plus className="h-4 w-4 mr-2" />
-                        혈압 기록 추가
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <BloodPressureHistory />
                 </div>
               </TabsContent>
 
