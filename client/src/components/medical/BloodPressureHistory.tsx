@@ -34,13 +34,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { format } from 'date-fns';
+import type { SelectBloodPressureRecord } from "@db/schema";
 
 interface BloodPressureRecord {
   id?: number;
   systolic: number;
   diastolic: number;
   pulse: number;
-  measuredAt?: string;
   notes?: string;
 }
 
@@ -49,29 +49,33 @@ export function BloodPressureHistory() {
   const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
-  const [selectedRecord, setSelectedRecord] = React.useState<BloodPressureRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] = React.useState<SelectBloodPressureRecord | null>(null);
   const [systolic, setSystolic] = React.useState("");
   const [diastolic, setDiastolic] = React.useState("");
   const [pulse, setPulse] = React.useState("");
   const [notes, setNotes] = React.useState("");
 
-  const { data: bloodPressureRecords = [] } = useQuery<BloodPressureRecord[]>({
+  const { data: bloodPressureRecords = [] } = useQuery<SelectBloodPressureRecord[]>({
     queryKey: ['/api/blood-pressure'],
   });
 
   const addRecord = useMutation({
-    mutationFn: async (data: Omit<BloodPressureRecord, 'id' | 'measuredAt'>) => {
+    mutationFn: async (data: Omit<BloodPressureRecord, 'id'>) => {
       const response = await fetch('/api/blood-pressure', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          measuredAt: new Date().toISOString(),
+        }),
         credentials: 'include',
       });
 
       if (!response.ok) {
-        throw new Error(await response.text());
+        const errorText = await response.text();
+        throw new Error(errorText || '혈압 기록 저장에 실패했습니다.');
       }
 
       return response.json();
@@ -102,7 +106,8 @@ export function BloodPressureHistory() {
       });
 
       if (!response.ok) {
-        throw new Error(await response.text());
+        const errorText = await response.text();
+        throw new Error(errorText || '혈압 기록 삭제에 실패했습니다.');
       }
 
       return response.json();
@@ -114,6 +119,7 @@ export function BloodPressureHistory() {
       });
       queryClient.invalidateQueries({ queryKey: ['/api/blood-pressure'] });
       setIsDeleteDialogOpen(false);
+      setSelectedRecord(null);
     },
     onError: (error: Error) => {
       toast({
@@ -129,13 +135,17 @@ export function BloodPressureHistory() {
     setDiastolic("");
     setPulse("");
     setNotes("");
-    setSelectedRecord(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!systolic || !diastolic || !pulse) {
+    // Validate inputs
+    const systolicNum = parseInt(systolic);
+    const diastolicNum = parseInt(diastolic);
+    const pulseNum = parseInt(pulse);
+
+    if (!systolicNum || !diastolicNum || !pulseNum) {
       toast({
         variant: "destructive",
         title: "입력 오류",
@@ -144,11 +154,39 @@ export function BloodPressureHistory() {
       return;
     }
 
+    // Validate ranges
+    if (systolicNum < 70 || systolicNum > 200) {
+      toast({
+        variant: "destructive",
+        title: "입력 오류",
+        description: "수축기 혈압은 70~200 사이여야 합니다.",
+      });
+      return;
+    }
+
+    if (diastolicNum < 40 || diastolicNum > 130) {
+      toast({
+        variant: "destructive",
+        title: "입력 오류",
+        description: "이완기 혈압은 40~130 사이여야 합니다.",
+      });
+      return;
+    }
+
+    if (pulseNum < 40 || pulseNum > 200) {
+      toast({
+        variant: "destructive",
+        title: "입력 오류",
+        description: "맥박은 40~200 사이여야 합니다.",
+      });
+      return;
+    }
+
     const data = {
-      systolic: parseInt(systolic),
-      diastolic: parseInt(diastolic),
-      pulse: parseInt(pulse),
-      notes,
+      systolic: systolicNum,
+      diastolic: diastolicNum,
+      pulse: pulseNum,
+      notes: notes.trim() || undefined,
     };
 
     addRecord.mutate(data);
@@ -165,7 +203,10 @@ export function BloodPressureHistory() {
             정기적으로 혈압을 측정하고 기록하세요
           </p>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
+        <Button onClick={() => {
+          resetForm();
+          setIsAddDialogOpen(true);
+        }}>
           <Plus className="mr-2 h-4 w-4" />
           새 기록 추가
         </Button>
@@ -228,6 +269,8 @@ export function BloodPressureHistory() {
                     type="number"
                     value={systolic}
                     onChange={(e) => setSystolic(e.target.value)}
+                    min="70"
+                    max="200"
                     required
                   />
                 </div>
@@ -238,6 +281,8 @@ export function BloodPressureHistory() {
                     type="number"
                     value={diastolic}
                     onChange={(e) => setDiastolic(e.target.value)}
+                    min="40"
+                    max="130"
                     required
                   />
                 </div>
@@ -250,6 +295,8 @@ export function BloodPressureHistory() {
                     type="number"
                     value={pulse}
                     onChange={(e) => setPulse(e.target.value)}
+                    min="40"
+                    max="200"
                     required
                   />
                 </div>

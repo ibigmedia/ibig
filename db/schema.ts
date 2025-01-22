@@ -1,6 +1,6 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { relations, type one } from 'drizzle-orm';
+import { relations } from 'drizzle-orm';
 import { z } from 'zod';
 
 // Define role type
@@ -75,7 +75,6 @@ export const bloodPressureRecords = pgTable("blood_pressure_records", {
   measuredAt: timestamp("measured_at").defaultNow(),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const bloodSugarRecords = pgTable("blood_sugar_records", {
