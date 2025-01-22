@@ -38,7 +38,8 @@ export function AppointmentList() {
       });
 
       if (!response.ok) {
-        throw new Error(await response.text());
+        const errorText = await response.text();
+        throw new Error(errorText);
       }
 
       return response.json();
@@ -78,6 +79,28 @@ export function AppointmentList() {
     }
   };
 
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-green-100 text-green-800';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return '대기중';
+      case 'cancelled':
+        return '취소됨';
+      default:
+        return '완료';
+    }
+  };
+
   return (
     <div className="space-y-4">
       {appointments.map((appointment) => (
@@ -100,19 +123,9 @@ export function AppointmentList() {
           </div>
           <div className="flex items-center space-x-2">
             <span
-              className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                appointment.status === 'pending'
-                  ? 'bg-yellow-100 text-yellow-800'
-                  : appointment.status === 'cancelled'
-                  ? 'bg-red-100 text-red-800'
-                  : 'bg-green-100 text-green-800'
-              }`}
+              className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusStyle(appointment.status)}`}
             >
-              {appointment.status === 'pending'
-                ? '대기중'
-                : appointment.status === 'cancelled'
-                ? '취소됨'
-                : '완료'}
+              {getStatusText(appointment.status)}
             </span>
             {appointment.status === 'cancelled' && (
               <Button
@@ -127,7 +140,7 @@ export function AppointmentList() {
         </div>
       ))}
 
-      <AlertDialog open={!!appointmentToDelete} onOpenChange={() => setAppointmentToDelete(null)}>
+      <AlertDialog open={!!appointmentToDelete} onOpenChange={(open) => !open && setAppointmentToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>예약 삭제</AlertDialogTitle>
