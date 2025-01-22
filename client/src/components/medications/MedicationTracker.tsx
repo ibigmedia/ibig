@@ -79,20 +79,30 @@ export function MedicationTracker() {
 
   const addMedication = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const response = await fetch('/api/medications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-        credentials: 'include',
-      });
+      try {
+        const response = await fetch('/api/medications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...data,
+            startDate: new Date(data.startDate).toISOString(),
+            endDate: data.endDate ? new Date(data.endDate).toISOString() : null,
+          }),
+          credentials: 'include',
+        });
 
-      if (!response.ok) {
-        throw new Error(await response.text());
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || '약물 추가 중 오류가 발생했습니다.');
+        }
+
+        return response.json();
+      } catch (error) {
+        console.error('Error adding medication:', error);
+        throw error;
       }
-
-      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -114,20 +124,30 @@ export function MedicationTracker() {
 
   const updateMedication = useMutation({
     mutationFn: async (data: { id: number; medication: typeof formData }) => {
-      const response = await fetch(`/api/medications/${data.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data.medication),
-        credentials: 'include',
-      });
+      try {
+        const response = await fetch(`/api/medications/${data.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...data.medication,
+            startDate: new Date(data.medication.startDate).toISOString(),
+            endDate: data.medication.endDate ? new Date(data.medication.endDate).toISOString() : null,
+          }),
+          credentials: 'include',
+        });
 
-      if (!response.ok) {
-        throw new Error(await response.text());
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || '약물 정보 수정 중 오류가 발생했습니다.');
+        }
+
+        return response.json();
+      } catch (error) {
+        console.error('Error updating medication:', error);
+        throw error;
       }
-
-      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -149,16 +169,22 @@ export function MedicationTracker() {
 
   const deleteMedication = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`/api/medications/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
+      try {
+        const response = await fetch(`/api/medications/${id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
 
-      if (!response.ok) {
-        throw new Error(await response.text());
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || '약물 삭제 중 오류가 발생했습니다.');
+        }
+
+        return response.json();
+      } catch (error) {
+        console.error('Error deleting medication:', error);
+        throw error;
       }
-
-      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -215,8 +241,8 @@ export function MedicationTracker() {
     setFormData({
       name: medication.name,
       dosage: medication.dosage,
-      startDate: medication.startDate,
-      endDate: medication.endDate || '',
+      startDate: new Date(medication.startDate).toISOString().split('T')[0],
+      endDate: medication.endDate ? new Date(medication.endDate).toISOString().split('T')[0] : '',
       frequency: medication.frequency,
       notes: medication.notes || '',
     });

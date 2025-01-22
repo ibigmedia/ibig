@@ -903,15 +903,15 @@ export function registerRoutes(app: Express): Server {
       const [record] = await db
         .insert(medications)
         .values({
-          userId: req.user.id,
           name,
           dosage,
-          startDate: new Date(startDate).toISOString(),
-          endDate: endDate ? new Date(endDate).toISOString() : null,
+          startDate: new Date(startDate),
+          endDate: endDate ? new Date(endDate) : null,
           frequency,
           notes,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          userId: req.user.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         })
         .returning();
 
@@ -920,6 +920,85 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error('Error saving medication:', error);
       res.status(500).send("약물 정보 저장 중 오류가 발생했습니다");
+    }
+  });
+
+  app.put("/api/medications/:id", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const medicationId = parseInt(req.params.id);
+      const { name, dosage, startDate, endDate, frequency, notes } = req.body;
+
+      const [existingMedication] = await db
+        .select()
+        .from(medications)
+        .where(
+          and(
+            eq(medications.id, medicationId),
+            eq(medications.userId, req.user.id)
+          )
+        )
+        .limit(1);
+
+      if (!existingMedication) {
+        return res.status(404).send("Medication not found");
+      }
+
+      const [updatedMedication] = await db
+        .update(medications)
+        .set({
+          name,
+          dosage,
+          startDate: new Date(startDate),
+          endDate: endDate ? new Date(endDate) : null,
+          frequency,
+          notes,
+          updatedAt: new Date(),
+        })
+        .where(eq(medications.id, medicationId))
+        .returning();
+
+      res.json(updatedMedication);
+    } catch (error) {
+      console.error('Error updating medication:', error);
+      res.status(500).send("약물 정보 수정 중 오류가 발생했습니다");
+    }
+  });
+
+  app.delete("/api/medications/:id", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const medicationId = parseInt(req.params.id);
+
+      const [existingMedication] = await db
+        .select()
+        .from(medications)
+        .where(
+          and(
+            eq(medications.id, medicationId),
+            eq(medications.userId, req.user.id)
+          )
+        )
+        .limit(1);
+
+      if (!existingMedication) {
+        return res.status(404).send("Medication not found");
+      }
+
+      await db
+        .delete(medications)
+        .where(eq(medications.id, medicationId));
+
+      res.json({ message: "Medication deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting medication:', error);
+      res.status(500).send("약물 정보 삭제 중 오류가 발생했습니다");
     }
   });
 
