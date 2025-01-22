@@ -53,15 +53,28 @@ export async function sendEmail(subject: string, content: { text: string, html?:
 
     const recipient = toEmail || settings.fromEmail;
 
-    await mailer.sendMail({
-      from: settings.fromEmail,
+    const mailOptions = {
+      from: {
+        name: '의료관리시스템',
+        address: settings.fromEmail
+      },
       to: recipient,
       subject,
-      text: content.text,
-      html: content.html || content.text,
-    });
+      text: content.text, // Fallback plain text
+      html: content.html || content.text, // HTML version takes precedence
+      headers: {
+        'Content-Type': 'text/html; charset=UTF-8',
+        'X-Priority': '1',
+        'X-MSMail-Priority': 'High'
+      },
+      alternatives: [{
+        contentType: 'text/html; charset=UTF-8',
+        content: content.html || content.text
+      }],
+    };
 
-    console.log('Email sent successfully');
+    await mailer.sendMail(mailOptions);
+    console.log('Email sent successfully with HTML content');
   } catch (error) {
     console.error('Error sending email:', error);
     throw error;
