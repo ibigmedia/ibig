@@ -61,15 +61,37 @@ export function AppointmentList() {
     },
   });
 
-  const handleDelete = (appointment: Appointment) => {
-    if (appointment.status !== 'cancelled') {
+  const cancelAppointmentMutation = useMutation({
+    mutationFn: async (appointmentId: number) => {
+      const response = await fetch(`/api/appointments/${appointmentId}/cancel`, {
+        method: 'PUT',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "예약이 취소되었습니다",
+        description: "예약이 성공적으로 취소되었습니다.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
+    },
+    onError: (error: Error) => {
       toast({
         variant: "destructive",
-        title: "삭제 불가",
-        description: "취소된 예약만 삭제할 수 있습니다.",
+        title: "오류",
+        description: error.message,
       });
-      return;
-    }
+    },
+  });
+
+  const handleDelete = (appointment: Appointment) => {
     setAppointmentToDelete(appointment);
   };
 
@@ -77,6 +99,10 @@ export function AppointmentList() {
     if (appointmentToDelete) {
       deleteAppointmentMutation.mutate(appointmentToDelete.id);
     }
+  };
+
+  const handleCancel = (appointmentId: number) => {
+    cancelAppointmentMutation.mutate(appointmentId);
   };
 
   const getStatusStyle = (status: string) => {
@@ -127,6 +153,16 @@ export function AppointmentList() {
             >
               {getStatusText(appointment.status)}
             </span>
+            {appointment.status === 'pending' && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => handleCancel(appointment.id)}
+                disabled={cancelAppointmentMutation.isPending}
+              >
+                예약 취소
+              </Button>
+            )}
             {appointment.status === 'cancelled' && (
               <Button
                 variant="ghost"
