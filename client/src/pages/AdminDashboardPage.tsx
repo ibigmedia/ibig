@@ -1,8 +1,9 @@
 import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useUser } from '@/hooks/use-user';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Settings, Mail } from 'lucide-react';
+import { Settings, Mail, LogOut } from 'lucide-react';
 import { Dashboard } from '@/components/admin/Dashboard';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { MedicalRecordsManagement } from '@/components/admin/MedicalRecordsManagement';
@@ -12,11 +13,33 @@ import { SubAdminManagement } from '@/components/admin/SubAdminManagement';
 import { SmtpSettingsDialog } from '@/components/admin/SmtpSettingsDialog';
 import { SubAdminInviteDialog } from '@/components/admin/SubAdminInviteDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 
 export function AdminDashboardPage() {
   const { t } = useLanguage();
+  const { toast } = useToast();
+  const { logout } = useUser();
   const [showSmtpSettings, setShowSmtpSettings] = React.useState(false);
   const [showInviteDialog, setShowInviteDialog] = React.useState(false);
+
+  const handleLogout = async () => {
+    try {
+      const result = await logout();
+      if (!result.ok) {
+        throw new Error(result.message);
+      }
+      toast({
+        title: "로그아웃 성공",
+        description: "성공적으로 로그아웃되었습니다.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "로그아웃 실패",
+        description: error.message,
+      });
+    }
+  };
 
   return (
     <div className="container mx-auto p-2 sm:p-4 md:p-8">
@@ -44,6 +67,14 @@ export function AdminDashboardPage() {
             >
               <Settings className="h-4 w-4 mr-2" />
               이메일 설정
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              로그아웃
             </Button>
           </div>
         </div>
