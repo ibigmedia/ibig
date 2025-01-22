@@ -168,7 +168,7 @@ export function AppointmentList() {
                 variant="ghost"
                 size="icon"
                 onClick={() => handleDelete(appointment)}
-                className="text-red-500 hover:text-red-700"
+                disabled={deleteAppointmentMutation.isPending}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -193,9 +193,8 @@ export function AppointmentList() {
             <AlertDialogAction 
               onClick={confirmDelete}
               className="bg-red-500 hover:bg-red-600"
-              disabled={deleteAppointmentMutation.isPending}
             >
-              {deleteAppointmentMutation.isPending ? "삭제 중..." : "삭제"}
+              삭제
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
