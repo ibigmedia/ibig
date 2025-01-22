@@ -1,6 +1,6 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { relations } from 'drizzle-orm';
+import { relations, type one } from 'drizzle-orm';
 import { z } from 'zod';
 
 // Define role type
@@ -38,6 +38,8 @@ export const allergyRecords = pgTable("allergy_records", {
   severity: text("severity").notNull(),
   notes: text("notes"),
   recordedAt: timestamp("recorded_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const medicalRecords = pgTable("medical_records", {
@@ -63,6 +65,7 @@ export const diseaseHistories = pgTable("disease_histories", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// 혈압 기록 테이블 수정
 export const bloodPressureRecords = pgTable("blood_pressure_records", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
@@ -72,6 +75,7 @@ export const bloodPressureRecords = pgTable("blood_pressure_records", {
   measuredAt: timestamp("measured_at").defaultNow(),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const bloodSugarRecords = pgTable("blood_sugar_records", {
@@ -153,7 +157,6 @@ export const selectMedicationSchema = createSelectSchema(medications);
 export type InsertMedication = typeof medications.$inferInsert;
 export type SelectMedication = typeof medications.$inferSelect;
 
-
 // Create schemas for SMTP settings
 export const insertSmtpSettingsSchema = createInsertSchema(smtpSettings);
 export const selectSmtpSettingsSchema = createSelectSchema(smtpSettings);
@@ -197,7 +200,7 @@ export type InsertPatientProfile = z.infer<typeof insertPatientProfileSchema>;
 export type SelectPatientProfile = typeof patientProfiles.$inferSelect;
 
 // Add relations for the new tables
-export const usersRelations = relations(users, ({ one, many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   patientProfile: one(patientProfiles, {
     fields: [users.id],
     references: [patientProfiles.userId],
@@ -221,13 +224,13 @@ export const invitationsRelations = relations(invitations, ({ one }) => ({
   }),
 }));
 
-// Create schemas for allergy records
+// 알러지 기록 스키마
 export const insertAllergyRecordSchema = createInsertSchema(allergyRecords);
 export const selectAllergyRecordSchema = createSelectSchema(allergyRecords);
 export type InsertAllergyRecord = typeof allergyRecords.$inferInsert;
 export type SelectAllergyRecord = typeof allergyRecords.$inferSelect;
 
-// Create schemas for blood pressure records
+// 혈압 기록 스키마
 export const insertBloodPressureRecordSchema = createInsertSchema(bloodPressureRecords);
 export const selectBloodPressureRecordSchema = createSelectSchema(bloodPressureRecords);
 export type InsertBloodPressureRecord = typeof bloodPressureRecords.$inferInsert;

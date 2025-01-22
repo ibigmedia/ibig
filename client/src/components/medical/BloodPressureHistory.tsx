@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,26 +35,26 @@ import {
 import { format } from 'date-fns';
 
 interface BloodPressureRecord {
-  id: number;
+  id?: number;
   systolic: number;
   diastolic: number;
   pulse: number;
-  notes: string;
   measuredAt: string;
+  notes?: string;
 }
 
 export function BloodPressureHistory() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<BloodPressureRecord | null>(null);
-  const [systolic, setSystolic] = useState("");
-  const [diastolic, setDiastolic] = useState("");
-  const [pulse, setPulse] = useState("");
-  const [notes, setNotes] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [selectedRecord, setSelectedRecord] = React.useState<BloodPressureRecord | null>(null);
+  const [systolic, setSystolic] = React.useState("");
+  const [diastolic, setDiastolic] = React.useState("");
+  const [pulse, setPulse] = React.useState("");
+  const [notes, setNotes] = React.useState("");
 
-  const { data: bloodPressureRecords } = useQuery<BloodPressureRecord[]>({
+  const { data: bloodPressureRecords = [] } = useQuery<BloodPressureRecord[]>({
     queryKey: ['/api/blood-pressure'],
   });
 
@@ -169,7 +169,7 @@ export function BloodPressureHistory() {
     setSystolic(record.systolic.toString());
     setDiastolic(record.diastolic.toString());
     setPulse(record.pulse.toString());
-    setNotes(record.notes);
+    setNotes(record.notes || "");
     setIsAddDialogOpen(true);
   };
 
@@ -206,7 +206,7 @@ export function BloodPressureHistory() {
               <TableHead>이완기 혈압</TableHead>
               <TableHead>맥박</TableHead>
               <TableHead>측정일</TableHead>
-              <TableHead>비고</TableHead>
+              <TableHead>메모</TableHead>
               <TableHead>작업</TableHead>
             </TableRow>
           </TableHeader>
@@ -277,7 +277,7 @@ export function BloodPressureHistory() {
                 />
               </div>
               <div>
-                <Label htmlFor="notes">비고</Label>
+                <Label htmlFor="notes">메모</Label>
                 <Textarea
                   id="notes"
                   value={notes}
@@ -305,7 +305,7 @@ export function BloodPressureHistory() {
               <AlertDialogCancel>취소</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => {
-                  if (selectedRecord) {
+                  if (selectedRecord?.id) {
                     deleteRecord.mutate(selectedRecord.id);
                   }
                 }}

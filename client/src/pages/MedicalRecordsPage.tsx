@@ -9,6 +9,8 @@ import {
 import { MedicalHistory } from "@/components/medical/MedicalHistory";
 import { DiabetesManagement } from "@/components/medical/DiabetesManagement";
 import { MedicationManagement } from "@/components/medical/MedicationManagement";
+import { AllergyHistory } from "@/components/medical/AllergyHistory";
+import { BloodPressureHistory } from "@/components/medical/BloodPressureHistory";
 import { PersonalInfoForm } from "@/components/personal/PersonalInfoForm";
 import { EmergencyContacts } from "@/components/user/EmergencyContacts";
 import { useQuery } from "@tanstack/react-query";
@@ -53,6 +55,18 @@ export function MedicalRecordsPage() {
                   >
                     약물 관리
                   </TabsTrigger>
+                  <TabsTrigger 
+                    value="allergy" 
+                    className="flex-shrink-0 whitespace-nowrap px-3 py-1.5 text-sm sm:text-base"
+                  >
+                    알러지 기록
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="bloodpressure" 
+                    className="flex-shrink-0 whitespace-nowrap px-3 py-1.5 text-sm sm:text-base"
+                  >
+                    혈압 기록
+                  </TabsTrigger>
                 </TabsList>
               </div>
 
@@ -72,6 +86,18 @@ export function MedicalRecordsPage() {
                 <TabsContent value="medications" className="mt-0 focus-visible:outline-none">
                   <div className="bg-card rounded-lg p-4 sm:p-6">
                     <MedicationManagement />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="allergy" className="mt-0 focus-visible:outline-none">
+                  <div className="bg-card rounded-lg p-4 sm:p-6">
+                    <AllergyHistory />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="bloodpressure" className="mt-0 focus-visible:outline-none">
+                  <div className="bg-card rounded-lg p-4 sm:p-6">
+                    <BloodPressureHistory />
                   </div>
                 </TabsContent>
               </div>
