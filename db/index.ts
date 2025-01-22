@@ -8,5 +8,15 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-const sql = neon(process.env.DATABASE_URL);
-export const db = drizzle(sql, { schema });
+// Configure with pooling for better performance
+const sql = neon(process.env.DATABASE_URL, { 
+  poolSize: 10,
+  idleTimeout: 30000,
+  maxRetries: 5
+});
+
+export const db = drizzle(sql, { 
+  schema,
+  // Add logger for debugging database queries
+  logger: true
+});
