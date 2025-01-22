@@ -5,134 +5,36 @@ import * as adminRoutes from "./routes/admin";
 import { getPatientProfile, updatePatientProfile } from "./routes/patient-profile";
 import translationRouter from './routes/translation';
 import { sendEmail, emailTemplates } from './services/email';
-import { db } from "@db";
+import { db, checkDatabaseConnection } from "@db";
 import { medicalRecords, emergencyContacts, users, appointments, medications, bloodPressureRecords, bloodSugarRecords, diseaseHistories, smtpSettings, invitations, allergyRecords } from "@db/schema";
-import { eq, and, sql, desc } from "drizzle-orm";
-import nodemailer from "nodemailer";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
-import type { Request, Response, NextFunction } from "express";
-
-
-const scryptAsync = promisify(scrypt);
-const crypto = {
-  hash: async (password: string) => {
-    const salt = randomBytes(16).toString("hex");
-    const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-    return `${buf.toString("hex")}.${salt}`;
-  },
-  compare: async (suppliedPassword: string, storedPassword: string) => {
-    const [hashedPassword, salt] = storedPassword.split(".");
-    const hashedPasswordBuf = Buffer.from(hashedPassword, "hex");
-    const suppliedPasswordBuf = (await scryptAsync(
-      suppliedPassword,
-      salt,
-      64
-    )) as Buffer;
-    return timingSafeEqual(hashedPasswordBuf, suppliedPasswordBuf);
-  },
-  randomBytes
-};
-
-async function createAdminUser() {
-  try {
-    const [existingAdmin] = await db
-      .select()
-      .from(users)
-      .where(eq(users.username, 'admin'))
-      .limit(1);
-
-    if (existingAdmin) {
-      return existingAdmin;
-    }
-
-    const hashedPassword = await crypto.hash('admin123');
-    const [newAdmin] = await db.insert(users)
-      .values({
-        username: 'admin',
-        password: hashedPassword,
-        role: 'admin'
-      })
-      .returning();
-
-    console.log('Admin user created successfully');
-    return newAdmin;
-  } catch (error) {
-    console.error('Error creating admin user:', error);
-    throw error;
-  }
-}
-
-let mailer: nodemailer.Transporter | null = null;
-
-async function setupMailer() {
-  try {
-    const [settings] = await db
-      .select()
-      .from(smtpSettings)
-      .limit(1);
-
-    if (!settings) {
-      mailer = null;
-      return;
-    }
-
-    mailer = nodemailer.createTransport({
-      host: settings.host,
-      port: settings.port,
-      secure: settings.port === 465,
-      auth: {
-        user: settings.username,
-        pass: settings.password,
-      },
-    });
-  } catch (error) {
-    console.error('Error setting up mailer:', error);
-    mailer = null;
-  }
-}
-
-async function sendNotificationEmail(subject: string, content: { text: string, html?: string }, toEmail?: string) {
-  if (!mailer) {
-    await setupMailer();
-    if (!mailer) {
-      console.error('Failed to setup mailer');
-      return;
-    }
-  }
-
-  try {
-    const [settings] = await db
-      .select()
-      .from(smtpSettings)
-      .limit(1);
-
-    if (!settings) {
-      console.error('No SMTP settings found');
-      return;
-    }
-
-    const recipient = toEmail || settings.fromEmail;
-
-    await mailer.sendMail({
-      from: settings.fromEmail,
-      to: recipient,
-      subject,
-      text: content.text,
-      html: content.html || content.text,
-    });
-
-    console.log('Email sent successfully');
-  } catch (error) {
-    console.error('Error sending notification email:', error);
-  }
-}
-
-
-// Email templates (moved to separate file)
-//These functions are now in email.ts
+import { eq, and, desc } from "drizzle-orm";
 
 export function registerRoutes(app: Express): Server {
+  // Add database health check endpoint
+  app.get("/api/health", async (req, res) => {
+    try {
+      const isConnected = await checkDatabaseConnection(3);
+      if (!isConnected) {
+        return res.status(503).json({
+          status: "error",
+          message: "Database connection failed",
+        });
+      }
+
+      res.json({
+        status: "healthy",
+        database: "connected",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Health check failed:", error);
+      res.status(500).json({
+        status: "error",
+        message: error instanceof Error ? error.message : "Health check failed",
+      });
+    }
+  });
+
   setupAuth(app);
 
   // Patient profile routes
@@ -140,11 +42,6 @@ export function registerRoutes(app: Express): Server {
   app.put("/api/patient-profile", updatePatientProfile);
 
   app.use('/api', translationRouter);
-
-  // SMTP Settings Routes
-  app.get("/api/admin/smtp-settings", adminRoutes.getSmtpSettings);
-  app.post("/api/admin/smtp-settings", adminRoutes.updateSmtpSettings);
-
 
   // Admin routes (moved to separate file)
   app.get("/api/admin/users", adminRoutes.getAllUsers);
@@ -1025,7 +922,7 @@ export function registerRoutes(app: Express): Server {
         .where(eq(medications.id, medicationId));
 
       res.json({ message: "Medication deleted successfully" });
-    }catch (error) {
+    } catch (error) {
       console.error('Error deleting medication:', error);
       res.status(500).send("약물 정보 삭제 중 오류가 발생했습니다");
     }
@@ -1119,7 +1016,7 @@ export function registerRoutes(app: Express): Server {
 
     try {
       const records = await db.query.allergyRecords.findMany({
-        where: eq(allergyRecords.userId, req.user.id),
+                where: eq(allergyRecords.userId, req.user.id),
         orderBy: [desc(allergyRecords.recordedAt)],
       });
       res.json(records);

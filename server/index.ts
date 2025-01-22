@@ -67,10 +67,10 @@ if (cluster.isPrimary && process.env.NODE_ENV === "production") {
 
   (async () => {
     try {
-      // Check database connection before starting the server
-      const isConnected = await checkDatabaseConnection();
+      // Check database connection before starting the server with retries
+      const isConnected = await checkDatabaseConnection(5);
       if (!isConnected) {
-        throw new Error("Failed to connect to database");
+        throw new Error("Failed to establish database connection after multiple retries");
       }
       log("Database connection successful");
 

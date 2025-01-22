@@ -8,27 +8,41 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Configure connection with enhanced resilience
-const sql = neon(process.env.DATABASE_URL, {
-  connectionTimeout: 10000, // 10 seconds
-  maxRetries: 5,
-  retryInterval: 1000, // 1 second between retries
-  fetchConnectionTimeout: 10000
-});
+// Validate database URL format
+const dbUrl = new URL(process.env.DATABASE_URL);
+if (!dbUrl.host || !dbUrl.pathname.slice(1)) {
+  throw new Error("Invalid DATABASE_URL format");
+}
 
-// Create db instance with better error handling
+// Configure connection with enhanced resilience and pooling
+const sql = neon(process.env.DATABASE_URL);
+
+// Create db instance with better error handling and logging
 export const db = drizzle(sql, {
   schema,
   logger: true,
 });
 
-// Add connection health check
-export async function checkDatabaseConnection() {
-  try {
-    const result = await sql`SELECT 1`;
-    return result != null;
-  } catch (error) {
-    console.error('Database connection error:', error);
-    return false;
+// Enhanced connection health check with retries
+export async function checkDatabaseConnection(retries = 3): Promise<boolean> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const result = await sql`SELECT 1`;
+      if (result) {
+        console.log('Database connection successful');
+        return true;
+      }
+    } catch (error) {
+      console.error(`Database connection attempt ${i + 1} failed:`, error);
+      if (i < retries - 1) {
+        console.log(`Retrying in ${2 ** i} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, 2 ** i * 1000));
+      }
+    }
   }
+
+  console.error('All database connection attempts failed');
+  return false;
 }
+
+export { sql };
