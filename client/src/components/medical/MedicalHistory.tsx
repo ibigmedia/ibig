@@ -1,18 +1,38 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface DiseaseHistory {
   id: number;
@@ -27,6 +47,8 @@ export function MedicalHistory() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showAddDialog, setShowAddDialog] = React.useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [selectedRecord, setSelectedRecord] = React.useState<DiseaseHistory | null>(null);
   const [newRecord, setNewRecord] = React.useState({
     diseaseName: '',
     diagnosisDate: '',
@@ -50,7 +72,8 @@ export function MedicalHistory() {
       });
 
       if (!response.ok) {
-        throw new Error(await response.text());
+        const errorText = await response.text();
+        throw new Error(errorText || '병력 기록 저장에 실패했습니다.');
       }
 
       return response.json();
@@ -61,12 +84,7 @@ export function MedicalHistory() {
         description: '질병 이력이 추가되었습니다.',
       });
       setShowAddDialog(false);
-      setNewRecord({
-        diseaseName: '',
-        diagnosisDate: '',
-        treatment: '',
-        notes: '',
-      });
+      resetForm();
       queryClient.invalidateQueries({ queryKey: ['/api/disease-histories'] });
     },
     onError: (error: Error) => {
@@ -87,7 +105,7 @@ export function MedicalHistory() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText);
+        throw new Error(errorText || '병력 기록 삭제에 실패했습니다.');
       }
 
       return response.json();
@@ -97,6 +115,8 @@ export function MedicalHistory() {
         title: '성공',
         description: '질병 이력이 삭제되었습니다.',
       });
+      setIsDeleteDialogOpen(false);
+      setSelectedRecord(null);
       queryClient.invalidateQueries({ queryKey: ['/api/disease-histories'] });
     },
     onError: (error: Error) => {
@@ -107,6 +127,15 @@ export function MedicalHistory() {
       });
     },
   });
+
+  const resetForm = () => {
+    setNewRecord({
+      diseaseName: '',
+      diagnosisDate: '',
+      treatment: '',
+      notes: '',
+    });
+  };
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,90 +151,149 @@ export function MedicalHistory() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button onClick={() => setShowAddDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          새 질병 이력 추가
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-semibold tracking-tight">
+            과거 병력
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            중요한 질병과 치료 이력을 기록하세요
+          </p>
+        </div>
+        <Button onClick={() => {
+          resetForm();
+          setShowAddDialog(true);
+        }}>
+          <Plus className="mr-2 h-4 w-4" />
+          새 기록 추가
         </Button>
-      </div>
-
-      <div className="grid gap-4">
-        {records.map((record) => (
-          <Card key={record.id}>
-            <CardContent className="pt-6">
-              <div className="space-y-2">
-                <div className="flex justify-between items-start">
-                  <h3 className="font-semibold">{record.diseaseName}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    진단일: {new Date(record.diagnosisDate).toLocaleDateString()}
-                  </p>
-                </div>
-                <p className="text-sm">치료내용: {record.treatment}</p>
-                {record.notes && (
-                  <p className="text-sm text-muted-foreground">
-                    메모: {record.notes}
-                  </p>
-                )}
-              </div>
-              <Button onClick={() => deleteMutation.mutate(record.id)} variant="destructive">삭제</Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>질병명</TableHead>
+              <TableHead>진단일</TableHead>
+              <TableHead>치료내용</TableHead>
+              <TableHead>메모</TableHead>
+              <TableHead className="w-[100px]">작업</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {records.map((record) => (
+              <TableRow key={record.id}>
+                <TableCell>{record.diseaseName}</TableCell>
+                <TableCell>{new Date(record.diagnosisDate).toLocaleDateString()}</TableCell>
+                <TableCell>{record.treatment}</TableCell>
+                <TableCell>{record.notes || '-'}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setSelectedRecord(record);
+                      setIsDeleteDialogOpen(true);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
 
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>새 질병 이력</DialogTitle>
+            <DialogDescription>
+              과거 병력과 관련 정보를 입력하세요
+            </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleAdd} className="space-y-4">
-            <div className="space-y-2">
-              <Label>질병명</Label>
-              <Input
-                value={newRecord.diseaseName}
-                onChange={(e) =>
-                  setNewRecord({ ...newRecord, diseaseName: e.target.value })
-                }
-                required
-              />
+          <form onSubmit={handleAdd}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 items-center gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="diseaseName">질병명</Label>
+                  <Input
+                    id="diseaseName"
+                    value={newRecord.diseaseName}
+                    onChange={(e) =>
+                      setNewRecord({ ...newRecord, diseaseName: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="diagnosisDate">진단일</Label>
+                  <Input
+                    id="diagnosisDate"
+                    type="date"
+                    value={newRecord.diagnosisDate}
+                    onChange={(e) =>
+                      setNewRecord({ ...newRecord, diagnosisDate: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="treatment">치료내용</Label>
+                <Input
+                  id="treatment"
+                  value={newRecord.treatment}
+                  onChange={(e) =>
+                    setNewRecord({ ...newRecord, treatment: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="notes">메모</Label>
+                <Textarea
+                  id="notes"
+                  value={newRecord.notes}
+                  onChange={(e) =>
+                    setNewRecord({ ...newRecord, notes: e.target.value })
+                  }
+                  placeholder="특이사항이나 증상을 기록하세요"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>진단일</Label>
-              <Input
-                type="date"
-                value={newRecord.diagnosisDate}
-                onChange={(e) =>
-                  setNewRecord({ ...newRecord, diagnosisDate: e.target.value })
-                }
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>치료내용</Label>
-              <Textarea
-                value={newRecord.treatment}
-                onChange={(e) =>
-                  setNewRecord({ ...newRecord, treatment: e.target.value })
-                }
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>메모 (선택사항)</Label>
-              <Textarea
-                value={newRecord.notes}
-                onChange={(e) =>
-                  setNewRecord({ ...newRecord, notes: e.target.value })
-                }
-              />
-            </div>
-            <Button type="submit" disabled={addRecordMutation.isPending}>
-              저장
-            </Button>
+            <DialogFooter>
+              <Button type="submit" disabled={addRecordMutation.isPending}>
+                저장
+              </Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>기록 삭제</AlertDialogTitle>
+            <AlertDialogDescription>
+              이 병력 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (selectedRecord?.id) {
+                  deleteMutation.mutate(selectedRecord.id);
+                }
+              }}
+            >
+              삭제
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Card>
   );
 }
