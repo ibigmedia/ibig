@@ -79,9 +79,9 @@ export const emailTemplates = {
   medicalRecord: (username: string, action: string, data: any, timestamp: string) => {
     const dataRows = Object.entries(data)
       .map(([key, value]) => `
-        <tr>
-          <td><strong>${key}</strong></td>
-          <td>${value}</td>
+        <tr style="border-bottom: 1px solid #e5e7eb;">
+          <td style="padding: 12px; font-weight: bold;">${key}</td>
+          <td style="padding: 12px;">${value}</td>
         </tr>
       `)
       .join('');
@@ -98,108 +98,33 @@ export const emailTemplates = {
           <html>
           <head>
             <meta charset="UTF-8">
-            <style>
-              @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
-
-              body {
-                font-family: 'Noto Sans KR', sans-serif;
-                margin: 0;
-                padding: 0;
-                background-color: #f5f5f5;
-              }
-
-              .email-container {
-                max-width: 600px;
-                margin: 20px auto;
-                background: #ffffff;
-                border-radius: 10px;
-                overflow: hidden;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-              }
-
-              .email-header {
-                background: linear-gradient(135deg, #4f46e5, #6366f1);
-                color: white;
-                padding: 30px;
-                text-align: center;
-              }
-
-              .email-header h2 {
-                margin: 0;
-                font-size: 24px;
-                font-weight: 700;
-              }
-
-              .email-content {
-                padding: 30px;
-                background: #ffffff;
-              }
-
-              .highlight-box {
-                background: linear-gradient(to right, #f3f4f6, #ffffff);
-                border-left: 4px solid #4f46e5;
-                padding: 20px;
-                margin-bottom: 20px;
-                border-radius: 8px;
-              }
-
-              .data-table {
-                width: 100%;
-                border-collapse: separate;
-                border-spacing: 0;
-                margin: 20px 0;
-              }
-
-              .data-table th {
-                background: #f9fafb;
-                padding: 12px 16px;
-                text-align: left;
-                font-weight: 600;
-                color: #4b5563;
-                border-bottom: 2px solid #e5e7eb;
-              }
-
-              .data-table td {
-                padding: 12px 16px;
-                border-bottom: 1px solid #e5e7eb;
-              }
-
-              .data-table tr:last-child td {
-                border-bottom: none;
-              }
-
-              .timestamp {
-                color: #6b7280;
-                font-size: 14px;
-                text-align: right;
-                margin-top: 20px;
-                font-style: italic;
-              }
-            </style>
           </head>
-          <body>
-            <div class="email-container">
-              <div class="email-header">
-                <h2>의료 기록 ${action} 알림</h2>
+          <body style="margin: 0; padding: 20px; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+            <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+              <div style="background: linear-gradient(to right, #4f46e5, #6366f1); color: white; padding: 24px; text-align: center;">
+                <h2 style="margin: 0; font-size: 24px; font-weight: bold;">의료 기록 ${action} 알림</h2>
               </div>
-              <div class="email-content">
-                <div class="highlight-box">
-                  <p style="margin: 0; font-size: 16px; font-weight: 500;">
+
+              <div style="padding: 24px;">
+                <div style="background: #f8fafc; border-left: 4px solid #4f46e5; padding: 16px; margin-bottom: 20px; border-radius: 4px;">
+                  <p style="margin: 0; font-size: 16px; font-weight: 500; color: #1f2937;">
                     ${username} 님의 의료 기록이 업데이트되었습니다
                   </p>
                 </div>
-                <table class="data-table">
+
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: white;">
                   <thead>
-                    <tr>
-                      <th>항목</th>
-                      <th>내용</th>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e5e7eb;">
+                      <th style="padding: 12px; text-align: left; font-weight: 600; color: #4b5563;">항목</th>
+                      <th style="padding: 12px; text-align: left; font-weight: 600; color: #4b5563;">내용</th>
                     </tr>
                   </thead>
                   <tbody>
                     ${dataRows}
                   </tbody>
                 </table>
-                <div class="timestamp">
+
+                <div style="color: #6b7280; font-size: 14px; text-align: right; margin-top: 20px; font-style: italic;">
                   업데이트 시간: ${timestamp}
                 </div>
               </div>
@@ -226,144 +151,60 @@ export const emailTemplates = {
         <html>
         <head>
           <meta charset="UTF-8">
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
-
-            body {
-              font-family: 'Noto Sans KR', sans-serif;
-              margin: 0;
-              padding: 0;
-              background-color: #f5f5f5;
-            }
-
-            .email-container {
-              max-width: 600px;
-              margin: 20px auto;
-              background: #ffffff;
-              border-radius: 10px;
-              overflow: hidden;
-              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            }
-
-            .email-header {
-              background: linear-gradient(135deg, #4f46e5, #6366f1);
-              color: white;
-              padding: 30px;
-              text-align: center;
-            }
-
-            .email-header h2 {
-              margin: 0;
-              font-size: 24px;
-              font-weight: 700;
-            }
-
-            .email-content {
-              padding: 30px;
-              background: #ffffff;
-            }
-
-            .highlight-box {
-              background: linear-gradient(to right, #f3f4f6, #ffffff);
-              border-left: 4px solid #4f46e5;
-              padding: 20px;
-              margin-bottom: 20px;
-              border-radius: 8px;
-            }
-
-            .data-table {
-              width: 100%;
-              border-collapse: separate;
-              border-spacing: 0;
-              margin: 20px 0;
-            }
-
-            .data-table th {
-              background: #f9fafb;
-              padding: 12px 16px;
-              text-align: left;
-              font-weight: 600;
-              color: #4b5563;
-              border-bottom: 2px solid #e5e7eb;
-            }
-
-            .data-table td {
-              padding: 12px 16px;
-              border-bottom: 1px solid #e5e7eb;
-            }
-
-            .data-table tr:last-child td {
-              border-bottom: none;
-            }
-
-            .status-badge {
-              display: inline-flex;
-              align-items: center;
-              padding: 6px 12px;
-              border-radius: 9999px;
-              font-size: 12px;
-              font-weight: 600;
-              background: #dcfce7;
-              color: #166534;
-            }
-
-            .timestamp {
-              color: #6b7280;
-              font-size: 14px;
-              text-align: right;
-              margin-top: 20px;
-              font-style: italic;
-            }
-          </style>
         </head>
-        <body>
-          <div class="email-container">
-            <div class="email-header">
-              <h2>비상 연락처 추가 알림</h2>
+        <body style="margin: 0; padding: 20px; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+            <div style="background: linear-gradient(to right, #4f46e5, #6366f1); color: white; padding: 24px; text-align: center;">
+              <h2 style="margin: 0; font-size: 24px; font-weight: bold;">비상 연락처 추가 알림</h2>
             </div>
-            <div class="email-content">
-              <div class="highlight-box">
-                <p style="margin: 0; font-size: 16px; font-weight: 500;">
+
+            <div style="padding: 24px;">
+              <div style="background: #f8fafc; border-left: 4px solid #4f46e5; padding: 16px; margin-bottom: 20px; border-radius: 4px;">
+                <p style="margin: 0; font-size: 16px; font-weight: 500; color: #1f2937;">
                   ${username} 님이 새로운 비상 연락처를 추가했습니다
                 </p>
               </div>
-              <table class="data-table">
+
+              <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: white;">
                 <thead>
-                  <tr>
-                    <th>구분</th>
-                    <th>정보</th>
+                  <tr style="background: #f8fafc; border-bottom: 2px solid #e5e7eb;">
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #4b5563;">구분</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #4b5563;">정보</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td><strong>이름</strong></td>
-                    <td>${contactData.name}</td>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; font-weight: bold;">이름</td>
+                    <td style="padding: 12px;">${contactData.name}</td>
                   </tr>
-                  <tr>
-                    <td><strong>관계</strong></td>
-                    <td>${contactData.relationship}</td>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; font-weight: bold;">관계</td>
+                    <td style="padding: 12px;">${contactData.relationship}</td>
                   </tr>
-                  <tr>
-                    <td><strong>전화번호</strong></td>
-                    <td>${contactData.phoneNumber}</td>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; font-weight: bold;">전화번호</td>
+                    <td style="padding: 12px;">${contactData.phoneNumber}</td>
                   </tr>
                   ${contactData.email ? `
-                  <tr>
-                    <td><strong>이메일</strong></td>
-                    <td>${contactData.email}</td>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; font-weight: bold;">이메일</td>
+                    <td style="padding: 12px;">${contactData.email}</td>
                   </tr>
                   ` : ''}
                   ${contactData.isMainContact ? `
-                  <tr>
-                    <td><strong>구분</strong></td>
-                    <td>
-                      <span class="status-badge">주 연락처</span>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; font-weight: bold;">구분</td>
+                    <td style="padding: 12px;">
+                      <span style="display: inline-block; padding: 4px 12px; background: #dcfce7; color: #166534; border-radius: 9999px; font-size: 12px; font-weight: 600;">
+                        주 연락처
+                      </span>
                     </td>
                   </tr>
                   ` : ''}
                 </tbody>
               </table>
-              <div class="timestamp">
+
+              <div style="color: #6b7280; font-size: 14px; text-align: right; margin-top: 20px; font-style: italic;">
                 등록 시간: ${timestamp}
               </div>
             </div>
@@ -373,6 +214,7 @@ export const emailTemplates = {
       `
     }
   }),
+
   appointmentCreated: (username: string, appointment: any) => ({
     subject: '진료 예약 확인',
     content: {
@@ -384,132 +226,48 @@ export const emailTemplates = {
         <html>
         <head>
           <meta charset="UTF-8">
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
-
-            body {
-              font-family: 'Noto Sans KR', sans-serif;
-              margin: 0;
-              padding: 0;
-              background-color: #f5f5f5;
-            }
-
-            .email-container {
-              max-width: 600px;
-              margin: 20px auto;
-              background: #ffffff;
-              border-radius: 10px;
-              overflow: hidden;
-              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            }
-
-            .email-header {
-              background: linear-gradient(135deg, #4f46e5, #6366f1);
-              color: white;
-              padding: 30px;
-              text-align: center;
-            }
-
-            .email-header h2 {
-              margin: 0;
-              font-size: 24px;
-              font-weight: 700;
-            }
-
-            .email-content {
-              padding: 30px;
-              background: #ffffff;
-            }
-
-            .highlight-box {
-              background: linear-gradient(to right, #f3f4f6, #ffffff);
-              border-left: 4px solid #4f46e5;
-              padding: 20px;
-              margin-bottom: 20px;
-              border-radius: 8px;
-            }
-
-            .data-table {
-              width: 100%;
-              border-collapse: separate;
-              border-spacing: 0;
-              margin: 20px 0;
-            }
-
-            .data-table th {
-              background: #f9fafb;
-              padding: 12px 16px;
-              text-align: left;
-              font-weight: 600;
-              color: #4b5563;
-              border-bottom: 2px solid #e5e7eb;
-            }
-
-            .data-table td {
-              padding: 12px 16px;
-              border-bottom: 1px solid #e5e7eb;
-            }
-
-            .data-table tr:last-child td {
-              border-bottom: none;
-            }
-
-            .status-badge {
-              display: inline-flex;
-              align-items: center;
-              padding: 6px 12px;
-              border-radius: 9999px;
-              font-size: 12px;
-              font-weight: 600;
-              background: #dcfce7;
-              color: #166534;
-            }
-
-            .timestamp {
-              color: #6b7280;
-              font-size: 14px;
-              text-align: right;
-              margin-top: 20px;
-              font-style: italic;
-            }
-          </style>
         </head>
-        <body>
-          <div class="email-container">
-            <div class="email-header">
-              <h2>진료 예약 확인</h2>
+        <body style="margin: 0; padding: 20px; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+            <div style="background: linear-gradient(to right, #4f46e5, #6366f1); color: white; padding: 24px; text-align: center;">
+              <h2 style="margin: 0; font-size: 24px; font-weight: bold;">진료 예약 확인</h2>
             </div>
-            <div class="email-content">
-              <div class="highlight-box">
-                <p style="margin: 0; font-size: 16px; font-weight: 500;">
+
+            <div style="padding: 24px;">
+              <div style="background: #f8fafc; border-left: 4px solid #4f46e5; padding: 16px; margin-bottom: 20px; border-radius: 4px;">
+                <p style="margin: 0; font-size: 16px; font-weight: 500; color: #1f2937;">
                   ${username} 님의 진료 예약이 완료되었습니다
                 </p>
               </div>
-              <table class="data-table">
+
+              <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: white;">
                 <thead>
-                  <tr>
-                    <th>구분</th>
-                    <th>정보</th>
+                  <tr style="background: #f8fafc; border-bottom: 2px solid #e5e7eb;">
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #4b5563;">구분</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #4b5563;">정보</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td><strong>진료과</strong></td>
-                    <td>${appointment.department}</td>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; font-weight: bold;">진료과</td>
+                    <td style="padding: 12px;">${appointment.department}</td>
                   </tr>
-                  <tr>
-                    <td><strong>예약 일시</strong></td>
-                    <td>${new Date(appointment.date).toLocaleString()}</td>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; font-weight: bold;">예약 일시</td>
+                    <td style="padding: 12px;">${new Date(appointment.date).toLocaleString()}</td>
                   </tr>
-                  <tr>
-                    <td><strong>상태</strong></td>
-                    <td>
-                      <span class="status-badge status-pending">예약 완료</span>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; font-weight: bold;">상태</td>
+                    <td style="padding: 12px;">
+                      <span style="display: inline-block; padding: 4px 12px; background: #fef9c3; color: #854d0e; border-radius: 9999px; font-size: 12px; font-weight: 600;">
+                        예약 완료
+                      </span>
                     </td>
                   </tr>
                 </tbody>
               </table>
-              <div class="timestamp">
+
+              <div style="color: #6b7280; font-size: 14px; text-align: right; margin-top: 20px; font-style: italic;">
                 예약 시간: ${new Date().toLocaleString()}
               </div>
             </div>
@@ -519,6 +277,7 @@ export const emailTemplates = {
       `
     }
   }),
+
   appointmentRescheduled: (username: string, appointment: any, oldDate: string) => ({
     subject: '진료 예약 변경 확인',
     content: {
@@ -531,140 +290,56 @@ export const emailTemplates = {
         <html>
         <head>
           <meta charset="UTF-8">
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
-
-            body {
-              font-family: 'Noto Sans KR', sans-serif;
-              margin: 0;
-              padding: 0;
-              background-color: #f5f5f5;
-            }
-
-            .email-container {
-              max-width: 600px;
-              margin: 20px auto;
-              background: #ffffff;
-              border-radius: 10px;
-              overflow: hidden;
-              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            }
-
-            .email-header {
-              background: linear-gradient(135deg, #4f46e5, #6366f1);
-              color: white;
-              padding: 30px;
-              text-align: center;
-            }
-
-            .email-header h2 {
-              margin: 0;
-              font-size: 24px;
-              font-weight: 700;
-            }
-
-            .email-content {
-              padding: 30px;
-              background: #ffffff;
-            }
-
-            .highlight-box {
-              background: linear-gradient(to right, #f3f4f6, #ffffff);
-              border-left: 4px solid #4f46e5;
-              padding: 20px;
-              margin-bottom: 20px;
-              border-radius: 8px;
-            }
-
-            .data-table {
-              width: 100%;
-              border-collapse: separate;
-              border-spacing: 0;
-              margin: 20px 0;
-            }
-
-            .data-table th {
-              background: #f9fafb;
-              padding: 12px 16px;
-              text-align: left;
-              font-weight: 600;
-              color: #4b5563;
-              border-bottom: 2px solid #e5e7eb;
-            }
-
-            .data-table td {
-              padding: 12px 16px;
-              border-bottom: 1px solid #e5e7eb;
-            }
-
-            .data-table tr:last-child td {
-              border-bottom: none;
-            }
-
-            .status-badge {
-              display: inline-flex;
-              align-items: center;
-              padding: 6px 12px;
-              border-radius: 9999px;
-              font-size: 12px;
-              font-weight: 600;
-              background: #dcfce7;
-              color: #166534;
-            }
-
-            .timestamp {
-              color: #6b7280;
-              font-size: 14px;
-              text-align: right;
-              margin-top: 20px;
-              font-style: italic;
-            }
-          </style>
         </head>
-        <body>
-          <div class="email-container">
-            <div class="email-header">
-              <h2>진료 예약 변경 확인</h2>
+        <body style="margin: 0; padding: 20px; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+            <div style="background: linear-gradient(to right, #4f46e5, #6366f1); color: white; padding: 24px; text-align: center;">
+              <h2 style="margin: 0; font-size: 24px; font-weight: bold;">진료 예약 변경 확인</h2>
             </div>
-            <div class="email-content">
-              <div class="highlight-box">
-                <p style="margin: 0; font-size: 16px; font-weight: 500;">
+
+            <div style="padding: 24px;">
+              <div style="background: #f8fafc; border-left: 4px solid #4f46e5; padding: 16px; margin-bottom: 20px; border-radius: 4px;">
+                <p style="margin: 0; font-size: 16px; font-weight: 500; color: #1f2937;">
                   ${username} 님의 진료 예약이 변경되었습니다
                 </p>
               </div>
-              <table class="data-table">
+
+              <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: white;">
                 <thead>
-                  <tr>
-                    <th>구분</th>
-                    <th>정보</th>
+                  <tr style="background: #f8fafc; border-bottom: 2px solid #e5e7eb;">
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #4b5563;">구분</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #4b5563;">정보</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td><strong>진료과</strong></td>
-                    <td>${appointment.department}</td>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; font-weight: bold;">진료과</td>
+                    <td style="padding: 12px;">${appointment.department}</td>
                   </tr>
-                  <tr>
-                    <td><strong>기존 예약 일시</strong></td>
-                    <td>
-                      <span style="text-decoration: line-through; color: var(--gray-400);">
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; font-weight: bold;">기존 예약 일시</td>
+                    <td style="padding: 12px;">
+                      <span style="color: #94a3b8; text-decoration: line-through;">
                         ${new Date(oldDate).toLocaleString()}
                       </span>
                     </td>
                   </tr>
-                  <tr>
-                    <td><strong>변경된 예약 일시</strong></td>
-                    <td>${new Date(appointment.date).toLocaleString()}</td>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; font-weight: bold;">변경된 예약 일시</td>
+                    <td style="padding: 12px;">${new Date(appointment.date).toLocaleString()}</td>
                   </tr>
-                  <tr>
-                    <td><strong>상태</strong></td>
-                    <td>
-                      <span class="status-badge status-pending">예약 변경</span>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; font-weight: bold;">상태</td>
+                    <td style="padding: 12px;">
+                      <span style="display: inline-block; padding: 4px 12px; background: #fef9c3; color: #854d0e; border-radius: 9999px; font-size: 12px; font-weight: 600;">
+                        예약 변경
+                      </span>
                     </td>
                   </tr>
                 </tbody>
               </table>
-              <div class="timestamp">
+
+              <div style="color: #6b7280; font-size: 14px; text-align: right; margin-top: 20px; font-style: italic;">
                 변경 시간: ${new Date().toLocaleString()}
               </div>
             </div>
@@ -674,6 +349,7 @@ export const emailTemplates = {
       `
     }
   }),
+
   appointmentCancelled: (username: string, appointment: any) => ({
     subject: '진료 예약 취소 확인',
     content: {
@@ -685,136 +361,52 @@ export const emailTemplates = {
         <html>
         <head>
           <meta charset="UTF-8">
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
-
-            body {
-              font-family: 'Noto Sans KR', sans-serif;
-              margin: 0;
-              padding: 0;
-              background-color: #f5f5f5;
-            }
-
-            .email-container {
-              max-width: 600px;
-              margin: 20px auto;
-              background: #ffffff;
-              border-radius: 10px;
-              overflow: hidden;
-              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            }
-
-            .email-header {
-              background: linear-gradient(135deg, #4f46e5, #6366f1);
-              color: white;
-              padding: 30px;
-              text-align: center;
-            }
-
-            .email-header h2 {
-              margin: 0;
-              font-size: 24px;
-              font-weight: 700;
-            }
-
-            .email-content {
-              padding: 30px;
-              background: #ffffff;
-            }
-
-            .highlight-box {
-              background: linear-gradient(to right, #f3f4f6, #ffffff);
-              border-left: 4px solid #4f46e5;
-              padding: 20px;
-              margin-bottom: 20px;
-              border-radius: 8px;
-            }
-
-            .data-table {
-              width: 100%;
-              border-collapse: separate;
-              border-spacing: 0;
-              margin: 20px 0;
-            }
-
-            .data-table th {
-              background: #f9fafb;
-              padding: 12px 16px;
-              text-align: left;
-              font-weight: 600;
-              color: #4b5563;
-              border-bottom: 2px solid #e5e7eb;
-            }
-
-            .data-table td {
-              padding: 12px 16px;
-              border-bottom: 1px solid #e5e7eb;
-            }
-
-            .data-table tr:last-child td {
-              border-bottom: none;
-            }
-
-            .status-badge {
-              display: inline-flex;
-              align-items: center;
-              padding: 6px 12px;
-              border-radius: 9999px;
-              font-size: 12px;
-              font-weight: 600;
-              background: #fee2e2;
-              color: #991b1b;
-            }
-
-            .timestamp {
-              color: #6b7280;
-              font-size: 14px;
-              text-align: right;
-              margin-top: 20px;
-              font-style: italic;
-            }
-          </style>
         </head>
-        <body>
-          <div class="email-container">
-            <div class="email-header">
-              <h2>진료 예약 취소 확인</h2>
+        <body style="margin: 0; padding: 20px; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+            <div style="background: linear-gradient(to right, #4f46e5, #6366f1); color: white; padding: 24px; text-align: center;">
+              <h2 style="margin: 0; font-size: 24px; font-weight: bold;">진료 예약 취소 확인</h2>
             </div>
-            <div class="email-content">
-              <div class="highlight-box">
-                <p style="margin: 0; font-size: 16px; font-weight: 500;">
+
+            <div style="padding: 24px;">
+              <div style="background: #f8fafc; border-left: 4px solid #4f46e5; padding: 16px; margin-bottom: 20px; border-radius: 4px;">
+                <p style="margin: 0; font-size: 16px; font-weight: 500; color: #1f2937;">
                   ${username} 님의 진료 예약이 취소되었습니다
                 </p>
               </div>
-              <table class="data-table">
+
+              <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: white;">
                 <thead>
-                  <tr>
-                    <th>구분</th>
-                    <th>정보</th>
+                  <tr style="background: #f8fafc; border-bottom: 2px solid #e5e7eb;">
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #4b5563;">구분</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #4b5563;">정보</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td><strong>진료과</strong></td>
-                    <td>${appointment.department}</td>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; font-weight: bold;">진료과</td>
+                    <td style="padding: 12px;">${appointment.department}</td>
                   </tr>
-                  <tr>
-                    <td><strong>취소된 예약 일시</strong></td>
-                    <td>
-                      <span style="text-decoration: line-through; color: var(--gray-400);">
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; font-weight: bold;">취소된 예약 일시</td>
+                    <td style="padding: 12px;">
+                      <span style="color: #94a3b8; text-decoration: line-through;">
                         ${new Date(appointment.date).toLocaleString()}
                       </span>
                     </td>
                   </tr>
-                  <tr>
-                    <td><strong>상태</strong></td>
-                    <td>
-                      <span class="status-badge status-cancelled">예약 취소</span>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; font-weight: bold;">상태</td>
+                    <td style="padding: 12px;">
+                      <span style="display: inline-block; padding: 4px 12px; background: #fee2e2; color: #991b1b; border-radius: 9999px; font-size: 12px; font-weight: 600;">
+                        예약 취소
+                      </span>
                     </td>
                   </tr>
                 </tbody>
               </table>
-              <div class="timestamp">
+
+              <div style="color: #6b7280; font-size: 14px; text-align: right; margin-top: 20px; font-style: italic;">
                 취소 시간: ${new Date().toLocaleString()}
               </div>
             </div>
