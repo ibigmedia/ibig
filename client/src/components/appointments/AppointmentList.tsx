@@ -31,8 +31,8 @@ export function AppointmentList() {
   });
 
   const deleteAppointmentMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await fetch(`/api/appointments/${id}`, {
+    mutationFn: async (appointmentId: number) => {
+      const response = await fetch(`/api/appointments/${appointmentId}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -49,8 +49,8 @@ export function AppointmentList() {
         title: "예약이 삭제되었습니다",
         description: "취소된 예약이 성공적으로 삭제되었습니다.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
       setAppointmentToDelete(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
     },
     onError: (error: Error) => {
       toast({
@@ -132,15 +132,19 @@ export function AppointmentList() {
                 variant="ghost"
                 size="icon"
                 onClick={() => handleDelete(appointment)}
+                className="text-red-500 hover:text-red-700"
               >
-                <Trash2 className="h-4 w-4 text-red-500" />
+                <Trash2 className="h-4 w-4" />
               </Button>
             )}
           </div>
         </div>
       ))}
 
-      <AlertDialog open={!!appointmentToDelete} onOpenChange={(open) => !open && setAppointmentToDelete(null)}>
+      <AlertDialog 
+        open={!!appointmentToDelete} 
+        onOpenChange={(open) => !open && setAppointmentToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>예약 삭제</AlertDialogTitle>
@@ -153,8 +157,9 @@ export function AppointmentList() {
             <AlertDialogAction 
               onClick={confirmDelete}
               className="bg-red-500 hover:bg-red-600"
+              disabled={deleteAppointmentMutation.isPending}
             >
-              삭제
+              {deleteAppointmentMutation.isPending ? "삭제 중..." : "삭제"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
