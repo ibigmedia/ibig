@@ -6,7 +6,7 @@ import { getPatientProfile, updatePatientProfile } from "./routes/patient-profil
 import translationRouter from './routes/translation';
 import { sendEmail, emailTemplates } from './services/email';
 import { db } from "@db";
-import { medicalRecords, emergencyContacts, users, appointments, medications, bloodPressureRecords, bloodSugarRecords, diseaseHistories, smtpSettings, invitations } from "@db/schema";
+import { medicalRecords, emergencyContacts, users, appointments, medications, bloodPressureRecords, bloodSugarRecords, diseaseHistories, smtpSettings, invitations, allergyRecords } from "@db/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
 import nodemailer from "nodemailer";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
@@ -899,6 +899,92 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Add allergy records routes
+  app.get("/api/allergy-records", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const records = await db.query.allergyRecords.findMany({
+        where: eq(allergyRecords.userId, req.user.id),
+        orderBy: [desc(allergyRecords.recordedAt)],
+      });
+      res.json(records);
+    } catch (error) {
+      console.error('Error fetching allergy records:', error);
+      res.status(500).send("Error fetching allergy records");
+    }
+  });
+
+  app.post("/api/allergy-records", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const { allergen, reaction, severity, notes } = req.body;
+      const recordedAt = new Date();
+
+      const [record] = await db
+        .insert(allergyRecords)
+        .values({
+          userId: req.user.id,
+          allergen,
+          reaction,
+          severity,
+          notes,
+          recordedAt,
+        })
+        .returning();
+
+      res.json(record);
+    } catch (error) {
+      console.error('Error saving allergy record:', error);
+      res.status(500).send("Error saving allergy record");
+    }
+  });
+
+  app.delete("/api/allergy-records/:id", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const recordId = parseInt(req.params.id);
+
+      const [existingRecord] = await db
+        .select()
+        .from(allergyRecords)
+        .where(
+          and(
+            eq(allergyRecords.id, recordId),
+            eq(allergyRecords.userId, req.user.id)
+          )
+        )
+        .limit(1);
+
+      if (!existingRecord) {
+        return res.status(404).send("Record not found");
+      }
+
+      const [deletedRecord] = await db
+        .delete(allergyRecords)
+        .where(
+          and(
+            eq(allergyRecords.id, recordId),
+            eq(allergyRecords.userId, req.user.id)
+          )
+        )
+        .returning();
+
+      res.json({ success: true, deletedRecord });
+    } catch (error) {
+      console.error('Error deleting allergy record:', error);
+      res.status(500).send("Error deleting allergy record");
+    }
+  });
+
   createAdminUser().catch(console.error);
   setupMailer().catch(console.error);
 
@@ -935,7 +1021,7 @@ export const selectDiseaseHistoryWithUser = {
 //       <p>안녕하세요,</p>
 //       <p>의료 관리 시스템의 서브관리자로 초대되었습니다.</p>
 //       <p>아래 링크를 클릭하여 계정을 생성하세요.</p>
-//       <a href="${invitationUrl}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">계정 생성</a>
+//       <a href="${invitationUrl}" style="background-color#2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">계정 생성</a>
 //       <p>이 링크는 7일간 유효합니다.</p>
 //       <p>감사합니다.</p>
 //     </div>

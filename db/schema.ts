@@ -29,6 +29,17 @@ export const selectUserSchema = createSelectSchema(users);
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type SelectUser = typeof users.$inferSelect;
 
+// Add allergy records table
+export const allergyRecords = pgTable("allergy_records", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  allergen: text("allergen").notNull(),
+  reaction: text("reaction").notNull(),
+  severity: text("severity").notNull(),
+  notes: text("notes"),
+  recordedAt: timestamp("recorded_at").defaultNow(),
+});
+
 export const medicalRecords = pgTable("medical_records", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
@@ -58,7 +69,7 @@ export const bloodPressureRecords = pgTable("blood_pressure_records", {
   systolic: integer("systolic").notNull(),
   diastolic: integer("diastolic").notNull(),
   pulse: integer("pulse").notNull(),
-  measuredAt: timestamp("measured_at").notNull(),
+  measuredAt: timestamp("measured_at").defaultNow(),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -185,7 +196,7 @@ export const selectPatientProfileSchema = createSelectSchema(patientProfiles);
 export type InsertPatientProfile = z.infer<typeof insertPatientProfileSchema>;
 export type SelectPatientProfile = typeof patientProfiles.$inferSelect;
 
-// Add the relationship to users relations
+// Add relations for the new tables
 export const usersRelations = relations(users, ({ one, many }) => ({
   patientProfile: one(patientProfiles, {
     fields: [users.id],
@@ -195,6 +206,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   appointments: many(appointments),
   medications: many(medications),
   bloodPressureRecords: many(bloodPressureRecords),
+  allergyRecords: many(allergyRecords),
   bloodSugarRecords: many(bloodSugarRecords),
   diseaseHistories: many(diseaseHistories),
   emergencyContacts: many(emergencyContacts),
@@ -208,3 +220,15 @@ export const invitationsRelations = relations(invitations, ({ one }) => ({
     relationName: "createdInvitations"
   }),
 }));
+
+// Create schemas for allergy records
+export const insertAllergyRecordSchema = createInsertSchema(allergyRecords);
+export const selectAllergyRecordSchema = createSelectSchema(allergyRecords);
+export type InsertAllergyRecord = typeof allergyRecords.$inferInsert;
+export type SelectAllergyRecord = typeof allergyRecords.$inferSelect;
+
+// Create schemas for blood pressure records
+export const insertBloodPressureRecordSchema = createInsertSchema(bloodPressureRecords);
+export const selectBloodPressureRecordSchema = createSelectSchema(bloodPressureRecords);
+export type InsertBloodPressureRecord = typeof bloodPressureRecords.$inferInsert;
+export type SelectBloodPressureRecord = typeof bloodPressureRecords.$inferSelect;
